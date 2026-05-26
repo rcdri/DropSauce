@@ -42,6 +42,7 @@ class MihonMangaRepository(
 	private var lastOffset = -1
 	private var currentPage = 1
 	private val paginationLock = Any()
+	@Volatile private var hasMorePages = true
 
 	override val sortOrders: Set<SortOrder> = buildSet {
 		add(SortOrder.POPULARITY)
@@ -63,12 +64,17 @@ class MihonMangaRepository(
 			if (offset == 0) {
 				currentPage = 1
 				lastOffset = 0
+				hasMorePages = true
 			} else if (offset > lastOffset) {
 				lastOffset = offset
 				currentPage += 1
 			}
 			currentPage
 		}
+
+		// Source told us on the last page that there are no more results — skip the request.
+		if (offset > 0 && !hasMorePages) return@withContext emptyList()
+
 		val query = filter?.query?.trim().orEmpty()
 
 		val hasFilters = filter?.let {
@@ -82,6 +88,9 @@ class MihonMangaRepository(
 			order == SortOrder.UPDATED && source.supportsLatest -> mihonSource.getLatestUpdates(page)
 			else -> mihonSource.getPopularManga(page)
 		}
+
+		// Remember whether the source has more pages for the next getList() call.
+		hasMorePages = mangasPage.hasNextPage
 
 		val httpSource = mihonSource as? HttpSource
 		mangasPage.mangas.map { sManga ->
@@ -119,10 +128,22 @@ class MihonMangaRepository(
 			}
 		}
 
-		Log.d(TAG, "rawChapters count: ${rawChapters.size}, source: ${source.name}")
+		// Deduplicate by URL — some sources accidentally return the same chapter twice.
+		val uniqueChapters = rawChapters.distinctBy { it.url }
+
+		val httpSource = mihonSource as? HttpSource
+
+		// Let the extension normalize chapter data (title, scanlator, chapter number, etc.)
+		// before we process them.  HttpSource.prepareNewChapter() is a no-op by default but
+		// many extensions override it.
+		if (httpSource != null) {
+			uniqueChapters.forEach { sChapter -> httpSource.prepareNewChapter(sChapter, sManga) }
+		}
+
+		Log.d(TAG, "rawChapters count: ${rawChapters.size} (unique: ${uniqueChapters.size}), source: ${source.name}")
 
 		// Reverse raw chapters (assuming newest-first from source) and assign virtual numbers
-		val chapters = rawChapters.asReversed()
+		val chapters = uniqueChapters.asReversed()
 			.mapIndexed { index, sChapter ->
 				val chapterNumber = if (sChapter.chapter_number >= 0) {
 					sChapter.chapter_number
@@ -150,7 +171,6 @@ class MihonMangaRepository(
 			}
 		}
 
-		val httpSource = mihonSource as? HttpSource
 		val publicUrl = httpSource?.getMangaUrl(details).orEmpty()
 
 		details.toManga(
