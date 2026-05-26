@@ -40,6 +40,7 @@ class LazyMihonMangaRepository(
 
 	@Volatile
 	private var delegate: MihonMangaRepository? = null
+	private val resolveMutex = Mutex()
 
 	override val sortOrders: Set<SortOrder>
 		get() = delegate?.sortOrders ?: EnumSet.allOf(SortOrder::class.java)
@@ -70,16 +71,18 @@ class LazyMihonMangaRepository(
 
 	private suspend fun resolve(): MihonMangaRepository {
 		delegate?.let { return it }
-		extensionManager.ensureReady()
-		val mihonSource = extensionManager.getMihonMangaSourceByName(source.name)
-			?: throw UnsupportedSourceException(
-				"Install the matching Mihon extension to read this manga",
-				null,
-			)
-		// Double-checked: a concurrent call may have already populated `delegate`.
-		delegate?.let { return it }
-		val real = MihonMangaRepository(mihonSource, cache)
-		delegate = real
-		return real
+		return resolveMutex.withLock {
+			// Re-check inside the lock — a concurrent caller may have already resolved.
+			delegate?.let { return@withLock it }
+			extensionManager.ensureReady()
+			val mihonSource = extensionManager.getMihonMangaSourceByName(source.name)
+				?: throw UnsupportedSourceException(
+					"Install the matching Mihon extension to read this manga",
+					null,
+				)
+			val real = MihonMangaRepository(mihonSource, cache)
+			delegate = real
+			real
+		}
 	}
 }
