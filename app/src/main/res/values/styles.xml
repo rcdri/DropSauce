@@ -68,6 +68,12 @@
 
 	<!-- Widget styles -->
 
+	<style name="Widget.Kotatsu.SearchBar" parent="Widget.Material3Expressive.SearchBar">
+		<item name="android:minHeight">@dimen/search_bar_min_height</item>
+		<item name="android:fontFamily">@font/gflex_medium</item>
+		<item name="fontFamily">@font/gflex_medium</item>
+	</style>
+
 	<style name="Widget.Kotatsu.SearchView" parent="@style/Widget.AppCompat.SearchView">
 		<item name="iconifiedByDefault">false</item>
 		<item name="searchIcon">@null</item>
@@ -251,6 +257,83 @@
 
 	<style name="TextAppearance.Kotatsu.SearchView" parent="TextAppearance.Material3.SearchBar">
 		<item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+		<item name="android:fontFamily">@font/gflex_heading</item>
+		<item name="fontFamily">@font/gflex_heading</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.BodySmall" parent="TextAppearance.Material3.BodySmall">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
 	</style>
 
 	<style name="TextAppearance.Widget.Menu" parent="TextAppearance.AppCompat.Menu">

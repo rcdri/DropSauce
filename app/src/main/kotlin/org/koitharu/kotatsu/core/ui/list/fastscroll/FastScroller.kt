@@ -274,14 +274,28 @@ class FastScroller @JvmOverloads constructor(
 				}
 			}
 
-			is CoordinatorLayout -> updateLayoutParams<CoordinatorLayout.LayoutParams> {
-				height = LayoutParams.MATCH_PARENT
-				anchorGravity = GravityCompat.END
-				anchorId = recyclerViewId
-				marginStart = offset
-				marginEnd = offset
-				topMargin = offsetTop
-				bottomMargin = offsetBottom
+			is CoordinatorLayout -> {
+				// Anchor to the direct child of CoordinatorLayout that contains the recyclerView,
+				// so the scroller respects AppBarLayout scroll behavior and doesn't overlap the top bar.
+				val anchorViewId = recyclerView?.let { rv ->
+					if (rv.parent === viewGroup) {
+						rv.id
+					} else {
+						rv.ancestors
+							.filterIsInstance<View>()
+							.firstOrNull { v -> v.parent === viewGroup }
+							?.id
+					}
+				} ?: recyclerViewId
+				updateLayoutParams<CoordinatorLayout.LayoutParams> {
+					height = LayoutParams.MATCH_PARENT
+					anchorGravity = GravityCompat.END
+					anchorId = anchorViewId
+					marginStart = offset
+					marginEnd = offset
+					topMargin = offsetTop
+					bottomMargin = offsetBottom
+				}
 			}
 
 			is FrameLayout -> updateLayoutParams<FrameLayout.LayoutParams> {

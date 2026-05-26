@@ -47,6 +47,25 @@
 		<item name="android:textColorPrimary">@color/kotatsu_onSurface</item>
 		<item name="android:textColorSecondary">@color/kotatsu_onSurfaceVariant</item>
 
+		<!-- Typography -->
+		<item name="android:fontFamily">@font/gflex_body</item>
+		<item name="fontFamily">@font/gflex_body</item>
+		<item name="textAppearanceDisplayLarge">@style/TextAppearance.Kotatsu.DisplayLarge</item>
+		<item name="textAppearanceDisplayMedium">@style/TextAppearance.Kotatsu.DisplayMedium</item>
+		<item name="textAppearanceDisplaySmall">@style/TextAppearance.Kotatsu.DisplaySmall</item>
+		<item name="textAppearanceHeadlineLarge">@style/TextAppearance.Kotatsu.HeadlineLarge</item>
+		<item name="textAppearanceHeadlineMedium">@style/TextAppearance.Kotatsu.HeadlineMedium</item>
+		<item name="textAppearanceHeadlineSmall">@style/TextAppearance.Kotatsu.HeadlineSmall</item>
+		<item name="textAppearanceTitleLarge">@style/TextAppearance.Kotatsu.TitleLarge</item>
+		<item name="textAppearanceTitleMedium">@style/TextAppearance.Kotatsu.TitleMedium</item>
+		<item name="textAppearanceTitleSmall">@style/TextAppearance.Kotatsu.TitleSmall</item>
+		<item name="textAppearanceBodyLarge">@style/TextAppearance.Kotatsu.BodyLarge</item>
+		<item name="textAppearanceBodyMedium">@style/TextAppearance.Kotatsu.BodyMedium</item>
+		<item name="textAppearanceBodySmall">@style/TextAppearance.Kotatsu.BodySmall</item>
+		<item name="textAppearanceLabelLarge">@style/TextAppearance.Kotatsu.LabelLarge</item>
+		<item name="textAppearanceLabelMedium">@style/TextAppearance.Kotatsu.LabelMedium</item>
+		<item name="textAppearanceLabelSmall">@style/TextAppearance.Kotatsu.LabelSmall</item>
+
 		<!-- Drawables (icons) -->
 		<item name="actionModeCloseDrawable">@drawable/abc_ic_clear_material</item>
 		<item name="actionModeWebSearchDrawable">@drawable/abc_ic_search_api_material</item>
@@ -77,6 +96,7 @@
 		<item name="preferenceTheme">@style/PreferenceThemeOverlay.Kotatsu</item>
 		<!-- Fix crash in A15 -->
 		<item name="actionButtonStyle">@style/Widget.AppCompat.ActionButton</item>
+		<item name="materialSearchBarStyle">@style/Widget.Kotatsu.SearchBar</item>
 
 		<!-- Custom views -->
 		<item name="fastScrollerStyle">@style/Widget.Kotatsu.FastScroller</item>
@@ -105,7 +125,7 @@
 		<item name="collapsingToolbarLayoutMediumStyle">@style/Widget.Material3Expressive.CollapsingToolbar.Medium</item>
 		<item name="collapsingToolbarLayoutLargeStyle">@style/Widget.Material3Expressive.CollapsingToolbar.Large</item>
 
-		<item name="materialSearchBarStyle">@style/Widget.Material3Expressive.SearchBar</item>
+		<item name="materialSearchBarStyle">@style/Widget.Kotatsu.SearchBar</item>
 
 		<item name="floatingActionButtonStyle">@style/Widget.Material3Expressive.FloatingActionButton</item>
 		<item name="floatingActionButtonMediumStyle">@style/Widget.Material3Expressive.FloatingActionButton.Medium</item>

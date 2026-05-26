@@ -24,6 +24,7 @@ import androidx.core.graphics.Insets
 import androidx.core.graphics.ColorUtils
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -86,6 +87,9 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 	private val downloadPackagesById = HashMap<Long, String>()
 	private var activeInstallerPackage: String? = null
 	private var isInstallerActive = false
+	private val appBarOffsetListener = AppBarLayout.OnOffsetChangedListener { _, _ ->
+		syncFastScrollerOffset()
+	}
 	private val extensionDownloadReceiver = ExtensionDownloadReceiver { downloadId ->
 		if (pendingInstallerDownloads.remove(downloadId)) {
 			if (isDownloadSuccessful(downloadId)) {
@@ -134,6 +138,10 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 			setHasFixedSize(true)
 			addItemDecoration(TypedListSpacingDecoration(context, false))
 			adapter = sourcesAdapter
+		}
+		viewBinding.appbar.addOnOffsetChangedListener(appBarOffsetListener)
+		viewBinding.recyclerView.doOnLayout {
+			syncFastScrollerOffset()
 		}
 		viewBinding.chipsFilter.onChipClickListener = this
 		pendingInstallerDownloads.addAll(settings.pendingExtensionDownloads)
@@ -200,6 +208,7 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 	}
 
 	override fun onDestroy() {
+		viewBinding.appbar.removeOnOffsetChangedListener(appBarOffsetListener)
 		unregisterReceiver(extensionDownloadReceiver)
 		clearOldApks()
 		super.onDestroy()
@@ -403,6 +412,22 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 					viewBinding.buttonScrollToTop.visibility = View.GONE
 				}
 				.start()
+		}
+	}
+
+	private fun syncFastScrollerOffset() {
+		val fastScroller = viewBinding.recyclerView.fastScroller
+		val baseTopMargin = resources.getDimensionPixelOffset(R.dimen.fastscroll_scrollbar_margin_top)
+		val appBarBottom = viewBinding.appbar.bottom
+		val layoutParams = fastScroller.layoutParams
+		if (layoutParams is androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams) {
+			val desiredTop = appBarBottom + baseTopMargin
+			if (layoutParams.topMargin != desiredTop) {
+				layoutParams.topMargin = desiredTop
+				fastScroller.layoutParams = layoutParams
+			}
+		} else {
+			fastScroller.translationY = appBarBottom.toFloat()
 		}
 	}
 
