@@ -41,6 +41,7 @@ class MihonMangaRepository(
 	val mihonSource = source.catalogueSource
 	private var lastOffset = -1
 	private var currentPage = 1
+	private val paginationLock = Any()
 
 	override val sortOrders: Set<SortOrder> = buildSet {
 		add(SortOrder.POPULARITY)
@@ -58,13 +59,16 @@ class MihonMangaRepository(
 		)
 
 	override suspend fun getList(offset: Int, order: SortOrder?, filter: MangaListFilter?): List<Manga> = withContext(Dispatchers.IO) {
-		if (offset == 0) {
-			currentPage = 1
-		} else if (offset > lastOffset) {
-			currentPage += 1
+		val page = synchronized(paginationLock) {
+			if (offset == 0) {
+				currentPage = 1
+				lastOffset = 0
+			} else if (offset > lastOffset) {
+				lastOffset = offset
+				currentPage += 1
+			}
+			currentPage
 		}
-		lastOffset = offset
-		val page = currentPage
 		val query = filter?.query?.trim().orEmpty()
 
 		val hasFilters = filter?.let {
@@ -120,7 +124,7 @@ class MihonMangaRepository(
 		// Reverse raw chapters (assuming newest-first from source) and assign virtual numbers
 		val chapters = rawChapters.asReversed()
 			.mapIndexed { index, sChapter ->
-				val chapterNumber = if (sChapter.chapter_number > 0) {
+				val chapterNumber = if (sChapter.chapter_number >= 0) {
 					sChapter.chapter_number
 				} else {
 					(index + 1).toFloat()
@@ -157,7 +161,17 @@ class MihonMangaRepository(
 	}
 
 	override suspend fun getPagesImpl(chapter: MangaChapter): List<MangaPage> = withContext(Dispatchers.IO) {
-		val pages = mihonSource.getPageList(chapter.toSChapter())
+		val sChapter = chapter.toSChapter()
+		val pages = try {
+			mihonSource.getPageList(sChapter)
+		} catch (e: Exception) {
+			if ((e is IOException || e.cause is IOException) && e !is CloudFlareException) {
+				delay(500)
+				mihonSource.getPageList(sChapter)
+			} else {
+				throw e
+			}
+		}
 		pages.mapIndexed { index, page ->
 			val mapped = page.toMangaPage(source, chapter.url)
 			if (page.imageUrl.isNullOrBlank() && page.url.isNotBlank()) {
@@ -176,8 +190,9 @@ class MihonMangaRepository(
 			return@withContext page.url
 		}
 		val encoded = page.url.substringAfter("page_url=", "").substringBefore('&')
+		val pageIndex = page.url.substringAfter("&index=", "0").toIntOrNull() ?: 0
 		val resolved = URLDecoder.decode(encoded, "UTF-8")
-		httpSource.getImageUrl(eu.kanade.tachiyomi.source.model.Page(0, resolved))
+		httpSource.getImageUrl(eu.kanade.tachiyomi.source.model.Page(pageIndex, resolved))
 	}
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
