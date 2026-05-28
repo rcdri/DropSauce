@@ -25,7 +25,9 @@
 		android:stateListAnimator="@null"
 		app:elevation="0dp"
 		app:liftOnScroll="false"
-		app:liftOnScrollColor="@null">
+		app:liftOnScrollColor="@null"
+		app:materialThemeOverlay="@style/ThemeOverlay.Material3Expressive.AppBarWithSearch"
+		app:statusBarForeground="?attr/colorSurface">
 
 		<org.koitharu.kotatsu.core.ui.widgets.WindowInsetHolder
 			android:id="@+id/insetsHolder"
@@ -39,7 +41,11 @@
 			android:id="@+id/search_bar"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:maxWidth="600dp"
 			android:hint="@string/search_manga"
+			app:hideNavigationIcon="false"
+			app:navigationIcon="?attr/actionModeWebSearchDrawable"
 			app:forceDefaultNavigationOnClickListener="true"
 			app:layout_scrollFlags="scroll|enterAlways|snap" />
 
@@ -50,6 +56,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:hint="@string/search_hint"
+		app:hideNavigationIcon="false"
 		app:layout_anchor="@id/search_bar">
 
 		<androidx.recyclerview.widget.RecyclerView

@@ -103,6 +103,8 @@
 		<!-- Fix crash in A15 -->
 		<item name="actionButtonStyle">@style/Widget.AppCompat.ActionButton</item>
 		<item name="materialSearchBarStyle">@style/Widget.Kotatsu.SearchBar</item>
+		<item name="materialSearchViewStyle">@style/Widget.Material3Expressive.SearchView.AppBarWithSearch</item>
+		<item name="materialSearchViewToolbarHeight">@dimen/search_bar_min_height</item>
 
 		<!-- Custom views -->
 		<item name="fastScrollerStyle">@style/Widget.Kotatsu.FastScroller</item>
@@ -132,6 +134,8 @@
 		<item name="collapsingToolbarLayoutLargeStyle">@style/Widget.Material3Expressive.CollapsingToolbar.Large</item>
 
 		<item name="materialSearchBarStyle">@style/Widget.Kotatsu.SearchBar</item>
+		<item name="materialSearchViewStyle">@style/Widget.Material3Expressive.SearchView.AppBarWithSearch</item>
+		<item name="materialSearchViewToolbarHeight">@dimen/search_bar_min_height</item>
 
 		<item name="floatingActionButtonStyle">@style/Widget.Material3Expressive.FloatingActionButton</item>
 		<item name="floatingActionButtonMediumStyle">@style/Widget.Material3Expressive.FloatingActionButton.Medium</item>

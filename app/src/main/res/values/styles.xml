@@ -72,7 +72,7 @@
 
 	<!-- Widget styles -->
 
-	<style name="Widget.Kotatsu.SearchBar" parent="Widget.Material3Expressive.SearchBar">
+	<style name="Widget.Kotatsu.SearchBar" parent="Widget.Material3Expressive.SearchBar.AppBarWithSearch">
 		<item name="android:minHeight">@dimen/search_bar_min_height</item>
 		<item name="android:fontFamily">@font/gflex_medium</item>
 		<item name="fontFamily">@font/gflex_medium</item>
