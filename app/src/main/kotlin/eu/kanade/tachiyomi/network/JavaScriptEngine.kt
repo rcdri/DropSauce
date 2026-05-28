@@ -1,24 +1,49 @@
 package eu.kanade.tachiyomi.network
 
 import android.content.Context
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlin.coroutines.resume
 
 /**
- * Util for evaluating JavaScript in sources.
+ * Executes JavaScript in a sandboxed WebView.
  *
- * Minimal implementation for extension-lib 1.4+ compatibility.
- * Extensions that rely on JS evaluation will get an UnsupportedOperationException.
+ * Return value mirrors Android's [WebView.evaluateJavascript] semantics:
+ * strings are JSON-quoted ("\"hello\""), numbers are plain ("42"),
+ * null/undefined returns "null".
+ *
+ * @since extension-lib 1.4
  */
-class JavaScriptEngine(context: Context) {
+class JavaScriptEngine(private val context: Context) {
 
-	/**
-	 * Evaluate arbitrary JavaScript code and get the result as a primitive type
-	 * (e.g., String, Int).
-	 *
-	 * @since extensions-lib 1.4
-	 * @param script JavaScript to execute.
-	 * @return Result of JavaScript code as a primitive type.
-	 */
 	@Suppress("UNCHECKED_CAST")
-	suspend fun <T> evaluate(script: String): T =
-		throw UnsupportedOperationException("JavaScriptEngine is not supported in DropSauce")
+	suspend fun <T> evaluate(script: String): T = withContext(Dispatchers.Main) {
+		val webView = WebView(context.applicationContext)
+		webView.settings.javaScriptEnabled = true
+		try {
+			withTimeout(10_000L) {
+				// Android requires a loaded page before evaluateJavascript will execute.
+				suspendCancellableCoroutine { cont ->
+					webView.webViewClient = object : WebViewClient() {
+						override fun onPageFinished(view: WebView, url: String) {
+							view.webViewClient = WebViewClient()
+							if (cont.isActive) cont.resume(Unit)
+						}
+					}
+					webView.loadUrl("about:blank")
+				}
+				suspendCancellableCoroutine { cont ->
+					webView.evaluateJavascript(script) { result ->
+						if (cont.isActive) cont.resume(result as T)
+					}
+				}
+			}
+		} finally {
+			webView.destroy()
+		}
+	}
 }
