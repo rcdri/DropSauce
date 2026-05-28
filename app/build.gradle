@@ -120,7 +120,8 @@ kotlin {
 			'-opt-in=kotlinx.serialization.ExperimentalSerializationApi',
 			'-Xjspecify-annotations=strict',
 			'-Xannotation-default-target=first-only',
-			'-Xtype-enhancement-improvements-strict-mode'
+			'-Xtype-enhancement-improvements-strict-mode',
+			'-Xcontext-parameters'
 		])
 	}
 }

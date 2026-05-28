@@ -28,6 +28,9 @@ abstract class HttpSource : CatalogueSource {
 
 	abstract val baseUrl: String
 
+	/** Returns the home URL of this source, shown in deep-link handlers (extensions-lib 1.5+). */
+	open fun getHomeUrl(): String = baseUrl
+
 	open val versionId = 1
 
 	override val id by lazy { generateId(name, lang, versionId) }

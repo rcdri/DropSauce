@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package org.koitharu.kotatsu.mihon.model
 
 import android.util.Log
