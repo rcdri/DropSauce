@@ -57,12 +57,6 @@ interface SManga : Serializable {
 	var update_strategy: UpdateStrategy
 	var initialized: Boolean
 
-	@Deprecated("Use genres instead", replaceWith = ReplaceWith("genres"))
-	fun getGenres(): List<String>? {
-		if (genre.isNullOrBlank()) return null
-		return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
-	}
-
 	fun copy() = create().also {
 		it.url = url
 		it.title = title

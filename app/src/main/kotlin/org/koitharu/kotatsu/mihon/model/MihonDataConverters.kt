@@ -31,7 +31,7 @@ fun SManga.toManga(
 	val safeUrl = try { url } catch (_: UninitializedPropertyAccessException) { "" }
 	val safeThumbnail = try { thumbnail_url } catch (_: UninitializedPropertyAccessException) { null }
 	val safeTitle = try { title } catch (_: UninitializedPropertyAccessException) { "Unknown" }
-	val safeGenres = try { getGenres() } catch (_: UninitializedPropertyAccessException) { null }
+	val safeGenres: List<String>? = genres.takeIf { it.isNotEmpty() }
 	val safeAuthor = try { author } catch (_: UninitializedPropertyAccessException) { null }
 	val safeArtist = try { artist } catch (_: UninitializedPropertyAccessException) { null }
 	val safeDescription = try { description } catch (_: UninitializedPropertyAccessException) { null }
