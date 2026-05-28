@@ -53,6 +53,7 @@ class MangaPageFetcher(
 		}
 		val repo = mangaRepositoryFactory.create(page.source)
 		val pageUrl = repo.getPageUrl(page)
+		val imageHeaders = repo.getImageRequestHeaders(pageUrl, page)
 		if (options.diskCachePolicy.readEnabled) {
 			pagesCache[pageUrl]?.let { file ->
 				return SourceFetchResult(
@@ -62,17 +63,18 @@ class MangaPageFetcher(
 				)
 			}
 		}
-		return loadPage(pageUrl)
+		return loadPage(pageUrl, imageHeaders)
 	}
 
-	private suspend fun loadPage(pageUrl: String): FetchResult? = if (pageUrl.toUri().isNetworkUri()) {
-		fetchPage(pageUrl)
-	} else {
-		imageLoader.fetch(pageUrl, options)
-	}
+	private suspend fun loadPage(pageUrl: String, imageHeaders: Headers?): FetchResult? =
+		if (pageUrl.toUri().isNetworkUri()) {
+			fetchPage(pageUrl, imageHeaders)
+		} else {
+			imageLoader.fetch(pageUrl, options)
+		}
 
-	private suspend fun fetchPage(pageUrl: String): FetchResult {
-		val request = PageLoader.createPageRequest(pageUrl, page.source)
+	private suspend fun fetchPage(pageUrl: String, imageHeaders: Headers?): FetchResult {
+		val request = PageLoader.createPageRequest(pageUrl, page.source, imageHeaders)
 		return imageProxyInterceptor.interceptPageRequest(request, okHttpClient).use { response ->
 			if (!response.isSuccessful) {
 				throw HttpException(response.toNetworkResponse())

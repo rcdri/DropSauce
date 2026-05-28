@@ -31,6 +31,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.use
@@ -298,7 +299,8 @@ class PageLoader @Inject constructor(
 				if (isPrefetch) {
 					downloadSlowdownDispatcher.delay(page.source)
 				}
-				val request = createPageRequest(pageUrl, page.source)
+				val imageHeaders = getRepository(page.source).getImageRequestHeaders(pageUrl, page)
+				val request = createPageRequest(pageUrl, page.source, imageHeaders)
 				imageProxyInterceptor.interceptPageRequest(request, okHttp).ensureSuccess().use { response ->
 					response.requireBody().withProgress(progress).use {
 						cache.set(pageUrl, it.source(), it.contentType()?.toMimeType())
@@ -338,10 +340,19 @@ class PageLoader @Inject constructor(
 		private const val PREFETCH_LIMIT_DEFAULT = 6
 		private const val PREFETCH_MIN_RAM_MB = 80L
 
-		fun createPageRequest(pageUrl: String, mangaSource: MangaSource) = Request.Builder()
+		fun createPageRequest(
+			pageUrl: String,
+			mangaSource: MangaSource,
+			extraHeaders: Headers? = null,
+		) = Request.Builder()
 			.url(pageUrl)
 			.get()
-			.header(CommonHeaders.ACCEPT, "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8")
+			.apply {
+				// Add extension-provided headers (e.g. Referer) before setting Accept,
+				// so our Accept always wins if the extension also sets one.
+				extraHeaders?.forEach { (name, value) -> addHeader(name, value) }
+				header(CommonHeaders.ACCEPT, "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8")
+			}
 			.cacheControl(CommonHeaders.CACHE_CONTROL_NO_STORE)
 			.tag(MangaSource::class.java, mangaSource)
 			.build()

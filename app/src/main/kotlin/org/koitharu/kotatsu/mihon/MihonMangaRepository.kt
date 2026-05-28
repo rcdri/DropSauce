@@ -5,6 +5,7 @@ package org.koitharu.kotatsu.mihon
 import android.util.Log
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.online.HttpSource
+import okhttp3.Headers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -215,6 +216,11 @@ class MihonMangaRepository(
 		val pageIndex = page.url.substringAfter("&index=", "0").toIntOrNull() ?: 0
 		val resolved = URLDecoder.decode(encoded, "UTF-8")
 		httpSource.getImageUrl(eu.kanade.tachiyomi.source.model.Page(pageIndex, resolved))
+	}
+
+	override suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? {
+		val httpSource = (mihonSource as? HttpSource) ?: return null
+		return runCatching { httpSource.getImageHeaders(imageUrl) }.getOrNull()
 	}
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {

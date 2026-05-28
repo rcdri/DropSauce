@@ -114,6 +114,15 @@ abstract class HttpSource : CatalogueSource {
 	protected open fun imageRequest(page: Page): Request = GET(page.imageUrl!!, headers)
 
 	/**
+	 * Returns the OkHttp headers that should be used when fetching the image at [imageUrl].
+	 * Delegates to [imageRequest] so any extension override (e.g. adding Referer) is honoured.
+	 *
+	 * @since extensions-lib 1.5
+	 */
+	fun getImageHeaders(imageUrl: String): Headers =
+		imageRequest(Page(index = 0, url = imageUrl, imageUrl = imageUrl)).headers
+
+	/**
 	 * Returns the response of the source image.
 	 * Typically does not need to be overridden.
 	 *

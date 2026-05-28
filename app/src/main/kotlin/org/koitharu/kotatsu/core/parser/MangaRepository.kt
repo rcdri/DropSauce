@@ -18,6 +18,7 @@ import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.model.MangaListFilter
 import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
+import okhttp3.Headers
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.model.SortOrder
@@ -42,6 +43,9 @@ interface MangaRepository {
 	suspend fun getPages(chapter: MangaChapter): List<MangaPage>
 
 	suspend fun getPageUrl(page: MangaPage): String
+
+	/** Returns extension-specific HTTP headers for the image at [imageUrl], or null for non-extension sources. */
+	suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? = null
 
 	suspend fun getFilterOptions(): MangaListFilterOptions
 
