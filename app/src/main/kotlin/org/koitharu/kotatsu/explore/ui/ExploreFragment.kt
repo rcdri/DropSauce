@@ -61,7 +61,7 @@ class ExploreFragment :
 	override fun onViewBindingCreated(binding: FragmentExploreBinding, savedInstanceState: Bundle?) {
 		super.onViewBindingCreated(binding, savedInstanceState)
 		exploreAdapter = ExploreAdapter(this, this) { manga, view ->
-			router.openDetails(manga)
+			router.openDetails(manga, view.findViewById(R.id.imageView_cover))
 		}
 		sourceSelectionController = ListSelectionController(
 			appCompatDelegate = checkNotNull(findAppCompatDelegate()),

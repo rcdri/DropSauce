@@ -65,6 +65,7 @@ import org.koitharu.kotatsu.core.ui.image.ChipIconTarget
 import org.koitharu.kotatsu.core.ui.image.FaviconDrawable
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.sheet.BottomSheetCollapseCallback
+import org.koitharu.kotatsu.core.ui.util.CoverSharedTransition
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
 import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.ui.widgets.ChipsView
@@ -141,6 +142,9 @@ class DetailsClassicActivity :
 		setContentView(ActivityDetailsClassicBinding.inflate(layoutInflater))
 		enableEdgeToEdge()
 		WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+		if (savedInstanceState == null && intent.getBooleanExtra(CoverSharedTransition.EXTRA_ENABLED, false)) {
+			CoverSharedTransition.setup(this, viewBinding.imageViewCover)
+		}
 		setDisplayHomeAsUp(isEnabled = true, showUpAsClose = false)
 		supportActionBar?.setDisplayShowTitleEnabled(false)
 		backdropController = BackdropController(

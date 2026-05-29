@@ -74,6 +74,7 @@ import org.koitharu.kotatsu.core.ui.image.TextDrawable
 import org.koitharu.kotatsu.core.ui.image.TextViewTarget
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.sheet.BottomSheetCollapseCallback
+import org.koitharu.kotatsu.core.ui.util.CoverSharedTransition
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
 import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.ui.widgets.ChipsView
@@ -159,6 +160,9 @@ class DetailsActivity :
 		WindowCompat.setDecorFitsSystemWindows(window, false)
 		enableEdgeToEdge()
 		WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+		if (savedInstanceState == null && intent.getBooleanExtra(CoverSharedTransition.EXTRA_ENABLED, false)) {
+			CoverSharedTransition.setup(this, viewBinding.imageViewCover)
+		}
 		backdropController = BackdropController(
 			backdrop = viewBinding.backdrop,
 			backdropGradient = viewBinding.backdropGradient,
