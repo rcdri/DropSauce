@@ -196,6 +196,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 	}
 
+	override fun onSupportNavigateUp(): Boolean {
+		if (!viewBinding.searchView.isShowing) {
+			viewBinding.searchView.show()
+		}
+		return true
+	}
+
 	override fun addMenuProvider(provider: MenuProvider, owner: LifecycleOwner, state: Lifecycle.State) {
 		if (provider !is MangaSearchMenuProvider) { // do not duplicate search menu item
 			super.addMenuProvider(provider, owner, state)
