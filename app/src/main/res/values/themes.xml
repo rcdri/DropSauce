@@ -162,9 +162,9 @@
 	<!-- Expressive Monet theme -->
 	<style name="ThemeOverlay.Kotatsu.Expressive" parent="ThemeOverlay.Material3Expressive.DynamicColors.DayNight">
 		<item name="appBarLayoutStyle">@style/Widget.Material3Expressive.AppBarLayout</item>
-		<item name="collapsingToolbarLayoutStyle">@style/Widget.Material3Expressive.CollapsingToolbar</item>
-		<item name="collapsingToolbarLayoutMediumStyle">@style/Widget.Material3Expressive.CollapsingToolbar.Medium</item>
-		<item name="collapsingToolbarLayoutLargeStyle">@style/Widget.Material3Expressive.CollapsingToolbar.Large</item>
+		<!-- The Expressive collapsing-toolbar styles shift the expanded title so the source
+		     name no longer lines up with the filter/sort button. Use the default collapsing
+		     toolbar (which keeps them aligned) on every theme. -->
 
 		<item name="materialSearchBarStyle">@style/Widget.Kotatsu.SearchBar</item>
 		<item name="materialSearchViewStyle">@style/Widget.Material3Expressive.SearchView.AppBarWithSearch</item>

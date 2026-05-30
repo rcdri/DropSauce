@@ -825,6 +825,8 @@
     <string name="popular_in_month">Popular this month</string>
     <string name="popular_in_year">Popular this year</string>
     <string name="original_language">Original language</string>
+    <string name="original_cover">Original cover</string>
+    <string name="original_name">Original name</string>
     <string name="year">Year</string>
     <string name="demographics">Demographics</string>
     <string name="demographic_shounen">Shounen</string>

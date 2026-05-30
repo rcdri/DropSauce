@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filterNotNull
@@ -32,6 +33,8 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 
 	private val viewModel: OverrideConfigViewModel by viewModels()
 
+	private var originalTitle: String? = null
+
 	private val pickCoverFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument(), this)
 	private val pickPageLauncher = registerForActivityResult(PageImagePickContract(), this)
 
@@ -44,6 +47,7 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 		viewBinding.buttonPickPage.setOnClickListener(this)
 		viewBinding.buttonResetCover.setOnClickListener(this)
 		viewBinding.layoutName.setEndIconOnClickListener(this)
+		viewBinding.editName.doAfterTextChanged { updateOriginalNamePreview() }
 		viewModel.data.filterNotNull().observe(this, ::onDataChanged)
 		viewModel.onSaved.observeEvent(this) { onDataSaved() }
 		viewModel.isLoading.observe(this, ::onLoadingStateChanged)
@@ -99,13 +103,34 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 
 	private fun onDataChanged(data: Pair<Manga, MangaOverride>) {
 		val (manga, override) = data
+		originalTitle = manga.title
 		viewBinding.imageViewCover.setImageAsync(override.coverUrl.ifNullOrEmpty { manga.coverUrl }, manga)
 		viewBinding.layoutName.placeholderText = manga.title
 		if (viewBinding.editName.tag == null) {
 			viewBinding.editName.setText(override.title)
 			viewBinding.editName.tag = override.title
 		}
-		viewBinding.buttonResetCover.isEnabled = !override.coverUrl.isNullOrEmpty()
+		val hasCustomCover = !override.coverUrl.isNullOrEmpty()
+		viewBinding.buttonResetCover.isEnabled = hasCustomCover
+		viewBinding.layoutOriginalCover.isVisible = hasCustomCover
+		if (hasCustomCover) {
+			viewBinding.imageViewOriginalCover.setImageAsync(manga.coverUrl, manga)
+		}
+		updateOriginalNamePreview()
+	}
+
+	private fun updateOriginalNamePreview() {
+		val original = originalTitle?.trim().orEmpty()
+		val current = viewBinding.editName.text?.toString()?.trim().orEmpty()
+		val changed = original.isNotEmpty() && current.isNotEmpty() && current != original
+		viewBinding.textViewOriginalName.isVisible = changed
+		if (changed) {
+			viewBinding.textViewOriginalName.text = getString(
+				R.string.inline_preference_pattern,
+				getString(R.string.original_name),
+				original,
+			)
+		}
 	}
 
 	private fun onError(e: Throwable) {

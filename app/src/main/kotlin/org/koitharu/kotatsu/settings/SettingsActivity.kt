@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.transition.MaterialSharedAxis
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import dagger.hilt.android.AndroidEntryPoint
@@ -112,12 +113,23 @@ class SettingsActivity :
 
 	fun openFragment(fragmentClass: Class<out Fragment>, args: Bundle?, isFromRoot: Boolean) {
 		viewModel.discardSearch()
-		val hasFragment = supportFragmentManager.findFragmentById(R.id.container) != null
-		supportFragmentManager.commit {
+		val fm = supportFragmentManager
+		val current = fm.findFragmentById(R.id.container)
+		val hasFragment = current != null
+		// M3 Expressive shared-axis (X) transitions. They are seekable androidx Transitions,
+		// so the system predictive-back gesture animates them instead of a plain cross-fade.
+		current?.apply {
+			exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+			reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+		}
+		val fragment = fm.fragmentFactory.instantiate(classLoader, fragmentClass.name).apply {
+			arguments = args
+			enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+			returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+		}
+		fm.commit {
 			setReorderingAllowed(true)
-			// Using the Fragment 1.7+ default predictive-back-compatible transition.
-			replace(R.id.container, fragmentClass, args)
-			setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+			replace(R.id.container, fragment)
 			if (!isMasterDetails || (hasFragment && !isFromRoot)) {
 				addToBackStack(null)
 			}
