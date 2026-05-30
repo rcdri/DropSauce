@@ -6,6 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import org.koitharu.kotatsu.main.ui.nav.rememberAnyDrawablePainter
@@ -223,43 +231,80 @@ private fun AboutHero(appVersion: String) {
 		color = cs.primaryContainer,
 	) {
 		Box(modifier = Modifier.fillMaxWidth()) {
-			// Ghost-ish M3 Expressive shapes (4-sided cookie + pill) scattered behind the content,
+			val infiniteTransition = rememberInfiniteTransition(label = "HeroShapes")
+
+			val cookieRotation = infiniteTransition.animateFloat(
+				initialValue = 0f,
+				targetValue = 360f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(18000, easing = LinearEasing),
+					repeatMode = RepeatMode.Restart
+				),
+				label = "cookieRotation"
+			)
+
+			val pillOffsetX = infiniteTransition.animateFloat(
+				initialValue = -25f,
+				targetValue = 25f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(10000, easing = EaseInOut),
+					repeatMode = RepeatMode.Reverse
+				),
+				label = "pillOffsetX"
+			)
+
+			val pillOffsetY = infiniteTransition.animateFloat(
+				initialValue = -15f,
+				targetValue = 15f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(12000, easing = EaseInOut),
+					repeatMode = RepeatMode.Reverse
+				),
+				label = "pillOffsetY"
+			)
+
+			val ghostScale = infiniteTransition.animateFloat(
+				initialValue = 0.85f,
+				targetValue = 1.15f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(8000, easing = EaseInOut),
+					repeatMode = RepeatMode.Reverse
+				),
+				label = "ghostScale"
+			)
+
+			// Ghost-ish M3 Expressive shapes (ghost, 4-sided cookie, pill) scattered behind the content,
 			// clipped by the Surface's rounded shape. The centered app icon sits around
 			// (width/2, ~90dp); shapes are kept to the edges/corners so they never touch it.
 			Canvas(modifier = Modifier.matchParentSize()) {
 				val unit = size.minDimension
-				// 4-sided cookie, top-right corner.
-				drawCookie(
-					centerX = size.width * 0.93f,
-					centerY = size.height * 0.12f,
-					radius = unit * 0.22f,
-					color = decorColorStrong,
-				)
-				// Pill, upright, left edge.
+				// 4-sided cookie, top-right corner, rotating smoothly
+				rotate(degrees = cookieRotation.value, pivot = Offset(size.width * 0.93f, size.height * 0.12f)) {
+					drawCookie(
+						centerX = size.width * 0.93f,
+						centerY = size.height * 0.12f,
+						radius = unit * 0.22f,
+						color = decorColorStrong,
+					)
+				}
+				// Pill, upright, left edge, moving around freely
 				drawPill(
-					centerX = size.width * 0.05f,
-					centerY = size.height * 0.46f,
+					centerX = size.width * 0.05f + pillOffsetX.value,
+					centerY = size.height * 0.46f + pillOffsetY.value,
 					width = unit * 0.15f,
 					height = unit * 0.44f,
 					rotationDeg = -16f,
 					color = decorColor,
 				)
-				// Pill, diagonal, bottom-right.
-				drawPill(
-					centerX = size.width * 0.87f,
-					centerY = size.height * 0.84f,
-					width = unit * 0.42f,
-					height = unit * 0.15f,
-					rotationDeg = -27f,
-					color = decorColor,
-				)
-				// Small 4-sided cookie, bottom-left.
-				drawCookie(
-					centerX = size.width * 0.13f,
-					centerY = size.height * 0.86f,
-					radius = unit * 0.14f,
-					color = decorColorStrong,
-				)
+				// Ghost-ish shape, diagonal, bottom-right, expanding and shrinking
+				scale(scale = ghostScale.value, pivot = Offset(size.width * 0.85f, size.height * 0.85f)) {
+					drawGhost(
+						centerX = size.width * 0.85f,
+						centerY = size.height * 0.85f,
+						radius = unit * 0.28f,
+						color = decorColor,
+					)
+				}
 			}
 		Column(
 			modifier = Modifier
@@ -335,6 +380,25 @@ private fun DrawScope.drawCookie(
 		innerRadius = radius * 0.82f,
 		rounding = CornerRounding(radius * 0.5f),
 		innerRounding = CornerRounding(radius * 0.5f),
+		centerX = centerX,
+		centerY = centerY,
+	)
+	drawPath(polygon.toComposePath(), color)
+}
+
+/** Draws a generic M3-Expressive "ghost-ish" blob shape. */
+private fun DrawScope.drawGhost(
+	centerX: Float,
+	centerY: Float,
+	radius: Float,
+	color: Color,
+) {
+	val polygon = RoundedPolygon.star(
+		numVerticesPerRadius = 5,
+		radius = radius,
+		innerRadius = radius * 0.7f,
+		rounding = CornerRounding(radius * 0.5f),
+		innerRounding = CornerRounding(radius * 0.4f),
 		centerX = centerX,
 		centerY = centerY,
 	)
