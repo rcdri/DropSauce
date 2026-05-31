@@ -299,10 +299,17 @@ class PageLoader @Inject constructor(
 				if (isPrefetch) {
 					downloadSlowdownDispatcher.delay(page.source)
 				}
-				val imageHeaders = getRepository(page.source).getImageRequestHeaders(pageUrl, page)
-				val request = createPageRequest(pageUrl, page.source, imageHeaders)
-				imageProxyInterceptor.interceptPageRequest(request, okHttp).ensureSuccess().use { response ->
-					response.requireBody().withProgress(progress).use {
+				val repo = getRepository(page.source)
+				val imageHeaders = repo.getImageRequestHeaders(pageUrl, page)
+				// Use extension's getImage() when available — handles decryption/unscrambling.
+				// Falls back to direct OkHttp fetch for non-Mihon sources (getImageStream returns null).
+				val response = repo.getImageStream(pageUrl, page)
+					?: run {
+						val request = createPageRequest(pageUrl, page.source, imageHeaders)
+						imageProxyInterceptor.interceptPageRequest(request, okHttp)
+					}
+				response.ensureSuccess().use { r ->
+					r.requireBody().withProgress(progress).use {
 						cache.set(pageUrl, it.source(), it.contentType()?.toMimeType())
 					}
 				}.toUri()

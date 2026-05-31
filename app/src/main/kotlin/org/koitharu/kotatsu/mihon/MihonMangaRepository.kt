@@ -6,6 +6,7 @@ import android.util.Log
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.Headers
+import okhttp3.Response
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -222,6 +223,24 @@ class MihonMangaRepository(
 		val httpSource = (mihonSource as? HttpSource) ?: return null
 		return runCatching { httpSource.getImageHeaders(imageUrl) }.getOrNull()
 	}
+
+	/**
+	 * Delegates image fetching to the extension's [HttpSource.getImage].
+	 * Extensions may override [getImage] to decrypt or un-scramble images before returning
+	 * them — bypassing this would deliver encrypted bytes to the decoder, causing failures
+	 * like "unsupported image format: image/jpeg".
+	 */
+	override suspend fun getImageStream(pageUrl: String, page: MangaPage): Response? =
+		withContext(Dispatchers.IO) {
+			val httpSource = mihonSource as? HttpSource ?: return@withContext null
+			httpSource.getImage(
+				eu.kanade.tachiyomi.source.model.Page(
+					index = 0,
+					url = pageUrl,
+					imageUrl = pageUrl,
+				)
+			)
+		}
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		val mihonFilters = try {

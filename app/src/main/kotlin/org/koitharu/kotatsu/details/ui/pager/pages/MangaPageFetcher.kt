@@ -63,24 +63,30 @@ class MangaPageFetcher(
 				)
 			}
 		}
-		return loadPage(pageUrl, imageHeaders)
+		return loadPage(pageUrl, imageHeaders, repo)
 	}
 
-	private suspend fun loadPage(pageUrl: String, imageHeaders: Headers?): FetchResult? =
+	private suspend fun loadPage(pageUrl: String, imageHeaders: Headers?, repo: MangaRepository): FetchResult? =
 		if (pageUrl.toUri().isNetworkUri()) {
-			fetchPage(pageUrl, imageHeaders)
+			fetchPage(pageUrl, imageHeaders, repo)
 		} else {
 			imageLoader.fetch(pageUrl, options)
 		}
 
-	private suspend fun fetchPage(pageUrl: String, imageHeaders: Headers?): FetchResult {
-		val request = PageLoader.createPageRequest(pageUrl, page.source, imageHeaders)
-		return imageProxyInterceptor.interceptPageRequest(request, okHttpClient).use { response ->
-			if (!response.isSuccessful) {
-				throw HttpException(response.toNetworkResponse())
+	private suspend fun fetchPage(pageUrl: String, imageHeaders: Headers?, repo: MangaRepository): FetchResult {
+		// Use extension's getImage() when available — handles decryption/unscrambling.
+		// Falls back to direct OkHttp fetch for non-Mihon sources.
+		val response = repo.getImageStream(pageUrl, page)
+			?: imageProxyInterceptor.interceptPageRequest(
+				PageLoader.createPageRequest(pageUrl, page.source, imageHeaders),
+				okHttpClient,
+			)
+		return response.use { r ->
+			if (!r.isSuccessful) {
+				throw HttpException(r.toNetworkResponse())
 			}
-			val mimeType = response.mimeType?.toMimeTypeOrNull()
-			val file = response.requireBody().use {
+			val mimeType = r.mimeType?.toMimeTypeOrNull()
+			val file = r.requireBody().use {
 				pagesCache.set(pageUrl, it.source(), mimeType)
 			}
 			SourceFetchResult(

@@ -19,6 +19,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilter
 import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
 import okhttp3.Headers
+import okhttp3.Response
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.model.SortOrder
@@ -46,6 +47,13 @@ interface MangaRepository {
 
 	/** Returns extension-specific HTTP headers for the image at [imageUrl], or null for non-extension sources. */
 	suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? = null
+
+	/**
+	 * Returns the full image [Response] for [pageUrl], or null to fall back to the default fetch path.
+	 * Extensions may override [HttpSource.getImage] to decrypt or transform scrambled images;
+	 * this hook ensures those transforms are applied before the bytes hit the disk cache.
+	 */
+	suspend fun getImageStream(pageUrl: String, page: MangaPage): Response? = null
 
 	suspend fun getFilterOptions(): MangaListFilterOptions
 
