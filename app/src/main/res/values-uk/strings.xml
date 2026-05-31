@@ -822,8 +822,6 @@
     <string name="error_non_file_uri">Вибраний шлях не може бути використаний, оскільки він не позначає файл чи каталог</string>
     <string name="tags_warnings_summary">Виділяти жанри, які можуть бути неприйнятними для більшості користувачів</string>
     <string name="tags_warnings">Виділяти небезпечні жанри</string>
-    <string name="suggestions_disabled_sources_summary">Відображати рекомендації з усіх джерел манги, включаючи вимкнені</string>
-    <string name="include_disabled_sources">Увімкнути відключені джерела</string>
     <string name="exclude_nsfw_from_suggestions_summary">Доросла манґа не відображатиметься у рекомендаціях. Ця опція може не працювати з деякими джерелами</string>
     <string name="no_write_permission_to_file">Немає прав на запис до файлу</string>
     <string name="clear_browser_data">Очистити дані браузера</string>

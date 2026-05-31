@@ -801,8 +801,6 @@
     <string name="tags_warnings_summary">Destacar gêneros que podem ser inapropriados para a maioria dos usuários</string>
     <string name="nsfw_16">+16</string>
     <string name="exclude_nsfw_from_suggestions_summary">Mangás adultos não serão exibidos nas sugestões. Esta opção pode funcionar de forma imprecisa com algumas fontes</string>
-    <string name="include_disabled_sources">Incluir fontes desabilitadas</string>
-    <string name="suggestions_disabled_sources_summary">Mostrar sugestões de todas as fontes, incluindo as desabilitadas</string>
     <string name="manga_override_hint">Essas mudanças afetarão como a obra é exibida no aplicativo</string>
     <string name="use_default_cover">Usar a capa padrão</string>
     <string name="pick_manga_page">Escolher uma página da obra</string>

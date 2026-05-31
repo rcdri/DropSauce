@@ -21,14 +21,6 @@
 	<SwitchPreferenceCompat
 		android:defaultValue="false"
 		android:dependency="suggestions"
-		android:icon="@drawable/ic_disable"
-		android:key="suggestions_disabled_sources"
-		android:summary="@string/suggestions_disabled_sources_summary"
-		android:title="@string/include_disabled_sources" />
-
-	<SwitchPreferenceCompat
-		android:defaultValue="false"
-		android:dependency="suggestions"
 		android:icon="@drawable/ic_notification"
 		android:key="suggestions_notifications"
 		android:summary="@string/suggestions_notifications_summary"

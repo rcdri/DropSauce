@@ -3,8 +3,11 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<!-- The app-update indicator was moved off the main search bar to the Settings icon
-	     (red dot) + an in-settings banner. See MainActivity.appUpdate observer and
-	     RootSettingsFragment's update banner. -->
+	<item
+		android:id="@+id/action_incognito"
+		android:checkable="true"
+		android:icon="@drawable/ic_incognito"
+		android:title="@string/incognito_mode"
+		app:showAsAction="never" />
 
 </menu>

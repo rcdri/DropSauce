@@ -519,9 +519,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isSuggestionsExcludeNsfw: Boolean
 		get() = prefs.getBoolean(KEY_SUGGESTIONS_EXCLUDE_NSFW, false)
 
-	val isSuggestionsIncludeDisabledSources: Boolean
-		get() = prefs.getBoolean(KEY_SUGGESTIONS_DISABLED_SOURCES, false)
-
 	val isSuggestionsNotificationAvailable: Boolean
 		get() = prefs.getBoolean(KEY_SUGGESTIONS_NOTIFICATIONS, false)
 
@@ -877,7 +874,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_SUGGESTIONS_WIFI_ONLY = "suggestions_wifi"
 		const val KEY_SUGGESTIONS_EXCLUDE_NSFW = "suggestions_exclude_nsfw"
 		const val KEY_SUGGESTIONS_EXCLUDE_TAGS = "suggestions_exclude_tags"
-		const val KEY_SUGGESTIONS_DISABLED_SOURCES = "suggestions_disabled_sources"
 		const val KEY_SUGGESTIONS_NOTIFICATIONS = "suggestions_notifications"
 		const val KEY_SHIKIMORI = "shikimori"
 		const val KEY_ANILIST = "anilist"

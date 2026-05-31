@@ -801,8 +801,6 @@
     <string name="clear_browser_data">Pulisci dati del browser</string>
     <string name="no_write_permission_to_file">Non ha l\'autorizzazione a scrivere un file</string>
     <string name="nsfw_16">16+</string>
-    <string name="include_disabled_sources">Includi fonti disabilitate</string>
-    <string name="suggestions_disabled_sources_summary">Mostra suggerimenti da tutte le fonti manga, incluse quelle disabilite</string>
     <string name="exclude_nsfw_from_suggestions_summary">I manga per adulti non verranno mostrati nei suggerimenti. Questa opzione potrebbe non funzionare accuratamente con alcune fonti</string>
     <string name="tags_warnings">Evidenzia i generi pericolosi</string>
     <string name="tags_warnings_summary">Evidenzia i generi che potrebbero essere inappropriati per la maggior parte degli utenti</string>

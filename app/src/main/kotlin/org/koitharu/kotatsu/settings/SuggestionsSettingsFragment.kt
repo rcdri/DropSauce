@@ -117,7 +117,6 @@ private fun SuggestionsScreen(
 ) {
 	var enabled by rememberBooleanPref(AppSettings.KEY_SUGGESTIONS, false)
 	var wifiOnly by rememberBooleanPref(AppSettings.KEY_SUGGESTIONS_WIFI_ONLY, false)
-	var includeDisabled by rememberBooleanPref(AppSettings.KEY_SUGGESTIONS_DISABLED_SOURCES, false)
 	var notifications by rememberBooleanPref(AppSettings.KEY_SUGGESTIONS_NOTIFICATIONS, false)
 	var excludeTags by rememberStringPref(AppSettings.KEY_SUGGESTIONS_EXCLUDE_TAGS, "")
 	var excludeNsfw by rememberBooleanPref(AppSettings.KEY_SUGGESTIONS_EXCLUDE_NSFW, false)
@@ -143,17 +142,6 @@ private fun SuggestionsScreen(
 						checked = wifiOnly,
 						onCheckedChange = { wifiOnly = it },
 						icon = R.drawable.ic_network_cellular,
-						shape = pos.shape,
-						enabled = enabled,
-					)
-				}
-				item { pos ->
-					SwitchSettingsItem(
-						title = stringResource(R.string.include_disabled_sources),
-						subtitle = stringResource(R.string.suggestions_disabled_sources_summary),
-						checked = includeDisabled,
-						onCheckedChange = { includeDisabled = it },
-						icon = R.drawable.ic_disable,
 						shape = pos.shape,
 						enabled = enabled,
 					)

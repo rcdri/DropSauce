@@ -801,8 +801,6 @@
     <string name="no_write_permission_to_file">Нет прав на запись в файл</string>
     <string name="link_to_manga_on_s">Ссылка на мангу на %s</string>
     <string name="exclude_nsfw_from_suggestions_summary">Взрослая манга не будет отображаться в рекомендациях. Эта опция может не работать с некоторыми источниками</string>
-    <string name="include_disabled_sources">Включить отключённые источники</string>
-    <string name="suggestions_disabled_sources_summary">Отображать рекомендации из всех источников манги, включая отключённые</string>
     <string name="link_to_manga_in_app">Ссылка на мангу в DropSauce</string>
     <string name="nsfw_16">16+</string>
     <string name="clear_browser_data_summary">Удалить данные встроенного браузера, такие как кэш и куки. Внимание: авторизация в источниках манги может быть потеряна</string>

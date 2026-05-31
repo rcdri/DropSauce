@@ -799,8 +799,6 @@
     <string name="clear_browser_data_summary">Điều này sẽ xóa những dữ liệu như cache và cookies. Lưu ý: Xác thực (đăng nhập) đối với nguồn đọc có thể sẽ không còn hợp lệ nữa</string>
     <string name="no_write_permission_to_file">Không có quyền để ghi một tệp tin mới</string>
     <string name="exclude_nsfw_from_suggestions_summary">Gợi ý về manga người lớn sẽ được ẩn đi. Tùy chọn này có thể không hoạt động chuẩn với một số nguồn</string>
-    <string name="include_disabled_sources">Bao gồm các nguồn đã bị vô hiệu hoá</string>
-    <string name="suggestions_disabled_sources_summary">Hiện gợi ý từ tất cả các nguồn đọc, bao gồm cả những nguồn đã bị vô hiệu hoá</string>
     <string name="nsfw_16">16+</string>
     <string name="tags_warnings">Highlight những thể loại không an toàn</string>
     <string name="tags_warnings_summary">Highlight những thể loại mà nó không thực sự phù hợp với hầu hết người đọc (mọi lứa tuổi)</string>

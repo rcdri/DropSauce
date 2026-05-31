@@ -805,8 +805,6 @@
     <string name="clear_browser_data_summary">Data penyemak imbas yang jelas seperti cache dan kuki. Amaran: Kebenaran dalam sumber manga mungkin tidak sah</string>
     <string name="no_write_permission_to_file">Tidak mempunyai kebenaran untuk menulis fail</string>
     <string name="exclude_nsfw_from_suggestions_summary">Manga dewasa tidak akan ditunjukkan dalam cadangan. Pilihan ini mungkin tidak tepat dengan beberapa sumber</string>
-    <string name="include_disabled_sources">Termasuk sumber kurang upaya</string>
-    <string name="suggestions_disabled_sources_summary">Tunjukkan cadangan dari semua sumber manga, termasuk orang kurang upaya</string>
     <string name="tags_warnings">Sorot genre berbahaya</string>
     <string name="tags_warnings_summary">Sorot genre yang mungkin tidak sesuai untuk kebanyakan pengguna</string>
     <string name="error_non_file_uri">Laluan yang dipilih tidak dapat digunakan kerana ia tidak menandakan fail atau direktori</string>

@@ -261,13 +261,13 @@ private fun NavIcon(
 				resId == R.drawable.ic_explore_selector -> R.drawable.ic_explore_normal
 				else -> resId
 			}
-			if (iv.tag != targetResId) {
+			val resourceChanged = iv.tag != targetResId
+			if (resourceChanged) {
 				iv.setImageResource(targetResId)
 				iv.tag = targetResId
-				iv.isSelected = !selected
 			}
 			val targetState = if (selected) SELECTOR_STATE_CHECKED else SELECTOR_STATE_UNCHECKED
-			if (iv.isSelected != selected) {
+			if (resourceChanged || iv.isSelected != selected) {
 				iv.isSelected = selected
 				iv.isActivated = selected
 				iv.setImageState(targetState, false)

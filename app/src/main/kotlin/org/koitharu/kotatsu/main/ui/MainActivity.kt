@@ -10,6 +10,7 @@ import android.view.ViewGroup.MarginLayoutParams
 import android.widget.LinearLayout
 import androidx.activity.viewModels
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
@@ -22,6 +23,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withResumed
@@ -60,6 +62,7 @@ import org.koitharu.kotatsu.core.util.ext.end
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.core.util.ext.printStackTraceDebug
+import org.koitharu.kotatsu.core.util.ext.setOptionalIconsVisibleCompat
 import org.koitharu.kotatsu.core.util.ext.start
 import org.koitharu.kotatsu.databinding.ActivityMainBinding
 import org.koitharu.kotatsu.details.service.MangaPrefetchService
@@ -100,6 +103,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	}
 	private lateinit var navigationDelegate: MainNavigationDelegate
 	private lateinit var fadingAppbarMediator: FadingAppbarMediator
+	private val overflowMenuProviders = mutableListOf<OverflowMenuProviderEntry>()
 	private var isSearchFullyShown = false
 
 	override val appBar: AppBarLayout
@@ -117,19 +121,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 		setContentView(ActivityMainBinding.inflate(layoutInflater))
 		setSupportActionBar(viewBinding.searchBar)
-		// Tapping the search bar's leading icon should open search just like tapping the bar itself.
-		viewBinding.searchBar.setNavigationOnClickListener {
-			if (!viewBinding.searchView.isShowing) {
-				viewBinding.searchView.show()
-			}
-		}
 
 		viewBinding.fab?.setOnClickListener(this)
 		viewBinding.navRail?.headerView?.findViewById<View>(R.id.railFab)?.setOnClickListener(this)
-		viewBinding.buttonIncognito.setOnClickListener {
-			val isEnabled = !viewModel.isIncognitoModeEnabled.value
-			viewModel.setIncognitoMode(isEnabled)
-		}
+		viewBinding.buttonOverflow.setOnClickListener(this::showMainOverflowMenu)
 		viewBinding.buttonSettings.setOnClickListener {
 			router.openSettings()
 		}
@@ -154,7 +149,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 			navigationDelegate.observeTitle().observe(this) { tv.text = it }
 		}
 
-		addMenuProvider(MainMenuProvider(router, viewModel))
+		addMainOverflowMenuProvider(MainMenuProvider(viewModel))
 
 		val exitCallback = ExitCallback(this, viewBinding.container)
 		onBackPressedDispatcher.addCallback(exitCallback)
@@ -212,7 +207,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 
 	override fun addMenuProvider(provider: MenuProvider, owner: LifecycleOwner, state: Lifecycle.State) {
 		if (provider !is MangaSearchMenuProvider) { // do not duplicate search menu item
-			super.addMenuProvider(provider, owner, state)
+			addMainOverflowMenuProvider(provider, owner, state)
 		}
 	}
 
@@ -220,6 +215,44 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		when (v.id) {
 			R.id.fab, R.id.railFab -> viewModel.openLastReader()
 		}
+	}
+
+	private fun addMainOverflowMenuProvider(
+		provider: MenuProvider,
+		owner: LifecycleOwner? = null,
+		state: Lifecycle.State = Lifecycle.State.CREATED,
+	) {
+		val entry = OverflowMenuProviderEntry(provider, owner, state)
+		overflowMenuProviders += entry
+		owner?.lifecycle?.addObserver(
+			LifecycleEventObserver { _, event ->
+				if (event == Lifecycle.Event.ON_DESTROY) {
+					overflowMenuProviders -= entry
+				}
+			},
+		)
+	}
+
+	private fun showMainOverflowMenu(anchor: View) {
+		val providers = overflowMenuProviders
+			.filter { it.isActive }
+			.map { it.provider }
+		val popup = PopupMenu(anchor.context, anchor)
+		val menu = popup.menu
+		providers.forEach { it.onCreateMenu(menu, popup.menuInflater) }
+		providers.forEach { it.onPrepareMenu(menu) }
+		if (!menu.hasVisibleItems()) {
+			return
+		}
+		menu.setOptionalIconsVisibleCompat(true)
+		popup.setForceShowIcon(true)
+		popup.setOnMenuItemClickListener { item ->
+			providers.any { it.onMenuItemSelected(item) }
+		}
+		popup.setOnDismissListener {
+			providers.forEach { it.onMenuClosed(menu) }
+		}
+		popup.show()
 	}
 
 	override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
@@ -317,7 +350,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 		viewBinding.searchView.getEditText().imeOptions = options
 		invalidateOptionsMenu()
-		viewBinding.buttonIncognito.isChecked = isIncognito
 	}
 
 	private fun onLoadingStateChanged(isLoading: Boolean) {
@@ -494,4 +526,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		addTransitionListener(listener)
 		awaitClose { removeTransitionListener(listener) }
 	}
+}
+
+private data class OverflowMenuProviderEntry(
+	val provider: MenuProvider,
+	val owner: LifecycleOwner?,
+	val minState: Lifecycle.State,
+) {
+
+	val isActive: Boolean
+		get() = owner?.lifecycle?.currentState?.isAtLeast(minState) ?: true
 }

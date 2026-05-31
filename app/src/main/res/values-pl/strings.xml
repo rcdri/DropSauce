@@ -789,8 +789,6 @@
     <string name="error_disclaimer_manga">Spróbuj otworzyć mangę w przeglądarce internetowej, aby upewnić się, że jest dostępna w swoim źródle.</string>
     <string name="link_to_manga_in_app">Link do mangi w DropSauce</string>
     <string name="clear_browser_data">Wyczyść dane przeglądarki</string>
-    <string name="include_disabled_sources">Uwzględnij wyłączone źródła</string>
-    <string name="suggestions_disabled_sources_summary">Pokaż sugestie ze wszystkich źródeł mangi, uwzględniając też wyłączone</string>
     <string name="tags_warnings">Wyróżnij niebezpieczne gatunki</string>
     <string name="use_default_cover">Użyj domyślnej okładki</string>
     <string name="pick_manga_page">Wybierz stronę mangi</string>

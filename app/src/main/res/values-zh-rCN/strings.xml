@@ -803,8 +803,6 @@
     <string name="clear_browser_data_summary">点击后清除浏览器（如缓存、Cookies）数据，警告：图源授权可能变为无效</string>
     <string name="nsfw_16">16+</string>
     <string name="exclude_nsfw_from_suggestions_summary">搜索建议中将不会出现成人漫画，此选项可能对某些图源不生效</string>
-    <string name="include_disabled_sources">包括已禁用图源</string>
-    <string name="suggestions_disabled_sources_summary">从所有图源获取漫画推荐，包括已禁用图源</string>
     <string name="simple">默认</string>
     <string name="tags_warnings">高亮敏感类别</string>
     <string name="tags_warnings_summary">将可能会对大部分用户不友善的类别高亮</string>
