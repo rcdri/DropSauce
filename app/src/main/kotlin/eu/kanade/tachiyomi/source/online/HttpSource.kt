@@ -65,6 +65,7 @@ abstract class HttpSource : CatalogueSource {
 	protected abstract fun latestUpdatesParse(response: Response): MangasPage
 	protected abstract fun mangaDetailsParse(response: Response): SManga
 	protected abstract fun chapterListParse(response: Response): List<SChapter>
+	protected open fun chapterPageParse(response: Response): SChapter = throw UnsupportedOperationException("Not used")
 	protected abstract fun pageListParse(response: Response): List<Page>
 	protected abstract fun imageUrlParse(response: Response): String
 
@@ -98,14 +99,14 @@ abstract class HttpSource : CatalogueSource {
 		return client.newCall(tagRequest(chapterListRequest(manga))).asObservableSuccess().map(::chapterListParse)
 	}
 
-	open fun chapterListRequest(manga: SManga): Request = GET(baseUrl + manga.url, headers)
+	protected open fun chapterListRequest(manga: SManga): Request = GET(baseUrl + manga.url, headers)
 
 	@Deprecated("Use the non-RxJava API instead", replaceWith = ReplaceWith("getPageList"))
 	override fun fetchPageList(chapter: SChapter): Observable<List<Page>> {
 		return client.newCall(tagRequest(pageListRequest(chapter))).asObservableSuccess().map(::pageListParse)
 	}
 
-	open fun pageListRequest(chapter: SChapter): Request = GET(baseUrl + chapter.url, headers)
+	protected open fun pageListRequest(chapter: SChapter): Request = GET(baseUrl + chapter.url, headers)
 
 	/**
 	 * Returns the request for getting the source image.
@@ -120,7 +121,9 @@ abstract class HttpSource : CatalogueSource {
 	 * @since extensions-lib 1.5
 	 */
 	fun getImageHeaders(imageUrl: String): Headers =
-		imageRequest(Page(index = 0, url = imageUrl, imageUrl = imageUrl)).headers
+		getImageHeaders(Page(index = 0, url = imageUrl, imageUrl = imageUrl))
+
+	fun getImageHeaders(page: Page): Headers = imageRequest(page).headers
 
 	/**
 	 * Returns the response of the source image.
@@ -151,7 +154,7 @@ abstract class HttpSource : CatalogueSource {
 			.map { imageUrlParse(it) }
 	}
 
-	open fun imageUrlRequest(page: Page): Request = GET(page.url, headers)
+	protected open fun imageUrlRequest(page: Page): Request = GET(page.url, headers)
 
 	private fun tagRequest(request: Request): Request {
 		if (request.tag(org.koitharu.kotatsu.parsers.model.MangaSource::class.java) != null) {

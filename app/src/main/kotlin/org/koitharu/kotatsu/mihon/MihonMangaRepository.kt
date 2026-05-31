@@ -3,7 +3,9 @@
 package org.koitharu.kotatsu.mihon
 
 import android.util.Log
+import androidx.core.net.toUri
 import eu.kanade.tachiyomi.source.model.FilterList
+import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.Headers
 import okhttp3.Response
@@ -28,8 +30,6 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import java.io.IOException
-import java.net.URLDecoder
-import java.net.URLEncoder
 import java.util.EnumSet
 
 @OptIn(InternalParsersApi::class)
@@ -40,6 +40,12 @@ class MihonMangaRepository(
 
 	companion object {
 		private const val TAG = "MihonMangaRepository"
+		private const val MIHON_URL_SCHEME = "mihon"
+		private const val MIHON_RESOLVE_HOST = "resolve"
+		private const val MIHON_IMAGE_HOST = "image"
+		private const val QUERY_PAGE_URL = "page_url"
+		private const val QUERY_IMAGE_URL = "image_url"
+		private const val QUERY_INDEX = "index"
 	}
 
 	val mihonSource = source.catalogueSource
@@ -198,30 +204,43 @@ class MihonMangaRepository(
 		}
 		pages.mapIndexed { index, page ->
 			val mapped = page.toMangaPage(source, chapter.url)
-			if (page.imageUrl.isNullOrBlank() && page.url.isNotBlank()) {
-				mapped.copy(
-					url = "mihon://resolve?page_url=${URLEncoder.encode(page.url, "UTF-8")}&index=$index",
+			when {
+				page.imageUrl.isNullOrBlank() && page.url.isNotBlank() -> mapped.copy(
+					url = buildMihonPageUrl(
+						host = MIHON_RESOLVE_HOST,
+						pageUrl = page.url,
+						imageUrl = null,
+						index = index,
+					),
 				)
-			} else {
-				mapped
+
+				!page.imageUrl.isNullOrBlank() && page.url.isNotBlank() && page.url != page.imageUrl -> mapped.copy(
+					url = buildMihonPageUrl(
+						host = MIHON_IMAGE_HOST,
+						pageUrl = page.url,
+						imageUrl = page.imageUrl,
+						index = index,
+					),
+				)
+
+				else -> mapped
 			}
 		}
 	}
 
 	override suspend fun getPageUrl(page: MangaPage): String = withContext(Dispatchers.IO) {
 		val httpSource = mihonSource as? HttpSource ?: return@withContext page.url
-		if (!page.url.startsWith("mihon://resolve")) {
-			return@withContext page.url
+		val ref = page.url.toMihonPageRef() ?: return@withContext page.url
+		when (ref.host) {
+			MIHON_RESOLVE_HOST -> httpSource.getImageUrl(Page(ref.index, ref.pageUrl))
+			MIHON_IMAGE_HOST -> ref.imageUrl ?: page.url
+			else -> page.url
 		}
-		val encoded = page.url.substringAfter("page_url=", "").substringBefore('&')
-		val pageIndex = page.url.substringAfter("&index=", "0").toIntOrNull() ?: 0
-		val resolved = URLDecoder.decode(encoded, "UTF-8")
-		httpSource.getImageUrl(eu.kanade.tachiyomi.source.model.Page(pageIndex, resolved))
 	}
 
 	override suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? {
 		val httpSource = (mihonSource as? HttpSource) ?: return null
-		return runCatching { httpSource.getImageHeaders(imageUrl) }.getOrNull()
+		return runCatching { httpSource.getImageHeaders(page.toMihonPage(imageUrl)) }.getOrNull()
 	}
 
 	/**
@@ -233,14 +252,56 @@ class MihonMangaRepository(
 	override suspend fun getImageStream(pageUrl: String, page: MangaPage): Response? =
 		withContext(Dispatchers.IO) {
 			val httpSource = mihonSource as? HttpSource ?: return@withContext null
-			httpSource.getImage(
-				eu.kanade.tachiyomi.source.model.Page(
-					index = 0,
-					url = pageUrl,
-					imageUrl = pageUrl,
-				)
-			)
+			httpSource.getImage(page.toMihonPage(pageUrl))
 		}
+
+	private fun MangaPage.toMihonPage(imageUrl: String): Page {
+		val ref = url.toMihonPageRef()
+		val pageUrl = ref?.pageUrl ?: imageUrl
+		val index = ref?.index ?: 0
+		return Page(
+			index = index,
+			url = pageUrl,
+			imageUrl = imageUrl,
+		)
+	}
+
+	private fun buildMihonPageUrl(
+		host: String,
+		pageUrl: String,
+		imageUrl: String?,
+		index: Int,
+	): String = android.net.Uri.Builder()
+		.scheme(MIHON_URL_SCHEME)
+		.authority(host)
+		.appendQueryParameter(QUERY_PAGE_URL, pageUrl)
+		.apply {
+			if (!imageUrl.isNullOrBlank()) {
+				appendQueryParameter(QUERY_IMAGE_URL, imageUrl)
+			}
+			appendQueryParameter(QUERY_INDEX, index.toString())
+		}
+		.build()
+		.toString()
+
+	private fun String.toMihonPageRef(): MihonPageRef? {
+		val uri = runCatching { toUri() }.getOrNull() ?: return null
+		if (uri.scheme != MIHON_URL_SCHEME) return null
+		val pageUrl = uri.getQueryParameter(QUERY_PAGE_URL) ?: return null
+		return MihonPageRef(
+			host = uri.host.orEmpty(),
+			pageUrl = pageUrl,
+			imageUrl = uri.getQueryParameter(QUERY_IMAGE_URL),
+			index = uri.getQueryParameter(QUERY_INDEX)?.toIntOrNull() ?: 0,
+		)
+	}
+
+	private data class MihonPageRef(
+		val host: String,
+		val pageUrl: String,
+		val imageUrl: String?,
+		val index: Int,
+	)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		val mihonFilters = try {

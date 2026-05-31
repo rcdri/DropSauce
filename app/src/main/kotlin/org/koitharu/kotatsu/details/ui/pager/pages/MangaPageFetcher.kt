@@ -19,6 +19,7 @@ import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import org.koitharu.kotatsu.core.network.MangaHttpClient
 import org.koitharu.kotatsu.core.network.imageproxy.ImageProxyInterceptor
+import org.koitharu.kotatsu.core.model.isExternalSource
 import org.koitharu.kotatsu.core.parser.MangaRepository
 import org.koitharu.kotatsu.core.util.MimeTypes
 import org.koitharu.kotatsu.core.util.ext.fetch
@@ -44,14 +45,14 @@ class MangaPageFetcher(
 ) : Fetcher {
 
 	override suspend fun fetch(): FetchResult? {
-		if (!page.preview.isNullOrEmpty()) {
+		val repo = mangaRepositoryFactory.create(page.source)
+		if (!page.source.isExternalSource() && !page.preview.isNullOrEmpty()) {
 			runCatchingCancellable {
 				imageLoader.fetch(checkNotNull(page.preview), options)
 			}.onSuccess {
 				return it
 			}
 		}
-		val repo = mangaRepositoryFactory.create(page.source)
 		val pageUrl = repo.getPageUrl(page)
 		val imageHeaders = repo.getImageRequestHeaders(pageUrl, page)
 		if (options.diskCachePolicy.readEnabled) {
