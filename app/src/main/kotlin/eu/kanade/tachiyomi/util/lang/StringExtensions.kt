@@ -4,7 +4,7 @@ import androidx.core.text.parseAsHtml
 import java.nio.charset.StandardCharsets
 import kotlin.math.floor
 
-fun String.chop(count: Int, replacement: String = "..."): String {
+fun String.chop(count: Int, replacement: String = "…"): String {
 	return if (length > count) {
 		take(count - replacement.length) + replacement
 	} else {

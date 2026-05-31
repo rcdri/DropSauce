@@ -53,6 +53,12 @@
     public <init>(...);
     public protected *;
 }
+-keep class tachiyomi.core.common.** { *; }
+-keep interface tachiyomi.core.common.** { *; }
+-keepclassmembers class tachiyomi.core.common.** {
+    public <init>(...);
+    public protected *;
+}
 
 # Injekt dependency injection (used by extensions via injectLazy)
 -keep class uy.kohesive.injekt.** { *; }
@@ -84,6 +90,11 @@
 -keep interface okio.** { *; }
 -dontwarn okio.**
 -dontwarn okhttp3.**
+
+# UniFile (used by Mihon DiskUtil signatures)
+-keep class com.hippo.unifile.** { *; }
+-keep interface com.hippo.unifile.** { *; }
+-dontwarn com.hippo.unifile.**
 
 # Mihon bridge and model classes
 -keep class org.koitharu.kotatsu.mihon.** { *; }
