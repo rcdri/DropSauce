@@ -88,6 +88,13 @@
 						android:paddingVertical="4dp">
 
 						<org.koitharu.kotatsu.core.ui.widgets.ListItemTextView
+							android:id="@+id/button_pick_gallery"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:text="@string/pick_from_gallery"
+							app:drawableStartCompat="@drawable/ic_images" />
+
+						<org.koitharu.kotatsu.core.ui.widgets.ListItemTextView
 							android:id="@+id/button_pick_file"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"

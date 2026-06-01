@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -23,6 +24,7 @@ import org.koitharu.kotatsu.bookmarks.domain.BookmarksRepository
 import org.koitharu.kotatsu.core.model.getPreferredBranch
 import org.koitharu.kotatsu.core.nav.MangaIntent
 import org.koitharu.kotatsu.core.db.MangaDatabase
+import org.koitharu.kotatsu.core.parser.MangaDataRepository
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.ListMode
 import org.koitharu.kotatsu.core.prefs.TriStateOption
@@ -74,6 +76,7 @@ class DetailsViewModel @Inject constructor(
 	private val readingTimeUseCase: ReadingTimeUseCase,
 	statsRepository: StatsRepository,
 	private val database: MangaDatabase,
+	private val mangaDataRepository: MangaDataRepository,
 ) : ChaptersPagesViewModel(
 	settings = settings,
 	interactor = interactor,
@@ -201,6 +204,15 @@ class DetailsViewModel @Inject constructor(
 			val manga = mangaDetails.firstOrNull { it != null && it.isLocal } ?: return@launchJob
 			remoteManga.value = interactor.findRemote(manga.toManga())
 		}
+		// Re-apply the override as soon as it changes in the DB so edits from the override editor
+		// are reflected instantly, without waiting for a manual reload or re-entering the screen.
+		mangaDataRepository.observeOverridesTrigger(emitInitialState = false)
+			.onEach {
+				val current = mangaDetails.value ?: return@onEach
+				mangaDetails.value = current.withOverride(mangaDataRepository.getOverride(mangaId))
+			}
+			.withErrorHandling()
+			.launchIn(viewModelScope + Dispatchers.Default)
 	}
 
 	fun reload() {

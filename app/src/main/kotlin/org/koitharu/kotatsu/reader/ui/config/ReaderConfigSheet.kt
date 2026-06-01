@@ -96,6 +96,7 @@ class ReaderConfigSheet :
         binding.buttonReversed.isChecked = mode == ReaderMode.REVERSED
         binding.buttonWebtoon.isChecked = mode == ReaderMode.WEBTOON
         binding.buttonVertical.isChecked = mode == ReaderMode.VERTICAL
+        updateReadModeTitle()
         binding.switchDoubleReader.isChecked = settings.isReaderDoubleOnLandscape
         binding.switchDoubleReader.isEnabled = mode == ReaderMode.STANDARD || mode == ReaderMode.REVERSED
         binding.switchDoubleFoldable.isChecked = settings.isReaderDoubleOnFoldable
@@ -239,7 +240,24 @@ class ReaderConfigSheet :
         }
         findParentCallback(Callback::class.java)?.onReaderModeChanged(newMode) ?: return
         mode = newMode
+        updateReadModeTitle()
     }
+
+    private fun updateReadModeTitle() {
+        viewBinding?.textViewReadMode?.text = getString(
+            R.string.inline_preference_pattern,
+            getString(R.string.read_mode),
+            getString(mode.titleResId),
+        )
+    }
+
+    private val ReaderMode.titleResId: Int
+        get() = when (this) {
+            ReaderMode.STANDARD -> R.string.standard
+            ReaderMode.REVERSED -> R.string.right_to_left
+            ReaderMode.VERTICAL -> R.string.vertical
+            ReaderMode.WEBTOON -> R.string.webtoon
+        }
 
     private fun observeScreenOrientation() {
         orientationHelper.observeAutoOrientation()

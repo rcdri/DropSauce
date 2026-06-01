@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.view.WindowInsetsCompat
@@ -38,11 +39,22 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 	private val pickCoverFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument(), this)
 	private val pickPageLauncher = registerForActivityResult(PageImagePickContract(), this)
 
+	// The photo picker grants temporary read access (no persistable permission), which lasts long
+	// enough for the cover to be copied into app storage when the override is saved.
+	private val pickCoverGalleryLauncher = registerForActivityResult(
+		ActivityResultContracts.PickVisualMedia(),
+	) { uri ->
+		if (uri != null) {
+			viewModel.updateCover(uri.toString())
+		}
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(ActivityOverrideEditBinding.inflate(layoutInflater))
 		setDisplayHomeAsUp(isEnabled = true, showUpAsClose = true)
 		viewBinding.buttonDone.setOnClickListener(this)
+		viewBinding.buttonPickGallery.setOnClickListener(this)
 		viewBinding.buttonPickFile.setOnClickListener(this)
 		viewBinding.buttonPickPage.setOnClickListener(this)
 		viewBinding.buttonResetCover.setOnClickListener(this)
@@ -84,6 +96,19 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 			materialR.id.text_input_end_icon -> viewBinding.editName.text?.clear()
 
 			R.id.button_reset_cover -> viewModel.updateCover(null)
+			R.id.button_pick_gallery -> {
+				if (!pickCoverGalleryLauncher.tryLaunch(
+						PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+					)
+				) {
+					Snackbar.make(
+						viewBinding.imageViewCover,
+						R.string.operation_not_supported,
+						Snackbar.LENGTH_SHORT,
+					).show()
+				}
+			}
+
 			R.id.button_pick_file -> {
 				if (!pickCoverFileLauncher.tryLaunch(arrayOf("image/*"))) {
 					Snackbar.make(

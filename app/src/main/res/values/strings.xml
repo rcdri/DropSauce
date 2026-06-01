@@ -939,6 +939,7 @@
     <string name="use_default_cover">Use default cover</string>
     <string name="pick_manga_page">Pick manga page</string>
     <string name="pick_custom_file">Pick custom file</string>
+    <string name="pick_from_gallery">Pick from gallery</string>
     <string name="change_cover">Change cover</string>
     <string name="page_switch_timer">The page will switch every ~%d seconds</string>
     <string name="dont_ask_again">Don\'t ask again</string>

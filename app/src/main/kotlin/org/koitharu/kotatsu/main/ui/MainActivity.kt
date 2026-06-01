@@ -105,6 +105,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	private lateinit var fadingAppbarMediator: FadingAppbarMediator
 	private val overflowMenuProviders = mutableListOf<OverflowMenuProviderEntry>()
 	private var isSearchFullyShown = false
+	private val shrinkFabRunnable = Runnable { viewBinding.fab?.shrink() }
 
 	override val appBar: AppBarLayout
 		get() = viewBinding.appbar
@@ -397,10 +398,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		val fab = viewBinding.fab ?: return
 		if (isResumeEnabled && !actionModeDelegate.isActionModeStarted && !isSearchOpened && topFragment is HistoryListFragment) {
 			if (!fab.isVisible) {
+				// Show the full "Continue" label, then collapse to just the icon after a short
+				// delay every time the history page is (re)opened.
+				fab.extend()
 				fab.show()
+				fab.removeCallbacks(shrinkFabRunnable)
+				fab.postDelayed(shrinkFabRunnable, FAB_SHRINK_DELAY_MS)
 			}
 		} else {
 			if (fab.isVisible) {
+				fab.removeCallbacks(shrinkFabRunnable)
 				fab.hide()
 			}
 		}
@@ -525,6 +532,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 		addTransitionListener(listener)
 		awaitClose { removeTransitionListener(listener) }
+	}
+
+	private companion object {
+
+		private const val FAB_SHRINK_DELAY_MS = 1500L
 	}
 }
 

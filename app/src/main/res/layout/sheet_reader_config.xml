@@ -87,11 +87,13 @@
                     android:paddingBottom="12dp">
 
                     <TextView
+                        android:id="@+id/textView_read_mode"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="@dimen/margin_normal"
                         android:text="@string/read_mode"
-                        android:textAppearance="?textAppearanceTitleSmall" />
+                        android:textAppearance="?textAppearanceTitleSmall"
+                        tools:text="Read mode: Standard" />
 
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/checkableGroup"
@@ -110,7 +112,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/standard"
+                    android:contentDescription="@string/standard"
                     app:icon="@drawable/ic_reader_ltr" />
 
                 <com.google.android.material.button.MaterialButton
@@ -119,7 +121,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/right_to_left"
+                    android:contentDescription="@string/right_to_left"
                     app:icon="@drawable/ic_reader_rtl" />
 
                 <com.google.android.material.button.MaterialButton
@@ -128,7 +130,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/vertical"
+                    android:contentDescription="@string/vertical"
                     app:icon="@drawable/ic_reader_vertical" />
 
                 <com.google.android.material.button.MaterialButton
@@ -137,7 +139,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/webtoon"
+                    android:contentDescription="@string/webtoon"
                     app:icon="@drawable/ic_script" />
 
             </com.google.android.material.button.MaterialButtonToggleGroup>

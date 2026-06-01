@@ -1,3 +1,6 @@
 # Android Project
 
-- Always test builds using ./gradlew assembleDebug
+* Always test builds using ./gradlew assembleDebug
+Never push anything to GitHub
+install that debug apk via adb (if there's any)
+

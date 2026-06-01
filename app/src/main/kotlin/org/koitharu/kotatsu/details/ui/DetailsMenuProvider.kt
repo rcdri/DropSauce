@@ -108,7 +108,10 @@ class DetailsMenuProvider(
 			}
 
 			R.id.action_edit_override -> {
-				val intent = AppRouter.overrideEditIntent(activity, manga)
+				// Pass the pristine source manga so the editor always shows the true original
+				// title/cover, independent of any previously saved override.
+				val original = viewModel.getSourceMangaOrNull() ?: manga
+				val intent = AppRouter.overrideEditIntent(activity, original)
 				activityForResultLauncher.launch(intent)
 			}
 

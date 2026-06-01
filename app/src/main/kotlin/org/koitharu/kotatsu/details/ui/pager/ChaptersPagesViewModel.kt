@@ -193,6 +193,8 @@ abstract class ChaptersPagesViewModel(
 
 	fun getMangaOrNull(): Manga? = mangaDetails.value?.toManga()
 
+	fun getSourceMangaOrNull(): Manga? = mangaDetails.value?.sourceManga
+
 	fun requireManga() = mangaDetails.requireValue().toManga()
 
 	fun markChapterAsCurrent(chapterId: Long) {

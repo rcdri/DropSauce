@@ -32,6 +32,13 @@ data class MangaDetails(
     val id: Long
         get() = manga.id
 
+    /**
+     * The pristine manga from the source, without any user override applied. Use this (rather than
+     * [toManga]) when the genuine original title/cover is required, e.g. in the override editor.
+     */
+    val sourceManga: Manga
+        get() = manga
+
     val allChapters: List<MangaChapter> by lazy { mergeChapters() }
 
     val chapters: Map<String?, List<MangaChapter>> by lazy {
@@ -76,6 +83,8 @@ data class MangaDetails(
     }
 
     fun toManga() = mergedManga
+
+    fun withOverride(override: MangaOverride?) = copy(override = override)
 
 	fun coverUrl(preferLarge: Boolean = false): String? =
 		override?.coverUrl
