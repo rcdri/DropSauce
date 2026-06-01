@@ -133,7 +133,7 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 		viewBinding.layoutName.placeholderText = manga.title
 		if (viewBinding.editName.tag == null) {
 			viewBinding.editName.setText(override.title)
-			viewBinding.editName.tag = override.title
+			viewBinding.editName.tag = true  // Sentinel: field has been initialised; don't overwrite user edits on re-emit.
 		}
 		val hasCustomCover = !override.coverUrl.isNullOrEmpty()
 		viewBinding.buttonResetCover.isEnabled = hasCustomCover

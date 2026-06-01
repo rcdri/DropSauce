@@ -184,7 +184,13 @@ abstract class MangaListFragment :
 
 	@CallSuper
 	override fun onRefresh() {
-		requireViewBinding().swipeRefreshLayout.isRefreshing = true
+		val swipe = requireViewBinding().swipeRefreshLayout
+		if (viewModel.isLoading.value) {
+			// Already loading — don't stack a second refresh; just clear the visual indicator.
+			swipe.isRefreshing = false
+			return
+		}
+		swipe.isRefreshing = true
 		viewModel.onRefresh()
 	}
 
@@ -210,8 +216,9 @@ abstract class MangaListFragment :
 
 	@CallSuper
 	protected open fun onLoadingStateChanged(isLoading: Boolean) {
-		requireViewBinding().swipeRefreshLayout.isEnabled = requireViewBinding().swipeRefreshLayout.isRefreshing ||
-			isSwipeRefreshEnabled && !isLoading
+		// Only clear the spinner when loading finishes. Never touch isEnabled here:
+		// setting it to false mid-drag interrupts the gesture and leaves the indicator
+		// stuck at the top. Double-refresh while loading is already blocked in onRefresh().
 		if (!isLoading) {
 			requireViewBinding().swipeRefreshLayout.isRefreshing = false
 		}

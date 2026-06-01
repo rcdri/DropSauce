@@ -44,7 +44,10 @@ class OverrideConfigViewModel @Inject constructor(
 
 	init {
 		launchLoadingJob(Dispatchers.Default) {
-			data.value = manga to (dataRepository.getOverride(manga.id) ?: emptyOverride())
+			// Always use the pristine DB-stored manga so that the editor shows the true
+			// source title/cover, regardless of whether the caller already had an override applied.
+			val sourceManga = dataRepository.findMangaById(manga.id, false) ?: manga
+			data.value = sourceManga to (dataRepository.getOverride(manga.id) ?: emptyOverride())
 		}
 	}
 

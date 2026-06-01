@@ -39,6 +39,41 @@
 			android:paddingTop="@dimen/margin_normal"
 			android:paddingBottom="@dimen/screen_padding">
 
+			<!-- Name field at the top so the keyboard doesn't cover it -->
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/layout_name"
+				style="?textInputOutlinedStyle"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="@dimen/margin_small"
+				app:endIconContentDescription="@string/reset"
+				app:endIconDrawable="@drawable/ic_revert"
+				app:endIconMode="custom">
+
+				<com.google.android.material.textfield.TextInputEditText
+					android:id="@+id/edit_name"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:hint="@string/name"
+					android:imeOptions="actionDone"
+					android:inputType="textCapSentences"
+					android:maxLength="120"
+					tools:text="@tools:sample/lorem[3]" />
+
+			</com.google.android.material.textfield.TextInputLayout>
+
+			<TextView
+				android:id="@+id/textView_original_name"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="@dimen/margin_normal"
+				android:paddingHorizontal="@dimen/margin_small"
+				android:textAppearance="?attr/textAppearanceBodySmall"
+				android:textColor="?colorOnSurfaceVariant"
+				android:visibility="gone"
+				tools:text="Original name: One Piece"
+				tools:visibility="visible" />
+
 			<!-- Cover preview hero (floating, no wrapper) -->
 			<org.koitharu.kotatsu.image.ui.CoverImageView
 				android:id="@+id/imageView_cover"
@@ -153,48 +188,6 @@
 				</LinearLayout>
 
 			</com.google.android.material.card.MaterialCardView>
-
-			<TextView
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="@dimen/margin_normal"
-				android:layout_marginBottom="@dimen/margin_small"
-				android:paddingHorizontal="@dimen/margin_small"
-				android:text="@string/name"
-				android:textAppearance="?textAppearanceTitleSmall" />
-
-			<com.google.android.material.textfield.TextInputLayout
-				android:id="@+id/layout_name"
-				style="?textInputOutlinedStyle"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				app:endIconContentDescription="@string/reset"
-				app:endIconDrawable="@drawable/ic_revert"
-				app:endIconMode="custom">
-
-				<com.google.android.material.textfield.TextInputEditText
-					android:id="@+id/edit_name"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:hint="@string/name"
-					android:imeOptions="actionDone"
-					android:inputType="textCapSentences"
-					android:maxLength="120"
-					tools:text="@tools:sample/lorem[3]" />
-
-			</com.google.android.material.textfield.TextInputLayout>
-
-			<TextView
-				android:id="@+id/textView_original_name"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="@dimen/margin_small"
-				android:paddingHorizontal="@dimen/margin_small"
-				android:textAppearance="?attr/textAppearanceBodySmall"
-				android:textColor="?colorOnSurfaceVariant"
-				android:visibility="gone"
-				tools:text="Original name: One Piece"
-				tools:visibility="visible" />
 
 			<!-- Tip -->
 			<LinearLayout
