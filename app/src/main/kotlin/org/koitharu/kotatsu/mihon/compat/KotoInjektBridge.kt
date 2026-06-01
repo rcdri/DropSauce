@@ -13,7 +13,10 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
+import eu.kanade.tachiyomi.network.AndroidCookieJar
+import okhttp3.Cookie
 import okhttp3.CookieJar
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -38,10 +41,28 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * A [CookieJar] that writes to both [primary] and [secondary] on every response, so that
+ * extensions injecting [AndroidCookieJar] see the same cookies as our OkHttp client.
+ * Request cookies are read only from [primary] to keep our CF/proxy logic unchanged.
+ */
+private class SyncCookieJar(
+	private val primary: CookieJar,
+	private val secondary: AndroidCookieJar,
+) : CookieJar {
+	override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+		primary.saveFromResponse(url, cookies)
+		secondary.saveFromResponse(url, cookies)
+	}
+
+	override fun loadForRequest(url: HttpUrl): List<Cookie> = primary.loadForRequest(url)
+}
+
 class KotoNetworkHelper(
 	private val baseClient: OkHttpClient,
 	private val mutableCookieJar: MutableCookieJar,
 	private val webViewExecutor: WebViewExecutor? = null,
+	private val androidCookieJar: AndroidCookieJar? = null,
 ) : NetworkHelper() {
 
 	/** Expose the cookie jar so extensions can read/write session cookies. */
@@ -54,7 +75,13 @@ class KotoNetworkHelper(
 		connectTimeout(baseClient.connectTimeoutMillis.toLong(), java.util.concurrent.TimeUnit.MILLISECONDS)
 		readTimeout(baseClient.readTimeoutMillis.toLong(), java.util.concurrent.TimeUnit.MILLISECONDS)
 		writeTimeout(baseClient.writeTimeoutMillis.toLong(), java.util.concurrent.TimeUnit.MILLISECONDS)
-		cookieJar(baseClient.cookieJar)
+		// Use a bridge cookie jar so that every Set-Cookie response is mirrored to
+		// AndroidCookieJar (Android's system CookieManager). Extensions that do
+		// `injectLazy<AndroidCookieJar>()` then see the same cookies our OkHttp client uses.
+		cookieJar(
+			if (androidCookieJar != null) SyncCookieJar(baseClient.cookieJar, androidCookieJar)
+			else baseClient.cookieJar
+		)
 		dns(baseClient.dns)
 		cache(baseClient.cache)
 		dispatcher(baseClient.dispatcher)
@@ -290,11 +317,15 @@ class KotoInjektBridge @Inject constructor(
 	@Volatile
 	private var initialized = false
 
+	// Single AndroidCookieJar instance shared across Injekt and KotoNetworkHelper.
+	// It wraps Android's system CookieManager so extensions and WebViews share one cookie store.
+	private val androidCookieJar = AndroidCookieJar()
+
 	@Synchronized
 	fun initialize() {
 		if (initialized) return
 		val application = context.applicationContext as Application
-		val networkHelper = KotoNetworkHelper(httpClient, cookieJar, webViewExecutor)
+		val networkHelper = KotoNetworkHelper(httpClient, cookieJar, webViewExecutor, androidCookieJar)
 		val json = Json {
 			ignoreUnknownKeys = true
 			explicitNulls = false
@@ -315,6 +346,10 @@ class KotoInjektBridge @Inject constructor(
 				addSingletonFactory<NetworkHelper> { networkHelper }
 				addSingletonFactory<OkHttpClient> { httpClient }
 				addSingletonFactory<CookieJar> { cookieJar }
+				// AndroidCookieJar wraps Android's system CookieManager.  Extensions that do
+				// `val cookieManager: AndroidCookieJar by injectLazy()` (e.g. for custom CF
+				// interceptors) need this registration or they crash with a missing-binding error.
+				addSingletonFactory<AndroidCookieJar> { androidCookieJar }
 				addSingletonFactory<Json> { json }
 				addSingletonFactory<StringFormat> { json }
 				addSingletonFactory<SerialFormat> { json }
@@ -322,8 +357,9 @@ class KotoInjektBridge @Inject constructor(
 				addSingletonFactory<XML> { xml }
 				// ProtoBuf serialization (used by extensions that use protobuf APIs)
 				addSingletonFactory<ProtoBuf> { ProtoBuf }
-				// JavaScript engine — delegates to WebViewExecutor for proxy-aware execution
-				addSingletonFactory<JavaScriptEngine> { JavaScriptEngine(context, webViewExecutor) }
+				// JavaScript engine — uses QuickJS for synchronous, thread-safe JS evaluation.
+				// Context and executor params are kept for Injekt/API compat but QuickJS ignores them.
+				addSingletonFactory<JavaScriptEngine> { JavaScriptEngine(context) }
 			}
 		})
 		initialized = true
