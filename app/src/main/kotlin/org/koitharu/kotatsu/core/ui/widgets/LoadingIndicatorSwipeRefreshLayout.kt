@@ -96,7 +96,7 @@ class LoadingIndicatorSwipeRefreshLayout @JvmOverloads constructor(
 		) {
 			// User lifted finger; schedule a hard hide after the cancel animation.
 			removeCallbacks(forceHideRunnable)
-			postDelayed(forceHideRunnable, 300L)
+			postDelayed(forceHideRunnable, 500L)
 		}
 		return result
 	}
@@ -112,7 +112,7 @@ class LoadingIndicatorSwipeRefreshLayout @JvmOverloads constructor(
 		super.onStopNestedScroll(target, type)
 		if (!isRefreshing) {
 			removeCallbacks(forceHideRunnable)
-			postDelayed(forceHideRunnable, 300L)
+			postDelayed(forceHideRunnable, 500L)
 		}
 	}
 
