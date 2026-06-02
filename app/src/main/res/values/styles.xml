@@ -178,17 +178,22 @@
 		<item name="iconTint">@color/sel_toggle_button_fg</item>
 	</style>
 
-	<!-- Reader read-mode segmented buttons: compact, icon-only segments of equal height.
-	     The name of the selected mode is shown next to the "Read mode" label instead. -->
 	<style name="Widget.Kotatsu.ToggleButton.Vertical.ReaderMode">
-		<item name="android:minHeight">48dp</item>
-		<item name="iconGravity">textStart</item>
+		<item name="android:minHeight">64dp</item>
+		<item name="iconGravity">top</item>
 		<item name="iconSize">24dp</item>
-		<item name="iconPadding">0dp</item>
-		<item name="android:paddingStart">2dp</item>
-		<item name="android:paddingEnd">2dp</item>
-		<item name="android:paddingTop">10dp</item>
+		<item name="iconPadding">2dp</item>
+		<item name="android:paddingStart">6dp</item>
+		<item name="android:paddingEnd">6dp</item>
+		<item name="android:paddingTop">12dp</item>
 		<item name="android:paddingBottom">10dp</item>
+		<item name="android:textAlignment">center</item>
+		<item name="android:singleLine">false</item>
+		<item name="android:elegantTextHeight">false</item>
+	</style>
+
+	<style name="Widget.Kotatsu.MaterialButtonToggleGroup.RectEdges" parent="Widget.Material3Expressive.MaterialButtonToggleGroup">
+		<item name="shapeAppearance">@xml/kotatsu_m3e_button_group_outer_shape</item>
 	</style>
 
 	<!-- Reader options sheet: round (pill) action buttons with the label beside the icon

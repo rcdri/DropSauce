@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.CompoundButton
@@ -11,6 +12,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,6 +24,7 @@ import org.koitharu.kotatsu.core.util.ext.consume
 import org.koitharu.kotatsu.core.util.ext.setValueRounded
 import org.koitharu.kotatsu.core.util.progress.IntPercentLabelFormatter
 import org.koitharu.kotatsu.databinding.SheetListModeBinding
+import com.google.android.material.R as materialR
 
 @AndroidEntryPoint
 class ListConfigBottomSheet :
@@ -43,10 +47,7 @@ class ListConfigBottomSheet :
 		binding.buttonListDetailed.isChecked = mode == ListMode.DETAILED_LIST
 		binding.buttonGrid.isChecked = mode == ListMode.GRID
 		binding.buttonCoverOnly.isChecked = mode == ListMode.COVER_ONLY
-		val isGridMode = mode == ListMode.GRID || mode == ListMode.COVER_ONLY
-		binding.textViewGridTitle.isVisible = isGridMode
-		binding.sliderGrid.isVisible = isGridMode
-		binding.switchTitleOverCover.isEnabled = isGridMode
+		binding.adjustGridOptions(mode, withAnimation = false)
 		binding.switchTitleOverCover.isChecked = viewModel.isTitleOverCover
 		binding.switchTitleOverCover.setOnCheckedChangeListener(this)
 
@@ -100,11 +101,29 @@ class ListConfigBottomSheet :
 			R.id.button_cover_only -> ListMode.COVER_ONLY
 			else -> return
 		}
-		val isGridMode = mode == ListMode.GRID || mode == ListMode.COVER_ONLY
-		requireViewBinding().textViewGridTitle.isVisible = isGridMode
-		requireViewBinding().sliderGrid.isVisible = isGridMode
-		requireViewBinding().switchTitleOverCover.isEnabled = isGridMode
+		requireViewBinding().adjustGridOptions(mode, withAnimation = true)
 		viewModel.listMode = mode
+	}
+
+	private fun SheetListModeBinding.adjustGridOptions(mode: ListMode, withAnimation: Boolean) {
+		val isGridMode = mode == ListMode.GRID || mode == ListMode.COVER_ONLY
+		val needTransition = withAnimation && (
+			isGridMode != textViewGridTitle.isVisible ||
+				isGridMode != sliderGrid.isVisible
+			)
+		if (needTransition) {
+			val transition = AutoTransition().apply {
+				duration = 250L
+				interpolator = AccelerateDecelerateInterpolator()
+			}
+			val sceneRoot = dialog?.findViewById<ViewGroup>(materialR.id.coordinator)
+				?: dialog?.findViewById<ViewGroup>(materialR.id.design_bottom_sheet)
+				?: root
+			TransitionManager.beginDelayedTransition(sceneRoot, transition)
+		}
+		textViewGridTitle.isVisible = isGridMode
+		sliderGrid.isVisible = isGridMode
+		switchTitleOverCover.isEnabled = isGridMode
 	}
 
 	override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
