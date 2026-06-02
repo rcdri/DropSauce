@@ -402,18 +402,18 @@
 					<androidx.recyclerview.widget.RecyclerView
 						android:id="@+id/recyclerView_related"
 						android:layout_width="0dp"
-						android:layout_height="wrap_content"
+						android:layout_height="200dp"
 						android:layout_marginBottom="6dp"
+						android:clipChildren="false"
 						android:clipToPadding="false"
 						android:nestedScrollingEnabled="false"
 						android:orientation="horizontal"
 						android:paddingStart="12dp"
 						android:paddingEnd="12dp"
-						app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
 						app:layout_constraintEnd_toEndOf="parent"
 						app:layout_constraintStart_toStartOf="parent"
 						app:layout_constraintTop_toBottomOf="@id/textView_related_title"
-						tools:listitem="@layout/item_manga_grid" />
+						tools:listitem="@layout/item_manga_carousel" />
 
 					<androidx.constraintlayout.widget.Group
 						android:id="@+id/group_related"

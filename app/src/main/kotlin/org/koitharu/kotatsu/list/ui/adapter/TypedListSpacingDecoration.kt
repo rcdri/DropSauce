@@ -49,6 +49,8 @@ class TypedListSpacingDecoration(
 
 			ListItemType.PAGE_THUMB -> outRect.set(spacingNormal)
 			ListItemType.MANGA_GRID -> outRect.set(0)
+			// Carousel items carry their own margins in the item layout.
+			ListItemType.MANGA_CAROUSEL -> outRect.set(0)
 
 			ListItemType.EXPLORE_BUTTONS -> outRect.set(spacingNormal)
 

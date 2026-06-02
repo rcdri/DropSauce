@@ -14,13 +14,14 @@ class ExploreAdapter(
 	listener: ExploreListEventListener,
 	clickListener: OnListItemClickListener<MangaSourceItem>,
 	mangaClickListener: OnListItemClickListener<Manga>,
+	onToggleSuggestions: () -> Unit,
 ) : BaseListAdapter<ListModel>() {
 
 	init {
 		addDelegate(ListItemType.EXPLORE_BUTTONS, exploreButtonsAD(listener))
 		addDelegate(
 			ListItemType.EXPLORE_SUGGESTION,
-			exploreRecommendationItemAD(mangaClickListener),
+			exploreRecommendationItemAD(mangaClickListener, listener, onToggleSuggestions),
 		)
 		addDelegate(ListItemType.HEADER, listHeaderAD(listener))
 		addDelegate(ListItemType.EXPLORE_SOURCE_LIST, exploreSourceListItemAD(clickListener))

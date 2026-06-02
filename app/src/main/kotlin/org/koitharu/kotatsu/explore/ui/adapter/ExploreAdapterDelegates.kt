@@ -4,6 +4,11 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
+import androidx.core.view.isVisible
+import com.google.android.material.carousel.CarouselLayoutManager
+import com.google.android.material.carousel.CarouselSnapHelper
+import com.google.android.material.carousel.MaskableFrameLayout
+import com.google.android.material.carousel.MultiBrowseCarouselStrategy
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.getSummary
@@ -13,15 +18,13 @@ import org.koitharu.kotatsu.core.ui.BaseListAdapter
 import org.koitharu.kotatsu.core.ui.list.AdapterDelegateClickListenerAdapter
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.util.ext.drawableStart
-import org.koitharu.kotatsu.core.util.ext.recyclerView
 import org.koitharu.kotatsu.core.util.ext.setProgressIcon
 import org.koitharu.kotatsu.core.util.ext.setTooltipCompat
-import org.koitharu.kotatsu.core.util.ext.textAndVisible
 import org.koitharu.kotatsu.databinding.ItemExploreButtonsBinding
 import org.koitharu.kotatsu.databinding.ItemExploreSourceGridBinding
 import org.koitharu.kotatsu.databinding.ItemExploreSourceListBinding
+import org.koitharu.kotatsu.databinding.ItemMangaCarouselBinding
 import org.koitharu.kotatsu.databinding.ItemRecommendationBinding
-import org.koitharu.kotatsu.databinding.ItemRecommendationMangaBinding
 import org.koitharu.kotatsu.explore.ui.model.ExploreButtons
 import org.koitharu.kotatsu.explore.ui.model.MangaSourceItem
 import org.koitharu.kotatsu.explore.ui.model.RecommendationsItem
@@ -53,33 +56,52 @@ fun exploreButtonsAD(
 
 fun exploreRecommendationItemAD(
 	itemClickListener: OnListItemClickListener<Manga>,
+	moreClickListener: View.OnClickListener,
+	onToggle: () -> Unit,
 ) = adapterDelegateViewBinding<RecommendationsItem, ListModel, ItemRecommendationBinding>(
 	{ layoutInflater, parent -> ItemRecommendationBinding.inflate(layoutInflater, parent, false) },
 ) {
 
 	val adapter = BaseListAdapter<MangaCompactListModel>()
-		.addDelegate(ListItemType.MANGA_LIST, recommendationMangaItemAD(itemClickListener))
-	binding.pager.adapter = adapter
-	binding.pager.recyclerView?.isNestedScrollingEnabled = false
-	binding.dots.bindToViewPager(binding.pager)
+		.addDelegate(ListItemType.MANGA_CAROUSEL, recommendationCarouselItemAD(itemClickListener))
+	with(binding.recyclerView) {
+		this.adapter = adapter
+		layoutManager = CarouselLayoutManager(MultiBrowseCarouselStrategy())
+		isNestedScrollingEnabled = false
+		if (onFlingListener == null) {
+			CarouselSnapHelper().attachToRecyclerView(this)
+		}
+	}
+	binding.buttonMore.setOnClickListener(moreClickListener)
+	binding.layoutHeader.setOnClickListener { onToggle() }
 
 	bind {
 		adapter.items = item.manga
+		binding.recyclerView.isVisible = item.isExpanded
+		binding.imageViewChevron.rotation = if (item.isExpanded) 180f else 0f
 	}
 }
 
-fun recommendationMangaItemAD(
+fun recommendationCarouselItemAD(
 	itemClickListener: OnListItemClickListener<Manga>,
-) = adapterDelegateViewBinding<MangaCompactListModel, MangaCompactListModel, ItemRecommendationMangaBinding>(
-	{ layoutInflater, parent -> ItemRecommendationMangaBinding.inflate(layoutInflater, parent, false) },
+) = adapterDelegateViewBinding<MangaCompactListModel, MangaCompactListModel, ItemMangaCarouselBinding>(
+	{ layoutInflater, parent -> ItemMangaCarouselBinding.inflate(layoutInflater, parent, false) },
 ) {
 
 	binding.root.setOnClickListener { v ->
 		itemClickListener.onItemClick(item.manga, v)
 	}
+	(itemView as? MaskableFrameLayout)?.setOnMaskChangedListener { maskRect ->
+		val w = itemView.width.toFloat()
+		val ratio = if (w > 0f) maskRect.width() / w else 1f
+		binding.textViewTitle.alpha = ((ratio - 0.35f) / 0.4f).coerceIn(0f, 1f)
+	}
+	binding.progressView.isVisible = false
+	binding.iconsView.isVisible = false
+	binding.badge.isVisible = false
+
 	bind {
 		binding.textViewTitle.text = item.manga.title
-		binding.textViewSubtitle.textAndVisible = item.subtitle
 		binding.imageViewCover.setImageAsync(item.manga.coverUrl, item.manga.source)
 	}
 }

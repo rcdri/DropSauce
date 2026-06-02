@@ -110,10 +110,12 @@ import org.koitharu.kotatsu.details.ui.scrobbling.ScrollingInfoAdapter
 import org.koitharu.kotatsu.download.ui.worker.DownloadStartedObserver
 import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.list.ui.adapter.ListItemType
-import org.koitharu.kotatsu.list.ui.adapter.mangaGridItemAD
+import org.koitharu.kotatsu.list.ui.adapter.mangaCarouselItemAD
 import org.koitharu.kotatsu.list.ui.model.ListModel
 import org.koitharu.kotatsu.list.ui.model.MangaListModel
-import org.koitharu.kotatsu.list.ui.size.StaticItemSizeResolver
+import com.google.android.material.carousel.CarouselLayoutManager
+import com.google.android.material.carousel.CarouselSnapHelper
+import com.google.android.material.carousel.MultiBrowseCarouselStrategy
 import org.koitharu.kotatsu.main.ui.owners.BottomSheetOwner
 import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
@@ -437,11 +439,13 @@ class DetailsActivity :
 		@Suppress("UNCHECKED_CAST")
 		val adapter = (rv.adapter as? BaseListAdapter<ListModel>) ?: BaseListAdapter<ListModel>()
 			.addDelegate(
-				ListItemType.MANGA_GRID,
-				mangaGridItemAD(
-					sizeResolver = StaticItemSizeResolver(resources.getDimensionPixelSize(R.dimen.smaller_grid_width)),
-				) { item, _ -> router.openDetails(item.toMangaWithOverride()) },
-			).also { rv.adapter = it }
+				ListItemType.MANGA_CAROUSEL,
+				mangaCarouselItemAD { item, _ -> router.openDetails(item.toMangaWithOverride()) },
+			).also {
+				rv.adapter = it
+				rv.layoutManager = CarouselLayoutManager(MultiBrowseCarouselStrategy())
+				CarouselSnapHelper().attachToRecyclerView(rv)
+			}
 		adapter.items = related
 		viewBinding.groupRelated.isVisible = true
 	}
