@@ -5,6 +5,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.exceptions.UnsupportedSourceException
 import org.koitharu.kotatsu.core.exceptions.resolve.ErrorObserver
 import org.koitharu.kotatsu.core.exceptions.resolve.ExceptionResolver
+import org.koitharu.kotatsu.core.exceptions.resolve.addCopyErrorAction
 import org.koitharu.kotatsu.core.util.ext.getDisplayMessage
 import org.koitharu.kotatsu.core.util.ext.isNetworkError
 import org.koitharu.kotatsu.core.util.ext.isSerializable
@@ -53,6 +54,9 @@ class DetailsErrorObserver(
 					viewModel.reload()
 				}
 			}
+		}
+		if (value.isSerializable()) {
+			snackbar.addCopyErrorAction(value)
 		}
 		snackbar.show()
 	}

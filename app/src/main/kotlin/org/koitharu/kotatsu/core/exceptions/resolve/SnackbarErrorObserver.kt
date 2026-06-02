@@ -41,6 +41,9 @@ class SnackbarErrorObserver(
 				}
 			}
 		}
+		if (value.isSerializable()) {
+			snackbar.addCopyErrorAction(value)
+		}
 		snackbar.show()
 	}
 }

@@ -160,6 +160,7 @@
     <string name="app_version">Version %s</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="no_update_available">No updates available</string>
+    <string name="copy">Copy</string>
     <string name="right_to_left">Right-to-left</string>
     <string name="r_to_l">R-to-L</string>
     <string name="create_category">New category</string>

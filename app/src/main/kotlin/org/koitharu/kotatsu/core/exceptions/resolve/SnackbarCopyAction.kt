@@ -1,0 +1,59 @@
+package org.koitharu.kotatsu.core.exceptions.resolve
+
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
+import androidx.appcompat.widget.AppCompatButton
+import com.google.android.material.snackbar.Snackbar
+import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.util.ext.copyToClipboard
+import com.google.android.material.R as materialR
+
+private const val COPY_ERROR_ACTION_TAG = "copy_error_action"
+
+fun Snackbar.addCopyErrorAction(error: Throwable): Snackbar {
+	val snackbarView = view as? ViewGroup ?: return this
+	val content = snackbarView.findFirstChildViewGroup() ?: return this
+	if (content.findViewWithTag<View>(COPY_ERROR_ACTION_TAG) != null) {
+		return this
+	}
+	val originalAction = content.findViewById<Button>(materialR.id.snackbar_action)
+	val copyAction = AppCompatButton(context, null, materialR.attr.snackbarButtonStyle).apply {
+		tag = COPY_ERROR_ACTION_TAG
+		text = context.getString(R.string.copy)
+		isAllCaps = originalAction?.isAllCaps ?: true
+		minWidth = 0
+		minHeight = originalAction?.minHeight ?: 0
+		minimumWidth = 0
+		minimumHeight = originalAction?.minimumHeight ?: 0
+		originalAction?.let {
+			setTextColor(it.currentTextColor)
+			typeface = it.typeface
+		}
+		setOnClickListener {
+			context.copyToClipboard(context.getString(R.string.error), error.stackTraceToString())
+			dismiss()
+		}
+	}
+	val layoutParams = originalAction?.layoutParams?.let {
+		when (it) {
+			is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(it)
+			is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(it)
+			else -> ViewGroup.LayoutParams(it)
+		}
+	} ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+	val index = originalAction?.let { content.indexOfChild(it) + 1 } ?: content.childCount
+	content.addView(copyAction, index, layoutParams)
+	return this
+}
+
+private fun ViewGroup.findFirstChildViewGroup(): ViewGroup? {
+	for (i in 0 until childCount) {
+		val child = getChildAt(i)
+		if (child is ViewGroup) {
+			return child
+		}
+	}
+	return null
+}
