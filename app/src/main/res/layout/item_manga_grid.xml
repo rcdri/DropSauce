@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- App-wide manga card (Material 3 Expressive). The cover lives in a rounded card; the title can
+     either be overlaid on a bottom scrim inside the cover (textView_title_overlay) or placed below
+     the cover (textView_title), toggled per the "title over cover" setting. The root width and the
+     overlay title appearance are applied by ItemSizeResolver. -->
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,40 +10,43 @@
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:layout_margin="2dp"
-	android:background="@drawable/custom_selectable_item_background"
 	android:clipChildren="false"
 	android:orientation="vertical"
-	android:padding="6dp"
 	tools:layout_width="140dp">
 
-	<FrameLayout
+	<com.google.android.material.card.MaterialCardView
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content">
+		android:layout_height="wrap_content"
+		android:duplicateParentState="true"
+		android:foreground="?attr/selectableItemBackground"
+		app:cardBackgroundColor="?attr/colorSurfaceContainer"
+		app:cardCornerRadius="16dp"
+		app:cardElevation="0dp">
 
 		<org.koitharu.kotatsu.image.ui.CoverImageView
 			android:id="@+id/imageView_cover"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:background="?colorSurfaceContainer"
-			android:orientation="horizontal"
+			android:background="?attr/colorSurfaceContainer"
+			android:scaleType="centerCrop"
 			app:allowRgb565="true"
-			app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Kotatsu.Cover"
 			tools:ignore="ContentDescription"
 			tools:src="@tools:sample/backgrounds/scenic[5]" />
 
-		<org.koitharu.kotatsu.history.ui.util.ReadingProgressView
-			android:id="@+id/progressView"
-			android:layout_width="@dimen/card_indicator_size"
-			android:layout_height="@dimen/card_indicator_size"
-			android:layout_gravity="bottom|end"
-			android:layout_margin="@dimen/card_indicator_offset" />
+		<View
+			android:id="@+id/view_scrim"
+			android:layout_width="match_parent"
+			android:layout_height="104dp"
+			android:layout_gravity="bottom"
+			tools:background="#99000000" />
 
 		<org.koitharu.kotatsu.core.ui.widgets.IconsView
 			android:id="@+id/iconsView"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_gravity="top|start"
-			android:layout_marginTop="10dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
 			android:background="@drawable/bg_list_icons"
 			android:orientation="horizontal"
 			android:padding="4dp"
@@ -57,7 +64,28 @@
 			tools:number="8"
 			tools:visibility="visible" />
 
-	</FrameLayout>
+		<TextView
+			android:id="@+id/textView_title_overlay"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_gravity="bottom|start"
+			android:layout_marginStart="10dp"
+			android:layout_marginEnd="44dp"
+			android:layout_marginBottom="8dp"
+			android:elegantTextHeight="false"
+			android:ellipsize="end"
+			android:maxLines="2"
+			android:textAppearance="@style/TextAppearance.Kotatsu.GridTitle.Overlay"
+			tools:text="@tools:sample/lorem" />
+
+		<org.koitharu.kotatsu.history.ui.util.ReadingProgressView
+			android:id="@+id/progressView"
+			android:layout_width="@dimen/card_indicator_size"
+			android:layout_height="@dimen/card_indicator_size"
+			android:layout_gravity="bottom|end"
+			android:layout_margin="@dimen/card_indicator_offset" />
+
+	</com.google.android.material.card.MaterialCardView>
 
 	<TextView
 		android:id="@+id/textView_title"
@@ -65,12 +93,11 @@
 		android:layout_height="wrap_content"
 		android:elegantTextHeight="false"
 		android:ellipsize="end"
-		android:lines="2"
-		android:paddingVertical="4dp"
-		android:textAppearance="?attr/textAppearanceTitleSmall"
+		android:maxLines="2"
+		android:paddingHorizontal="2dp"
+		android:paddingVertical="6dp"
+		android:textAppearance="@style/TextAppearance.Kotatsu.GridTitle"
 		android:textColor="?android:attr/textColorPrimary"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/thumbnail"
 		tools:text="@tools:sample/lorem" />
 
 </LinearLayout>

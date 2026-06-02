@@ -14,6 +14,7 @@ data class MangaGridModel(
 	val isFavorite: Boolean,
 	val isSaved: Boolean,
 	val isTitleHidden: Boolean = false,
+	val isTitleOverCover: Boolean = true,
 ) : MangaListModel() {
 
 	override fun getChangePayload(previousState: ListModel): Any? = when {
@@ -22,7 +23,8 @@ data class MangaGridModel(
 		previousState.progress != progress -> PAYLOAD_PROGRESS_CHANGED
 		previousState.isFavorite != isFavorite ||
 			previousState.isSaved != isSaved ||
-			previousState.isTitleHidden != isTitleHidden -> PAYLOAD_ANYTHING_CHANGED
+			previousState.isTitleHidden != isTitleHidden ||
+			previousState.isTitleOverCover != isTitleOverCover -> PAYLOAD_ANYTHING_CHANGED
 
 		else -> super.getChangePayload(previousState)
 	}

@@ -1,10 +1,14 @@
 package org.koitharu.kotatsu.list.ui.adapter
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.ui.list.AdapterDelegateClickListenerAdapter
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
+import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.setTooltipCompat
 import org.koitharu.kotatsu.databinding.ItemMangaGridBinding
 import org.koitharu.kotatsu.list.ui.ListModelDiffCallback.Companion.PAYLOAD_PROGRESS_CHANGED
@@ -12,6 +16,7 @@ import org.koitharu.kotatsu.list.ui.model.ListModel
 import org.koitharu.kotatsu.list.ui.model.MangaGridModel
 import org.koitharu.kotatsu.list.ui.model.MangaListModel
 import org.koitharu.kotatsu.list.ui.size.ItemSizeResolver
+import androidx.appcompat.R as appcompatR
 
 fun mangaGridItemAD(
 	sizeResolver: ItemSizeResolver,
@@ -21,12 +26,27 @@ fun mangaGridItemAD(
 ) {
 
 	AdapterDelegateClickListenerAdapter(this, clickListener).attach(itemView)
-	sizeResolver.attachToView(itemView, binding.textViewTitle, binding.progressView)
+	// The overlay title is the one that adapts to the grid size (white, on the scrim).
+	sizeResolver.attachToView(itemView, binding.textViewTitleOverlay, binding.progressView)
+	// Title scrim: a fading layer of a dark shade of the theme accent, so the overlaid title
+	// stays readable over any cover while keeping the app's colour identity.
+	val darkAccent = ColorUtils.blendARGB(context.getThemeColor(appcompatR.attr.colorPrimary), Color.BLACK, 0.72f)
+	binding.viewScrim.background = GradientDrawable(
+		GradientDrawable.Orientation.BOTTOM_TOP,
+		intArrayOf(
+			ColorUtils.setAlphaComponent(darkAccent, 0xE6),
+			ColorUtils.setAlphaComponent(darkAccent, 0x00),
+		),
+	)
 
 	bind { payloads ->
 		itemView.setTooltipCompat(item.getSummary(context))
+		val isTitleOverCover = item.isTitleOverCover && !item.isTitleHidden
+		binding.textViewTitleOverlay.text = item.title
 		binding.textViewTitle.text = item.title
-		binding.textViewTitle.isVisible = !item.isTitleHidden
+		binding.textViewTitleOverlay.isVisible = isTitleOverCover
+		binding.viewScrim.isVisible = isTitleOverCover
+		binding.textViewTitle.isVisible = !item.isTitleHidden && !isTitleOverCover
 		binding.progressView.setProgress(item.progress, PAYLOAD_PROGRESS_CHANGED in payloads)
 		with(binding.iconsView) {
 			clearIcons()

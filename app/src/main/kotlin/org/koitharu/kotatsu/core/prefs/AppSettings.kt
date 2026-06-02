@@ -137,6 +137,10 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getInt(KEY_GRID_SIZE, 100)
 		set(value) = prefs.edit { putInt(KEY_GRID_SIZE, value) }
 
+	var isTitleOverCover: Boolean
+		get() = prefs.getBoolean(KEY_TITLE_OVER_COVER, true)
+		set(value) = prefs.edit { putBoolean(KEY_TITLE_OVER_COVER, value) }
+
 	var gridSizePages: Int
 		get() = prefs.getInt(KEY_GRID_SIZE_PAGES, 100)
 		set(value) = prefs.edit { putInt(KEY_GRID_SIZE_PAGES, value) }
@@ -803,6 +807,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 		const val KEY_ADBLOCK = "adblock"
 		const val KEY_LIST_MODE = "list_mode_2"
+		const val KEY_TITLE_OVER_COVER = "title_over_cover"
 		const val KEY_LIST_MODE_HISTORY = "list_mode_history"
 		const val KEY_LIST_MODE_FAVORITES = "list_mode_favorites"
 		const val KEY_LIST_MODE_SUGGESTIONS = "list_mode_suggestions"

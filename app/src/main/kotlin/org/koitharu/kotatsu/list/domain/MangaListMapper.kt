@@ -133,6 +133,7 @@ class MangaListMapper @Inject constructor(
 		isFavorite = isFavorite(manga.id, options),
 		isSaved = isSaved(manga.id, options),
 		isTitleHidden = isTitleHidden,
+		isTitleOverCover = settings.isTitleOverCover,
 	)
 
 	private suspend fun toListModelImpl(

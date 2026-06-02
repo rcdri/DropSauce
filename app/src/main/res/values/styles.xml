@@ -507,6 +507,24 @@
 		<item name="android:lineHeight" tools:ignore="NewApi">14sp</item>
 	</style>
 
+	<!-- Grid-cover titles are overlaid on a dark scrim, so they are light with a soft shadow.
+	     Used only by the manga grid card (applied via ItemSizeResolver). -->
+	<style name="TextAppearance.Kotatsu.GridTitle.Overlay">
+		<item name="android:textColor">@android:color/white</item>
+		<item name="android:shadowColor">#80000000</item>
+		<item name="android:shadowDx">0</item>
+		<item name="android:shadowDy">1</item>
+		<item name="android:shadowRadius">3</item>
+	</style>
+
+	<style name="TextAppearance.Kotatsu.GridTitle.Small.Overlay">
+		<item name="android:textColor">@android:color/white</item>
+		<item name="android:shadowColor">#80000000</item>
+		<item name="android:shadowDx">0</item>
+		<item name="android:shadowDy">1</item>
+		<item name="android:shadowRadius">3</item>
+	</style>
+
 	<!-- Shapes -->
 
 	<!-- PixelPlayer M3 shape scale: small=8dp, medium=16dp, large=24dp -->

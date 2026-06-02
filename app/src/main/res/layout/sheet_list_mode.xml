@@ -84,6 +84,21 @@
 
 			</com.google.android.material.button.MaterialButtonToggleGroup>
 
+			<com.google.android.material.materialswitch.MaterialSwitch
+				android:id="@+id/switch_title_over_cover"
+				android:layout_width="match_parent"
+				android:layout_height="?android:listPreferredItemHeightSmall"
+				android:layout_marginTop="@dimen/margin_small"
+				android:drawablePadding="?android:listPreferredItemPaddingStart"
+				android:ellipsize="end"
+				android:paddingStart="?android:listPreferredItemPaddingStart"
+				android:paddingEnd="?android:listPreferredItemPaddingEnd"
+				android:singleLine="true"
+				android:text="@string/title_over_cover"
+				android:textAppearance="?attr/textAppearanceListItem"
+				android:textColor="?colorOnSurfaceVariant"
+				app:drawableStartCompat="@drawable/ic_title" />
+
 			<TextView
 				android:id="@+id/textView_grid_title"
 				android:layout_width="match_parent"

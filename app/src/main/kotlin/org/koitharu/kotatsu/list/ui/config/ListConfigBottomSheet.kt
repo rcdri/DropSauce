@@ -46,6 +46,9 @@ class ListConfigBottomSheet :
 		val isGridMode = mode == ListMode.GRID || mode == ListMode.COVER_ONLY
 		binding.textViewGridTitle.isVisible = isGridMode
 		binding.sliderGrid.isVisible = isGridMode
+		binding.switchTitleOverCover.isEnabled = isGridMode
+		binding.switchTitleOverCover.isChecked = viewModel.isTitleOverCover
+		binding.switchTitleOverCover.setOnCheckedChangeListener(this)
 
 		binding.sliderGrid.setLabelFormatter(IntPercentLabelFormatter(binding.root.context))
 		binding.sliderGrid.setValueRounded(viewModel.gridSize.toFloat())
@@ -100,12 +103,14 @@ class ListConfigBottomSheet :
 		val isGridMode = mode == ListMode.GRID || mode == ListMode.COVER_ONLY
 		requireViewBinding().textViewGridTitle.isVisible = isGridMode
 		requireViewBinding().sliderGrid.isVisible = isGridMode
+		requireViewBinding().switchTitleOverCover.isEnabled = isGridMode
 		viewModel.listMode = mode
 	}
 
 	override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
 		when (buttonView.id) {
 			R.id.switch_grouping -> viewModel.isGroupingEnabled = isChecked
+			R.id.switch_title_over_cover -> viewModel.isTitleOverCover = isChecked
 		}
 	}
 
