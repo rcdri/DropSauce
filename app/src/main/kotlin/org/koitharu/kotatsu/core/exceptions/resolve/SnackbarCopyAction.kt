@@ -19,7 +19,14 @@ fun Snackbar.addCopyErrorAction(error: Throwable): Snackbar {
 		return this
 	}
 	val originalAction = content.findViewById<Button>(materialR.id.snackbar_action)
-	val copyAction = AppCompatButton(context, null, materialR.attr.snackbarButtonStyle).apply {
+	// Button creation requires a fully-themed context. If the snackbar context doesn't
+	// carry the complete Material theme (e.g. in certain overlay/dialog scenarios), the
+	// constructor throws UnsupportedOperationException trying to resolve dimension attrs.
+	// Silently skip the copy action rather than crashing the app.
+	val copyAction = runCatching {
+		AppCompatButton(context, null, materialR.attr.snackbarButtonStyle)
+	}.getOrNull() ?: return this
+	copyAction.apply {
 		tag = COPY_ERROR_ACTION_TAG
 		text = context.getString(R.string.copy)
 		isAllCaps = originalAction?.isAllCaps ?: true

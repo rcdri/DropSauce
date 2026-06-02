@@ -64,7 +64,16 @@ class FaviconFetcher(
 
 			is LocalMangaRepository -> imageLoader.fetch(R.drawable.ic_storage, options)
 
-			else -> throw IllegalArgumentException("Unsupported repo ${repo.javaClass.simpleName}")
+			else -> {
+				// LazyMihonMangaRepository (extension not yet loaded) or any other unknown type.
+				// Try to resolve the extension icon; fall back to generic icon if unavailable.
+				val resolvedMihonSource = resolveMihonSource(mangaSource.name)
+				if (resolvedMihonSource != null) {
+					fetchMihonIcon(resolvedMihonSource)
+				} else {
+					imageLoader.fetch(R.drawable.ic_manga_source, options)
+				}
+			}
 		}
 	}
 
