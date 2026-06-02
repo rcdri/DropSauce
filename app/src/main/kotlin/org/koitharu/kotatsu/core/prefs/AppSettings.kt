@@ -283,10 +283,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_UPDATED_GROUPING, true)
 		set(value) = prefs.edit { putBoolean(KEY_UPDATED_GROUPING, value) }
 
-	var isFeedHeaderVisible: Boolean
-		get() = prefs.getBoolean(KEY_FEED_HEADER, true)
-		set(value) = prefs.edit { putBoolean(KEY_FEED_HEADER, value) }
-
 	val progressIndicatorMode: ProgressIndicatorMode
 		get() = prefs.getEnumValue(KEY_PROGRESS_INDICATORS, ProgressIndicatorMode.PERCENT_READ)
 
@@ -951,7 +947,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_PAGES_SAVE_DIR = "pages_dir"
 		const val KEY_PAGES_SAVE_ASK = "pages_dir_ask"
 		const val KEY_STATS_ENABLED = "stats_on"
-		const val KEY_FEED_HEADER = "feed_header"
 		const val KEY_SEARCH_SUGGESTION_TYPES = "search_suggest_types"
 		const val KEY_SOURCES_VERSION = "sources_version"
 		const val KEY_QUICK_FILTER = "quick_filter"

@@ -1,70 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Explore "Suggestions" block: a collapsible header (chevron + label + More) above a Material 3
-     start-aligned hero carousel of cover posters (CarouselLayoutManager + HeroCarouselStrategy are
-     set in code). Tapping the header row collapses/expands the carousel. -->
-<LinearLayout
+<!-- Explore "Suggestions" block: a Material 3 multi-browse carousel of cover posters
+     (CarouselLayoutManager + MultiBrowseCarouselStrategy are set in code). -->
+<androidx.recyclerview.widget.RecyclerView
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/recyclerView"
 	android:layout_width="match_parent"
-	android:layout_height="wrap_content"
-	android:orientation="vertical">
-
-	<LinearLayout
-		android:id="@+id/layout_header"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="?attr/selectableItemBackground"
-		android:clickable="true"
-		android:focusable="true"
-		android:gravity="center_vertical"
-		android:minHeight="48dp"
-		android:orientation="horizontal"
-		android:paddingStart="@dimen/grid_spacing"
-		android:paddingEnd="@dimen/grid_spacing">
-
-		<ImageView
-			android:id="@+id/imageView_chevron"
-			android:layout_width="24dp"
-			android:layout_height="24dp"
-			android:layout_marginEnd="@dimen/margin_small"
-			android:contentDescription="@null"
-			android:src="@drawable/ic_expand_more"
-			app:tint="?attr/colorOnSurfaceVariant" />
-
-		<TextView
-			android:id="@+id/textView_title"
-			android:layout_width="0dp"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:gravity="center_vertical|start"
-			android:paddingVertical="@dimen/grid_spacing"
-			android:singleLine="true"
-			android:text="@string/suggestions"
-			android:textAppearance="?textAppearanceTitleSmall" />
-
-		<com.google.android.material.button.MaterialButton
-			android:id="@+id/button_more"
-			style="@style/Widget.Kotatsu.Button.More.Small"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:minWidth="40dp"
-			android:minHeight="40dp"
-			android:text="@string/more"
-			app:iconSize="22dp" />
-
-	</LinearLayout>
-
-	<androidx.recyclerview.widget.RecyclerView
-		android:id="@+id/recyclerView"
-		android:layout_width="match_parent"
-		android:layout_height="200dp"
-		android:layout_marginBottom="@dimen/margin_small"
-		android:clipChildren="false"
-		android:clipToPadding="false"
-		android:nestedScrollingEnabled="false"
-		android:orientation="horizontal"
-		android:paddingHorizontal="12dp"
-		tools:listitem="@layout/item_manga_carousel" />
-
-</LinearLayout>
+	android:layout_height="200dp"
+	android:layout_marginBottom="@dimen/margin_small"
+	android:clipChildren="false"
+	android:clipToPadding="false"
+	android:nestedScrollingEnabled="false"
+	android:orientation="horizontal"
+	android:paddingHorizontal="12dp"
+	tools:listitem="@layout/item_manga_carousel" />

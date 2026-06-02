@@ -56,8 +56,6 @@ fun exploreButtonsAD(
 
 fun exploreRecommendationItemAD(
 	itemClickListener: OnListItemClickListener<Manga>,
-	moreClickListener: View.OnClickListener,
-	onToggle: () -> Unit,
 ) = adapterDelegateViewBinding<RecommendationsItem, ListModel, ItemRecommendationBinding>(
 	{ layoutInflater, parent -> ItemRecommendationBinding.inflate(layoutInflater, parent, false) },
 ) {
@@ -72,13 +70,9 @@ fun exploreRecommendationItemAD(
 			CarouselSnapHelper().attachToRecyclerView(this)
 		}
 	}
-	binding.buttonMore.setOnClickListener(moreClickListener)
-	binding.layoutHeader.setOnClickListener { onToggle() }
 
 	bind {
 		adapter.items = item.manga
-		binding.recyclerView.isVisible = item.isExpanded
-		binding.imageViewChevron.rotation = if (item.isExpanded) 180f else 0f
 	}
 }
 

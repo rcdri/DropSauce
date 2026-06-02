@@ -95,8 +95,7 @@
 				android:layout_weight="1"
 				android:layout_marginEnd="8dp"
 				android:hint="@string/search_manga"
-				app:hideNavigationIcon="true"
-				app:forceDefaultNavigationOnClickListener="false" />
+				app:hideNavigationIcon="true" />
 
 			<FrameLayout
 				android:layout_width="48dp"

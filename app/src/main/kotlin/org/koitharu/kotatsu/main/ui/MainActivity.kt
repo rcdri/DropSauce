@@ -122,6 +122,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 		setContentView(ActivityMainBinding.inflate(layoutInflater))
 		setSupportActionBar(viewBinding.searchBar)
+		// Place the search icon inline, right before the hint, and centre the whole group.
+		viewBinding.searchBar.textView.apply {
+			gravity = android.view.Gravity.CENTER
+			setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_search, 0, 0, 0)
+			compoundDrawablePadding = resources.getDimensionPixelOffset(R.dimen.margin_small)
+		}
 
 		viewBinding.fab?.setOnClickListener(this)
 		viewBinding.navRail?.headerView?.findViewById<View>(R.id.railFab)?.setOnClickListener(this)

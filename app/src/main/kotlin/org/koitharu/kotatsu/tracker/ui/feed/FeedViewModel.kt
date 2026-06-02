@@ -10,15 +10,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
-import org.koitharu.kotatsu.core.prefs.ListMode
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
-import org.koitharu.kotatsu.core.prefs.observeAsStateFlow
 import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.core.ui.model.DateTimeAgo
 import org.koitharu.kotatsu.core.ui.util.ReversibleAction
@@ -37,7 +33,6 @@ import org.koitharu.kotatsu.tracker.domain.TrackingRepository
 import org.koitharu.kotatsu.tracker.domain.UpdatesListQuickFilter
 import org.koitharu.kotatsu.tracker.domain.model.TrackingLogItem
 import org.koitharu.kotatsu.tracker.ui.feed.model.FeedItem
-import org.koitharu.kotatsu.tracker.ui.feed.model.UpdatedMangaHeader
 import org.koitharu.kotatsu.tracker.work.TrackWorker
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -59,26 +54,16 @@ class FeedViewModel @Inject constructor(
 	val isRunning = scheduler.observeIsRunning()
 		.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Lazily, false)
 
-	val isHeaderEnabled = settings.observeAsStateFlow(
-		scope = viewModelScope + Dispatchers.Default,
-		key = AppSettings.KEY_FEED_HEADER,
-		valueProducer = { isFeedHeaderVisible },
-	)
-
 	val onActionDone = MutableEventFlow<ReversibleAction>()
 
 	@Suppress("USELESS_CAST")
 	val content = combine(
-		observeHeader(),
 		quickFilter.appliedOptions,
 		combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
 			.flatMapLatest { repository.observeTrackingLog(it.first, it.second) },
-	) { header, filters, list ->
+	) { filters, list ->
 		val result = ArrayList<ListModel>((list.size * 1.4).toInt().coerceAtLeast(3))
 		quickFilter.filterItem(filters)?.let(result::add)
-		if (header != null) {
-			result += header
-		}
 		if (list.isEmpty()) {
 			result += EmptyState(
 				icon = R.drawable.ic_empty_feed,
@@ -121,10 +106,6 @@ class FeedViewModel @Inject constructor(
 		scheduler.startNow()
 	}
 
-	fun setHeaderEnabled(value: Boolean) {
-		settings.isFeedHeaderVisible = value
-	}
-
 	fun onItemClick(item: FeedItem) {
 		launchJob(Dispatchers.Default, CoroutineStart.ATOMIC) {
 			repository.markAsRead(item.id)
@@ -144,24 +125,6 @@ class FeedViewModel @Inject constructor(
 			}
 			prevDate = date
 			destination += mangaListMapper.toFeedItem(item)
-		}
-	}
-
-	private fun observeHeader() = isHeaderEnabled.flatMapLatest { hasHeader ->
-		if (hasHeader) {
-			quickFilter.appliedOptions.combineWithSettings().flatMapLatest {
-				repository.observeUpdatedManga(10, it)
-			}.map { mangaList ->
-				if (mangaList.isEmpty()) {
-					null
-				} else {
-					UpdatedMangaHeader(
-						mangaList.map { mangaListMapper.toListModel(it.manga, ListMode.GRID) },
-					)
-				}
-			}
-		} else {
-			flowOf(null)
 		}
 	}
 

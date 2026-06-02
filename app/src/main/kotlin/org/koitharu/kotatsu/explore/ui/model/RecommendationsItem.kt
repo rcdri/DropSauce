@@ -5,7 +5,6 @@ import org.koitharu.kotatsu.list.ui.model.MangaCompactListModel
 
 data class RecommendationsItem(
 	val manga: List<MangaCompactListModel>,
-	val isExpanded: Boolean,
 ) : ListModel {
 
 	override fun areItemsTheSame(other: ListModel): Boolean {

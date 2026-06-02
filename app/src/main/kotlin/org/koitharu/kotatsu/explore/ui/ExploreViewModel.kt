@@ -63,7 +63,6 @@ class ExploreViewModel @Inject constructor(
 	val onActionDone = MutableEventFlow<ReversibleAction>()
 	val onShowSuggestionsTip = MutableEventFlow<Unit>()
 	private val isRandomLoading = MutableStateFlow(false)
-	private val isSuggestionsExpanded = MutableStateFlow(true)
 
 	val content: StateFlow<List<ListModel>> = isLoading.flatMapLatest { loading ->
 		if (loading) {
@@ -125,24 +124,18 @@ class ExploreViewModel @Inject constructor(
 		}
 	}
 
-	fun toggleSuggestions() {
-		isSuggestionsExpanded.value = !isSuggestionsExpanded.value
-	}
-
 	@Suppress("UNCHECKED_CAST")
 	private fun createContentFlow() = kotlinx.coroutines.flow.combine(
 		sourcesRepository.observeEnabledSources(),
 		getSuggestionFlow(),
 		isGrid,
 		isRandomLoading,
-		isSuggestionsExpanded,
 	) { args ->
 		buildList(
 			args[0] as List<MangaSourceInfo>,
 			args[1] as List<Manga>,
 			args[2] as Boolean,
 			args[3] as Boolean,
-			args[4] as Boolean,
 		)
 	}.withErrorHandling()
 
@@ -151,12 +144,12 @@ class ExploreViewModel @Inject constructor(
 		recommendation: List<Manga>,
 		isGrid: Boolean,
 		randomLoading: Boolean,
-		suggestionsExpanded: Boolean,
 	): List<ListModel> {
 		val result = ArrayList<ListModel>(sources.size + 3)
 		result += ExploreButtons(randomLoading)
 		if (recommendation.isNotEmpty()) {
-			result += RecommendationsItem(recommendation.toRecommendationList(), suggestionsExpanded)
+			result += ListHeader(R.string.suggestions, R.string.more, R.id.nav_suggestions)
+			result += RecommendationsItem(recommendation.toRecommendationList())
 		}
 
 		if (sources.isNotEmpty()) {

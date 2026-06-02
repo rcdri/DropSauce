@@ -11,14 +11,6 @@
 		app:showAsAction="never" />
 
 	<item
-		android:id="@+id/action_show_updated"
-		android:checkable="true"
-		android:icon="@drawable/ic_updated"
-		android:orderInCategory="50"
-		android:title="@string/show_updated"
-		app:showAsAction="never" />
-
-	<item
 		android:id="@+id/action_clear_feed"
 		android:icon="@drawable/ic_clear_all"
 		android:orderInCategory="50"
