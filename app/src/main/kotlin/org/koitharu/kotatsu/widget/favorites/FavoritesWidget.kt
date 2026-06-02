@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
@@ -53,6 +54,7 @@ class FavoritesWidget : AppWidgetProvider() {
 		when (intent.action) {
 			ACTION_REFRESH,
 			Intent.ACTION_BOOT_COMPLETED,
+			Intent.ACTION_CONFIGURATION_CHANGED,
 			Intent.ACTION_MY_PACKAGE_REPLACED -> nudgeAll(context)
 		}
 	}
@@ -152,6 +154,11 @@ class FavoritesWidget : AppWidgetProvider() {
 		val views = RemoteViews(context.packageName, R.layout.widget_favorites)
 		views.setOnClickPendingIntent(R.id.widget_settings, configIntent(context, widgetId))
 		views.setOnClickPendingIntent(R.id.widget_header, configIntent(context, widgetId))
+		views.setInt(
+			R.id.widget_settings,
+			"setColorFilter",
+			context.widgetSettingsTint(),
+		)
 
 		val slotIds = intArrayOf(R.id.widget_slot_1, R.id.widget_slot_2, R.id.widget_slot_3)
 		val coverIds = intArrayOf(R.id.widget_cover_1, R.id.widget_cover_2, R.id.widget_cover_3)
@@ -234,5 +241,14 @@ class FavoritesWidget : AppWidgetProvider() {
 				.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
 			context.sendBroadcast(broadcast)
 		}
+	}
+}
+
+private fun Context.widgetSettingsTint(): Int {
+	val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+	return if (nightMode == Configuration.UI_MODE_NIGHT_YES) {
+		Color.rgb(199, 198, 202)
+	} else {
+		Color.BLACK
 	}
 }

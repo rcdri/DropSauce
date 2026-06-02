@@ -89,4 +89,90 @@
 		android:layout_weight="1"
 		android:contentDescription="@null"
 		android:scaleType="fitXY" />
+
+	<LinearLayout
+		android:id="@+id/widget_stats_weekdays"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="2dp"
+		android:baselineAligned="false"
+		android:orientation="horizontal">
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_monday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="M" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_tuesday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="T" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_wednesday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="W" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_thursday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="T" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_friday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="F" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_saturday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="S" />
+		</FrameLayout>
+
+		<FrameLayout
+			android:layout_width="0dp"
+			android:layout_height="24dp"
+			android:layout_weight="1">
+
+			<TextView
+				android:id="@+id/widget_stats_weekday_sunday"
+				style="@style/Widget.Kotatsu.AppWidget.WeekdayLabel"
+				android:text="S" />
+		</FrameLayout>
+	</LinearLayout>
 </LinearLayout>

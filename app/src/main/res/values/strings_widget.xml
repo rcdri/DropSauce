@@ -10,7 +10,7 @@
 	<string name="widget_progress_percent">%1$d%%</string>
 
 <!-- Stats Widget -->
-	<string name="widget_stats">Reading Stats</string>
+	<string name="widget_stats">Reading Statistics</string>
 	<string name="widget_stats_description">Track your reading time and streak</string>
 	<string name="widget_stats_empty">Start reading to see stats</string>
 	<string name="widget_stats_today">Today</string>

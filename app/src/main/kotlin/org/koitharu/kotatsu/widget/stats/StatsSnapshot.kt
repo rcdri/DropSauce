@@ -9,6 +9,7 @@ data class StatsSnapshot(
 	val weekMillis: Long,
 	val streakDays: Int,
 	val dailyMillis: LongArray,
+	val todayBucket: Int,
 ) {
 	val hasAny: Boolean get() = weekMillis > 0 || todayMillis > 0
 }
@@ -18,27 +19,47 @@ suspend fun MangaDatabase.loadStatsSnapshot(): StatsSnapshot {
 	val now = System.currentTimeMillis()
 	val startOfToday = startOfDayMillis(now)
 	val startOfWeek = startOfWeekMillis(now)
-	val todayMillis = dao.getTotalReadDurationSince(startOfToday)
-	val weekEntries = dao.getDurationEntriesSince(startOfWeek)
+	val weekEntries = dao.getDurationEntriesIntersecting(startOfWeek)
 
 	// Layout: daily[0] = Monday … daily[6] = Sunday of the current ISO week.
 	val daily = LongArray(7)
 	for (entry in weekEntries) {
-		val bucket = ((entry.startedAt - startOfWeek) / TimeUnit.DAYS.toMillis(1)).toInt()
-		if (bucket in 0..6) {
-			daily[bucket] += entry.duration
-		}
+		addEntryDurationByDay(daily, startOfWeek, entry.startedAt, entry.duration, now)
 	}
 	val weekMillis = daily.sum()
 	val todayBucket = ((startOfToday - startOfWeek) / TimeUnit.DAYS.toMillis(1))
 		.toInt().coerceIn(0, 6)
+	val todayMillis = daily[todayBucket]
 	val streak = computeStreak(daily, todayBucket)
 	return StatsSnapshot(
 		todayMillis = todayMillis,
 		weekMillis = weekMillis,
 		streakDays = streak,
 		dailyMillis = daily,
+		todayBucket = todayBucket,
 	)
+}
+
+private fun addEntryDurationByDay(
+	daily: LongArray,
+	startOfWeek: Long,
+	startedAt: Long,
+	duration: Long,
+	now: Long,
+) {
+	val dayMs = TimeUnit.DAYS.toMillis(1)
+	val entryEnd = (startedAt + duration).coerceAtMost(now)
+	var cursor = startedAt.coerceAtLeast(startOfWeek)
+	while (cursor < entryEnd) {
+		val bucket = ((cursor - startOfWeek) / dayMs).toInt()
+		if (bucket !in daily.indices) {
+			break
+		}
+		val nextDay = startOfWeek + (bucket + 1) * dayMs
+		val partEnd = entryEnd.coerceAtMost(nextDay)
+		daily[bucket] += partEnd - cursor
+		cursor = partEnd
+	}
 }
 
 /**

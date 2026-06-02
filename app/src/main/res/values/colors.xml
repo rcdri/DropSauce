@@ -39,5 +39,4 @@
 	<color name="background_kanade">#F3F3F3</color>
 
 	<!-- Widget chart label — explicit so the bitmap renderer always gets the right color -->
-	<color name="widget_chart_label">#44474E</color>
 </resources>

@@ -38,6 +38,9 @@ abstract class StatsDao {
 	@Query("SELECT started_at, duration FROM stats WHERE started_at >= :fromDate ORDER BY started_at")
 	abstract suspend fun getDurationEntriesSince(fromDate: Long): List<DurationEntry>
 
+	@Query("SELECT started_at, duration FROM stats WHERE started_at + duration >= :fromDate ORDER BY started_at")
+	abstract suspend fun getDurationEntriesIntersecting(fromDate: Long): List<DurationEntry>
+
 	@Query("SELECT IFNULL(SUM(chapters * percent), 0) FROM history WHERE deleted_at = 0 AND percent > 0")
 	abstract suspend fun getTotalReadChaptersEstimate(): Float
 

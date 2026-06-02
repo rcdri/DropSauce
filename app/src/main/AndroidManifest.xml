@@ -355,6 +355,7 @@
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="android.intent.action.CONFIGURATION_CHANGED" />
 				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 				<action android:name="org.koitharu.kotatsu.widget.continuereading.REFRESH" />
 			</intent-filter>
@@ -370,6 +371,7 @@
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="android.intent.action.CONFIGURATION_CHANGED" />
 				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 				<action android:name="org.koitharu.kotatsu.widget.stats.REFRESH" />
 			</intent-filter>
@@ -385,6 +387,7 @@
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="android.intent.action.CONFIGURATION_CHANGED" />
 				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 				<action android:name="org.koitharu.kotatsu.widget.favorites.REFRESH" />
 			</intent-filter>

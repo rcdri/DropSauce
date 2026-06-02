@@ -46,8 +46,7 @@
 			android:layout_height="22dp"
 			android:padding="2dp"
 			android:src="@drawable/ic_settings"
-			android:contentDescription="@string/widget_favorites_configure"
-			app:tint="@color/kotatsu_onSurfaceVariant" />
+			android:contentDescription="@string/widget_favorites_configure" />
 	</LinearLayout>
 
 	<LinearLayout

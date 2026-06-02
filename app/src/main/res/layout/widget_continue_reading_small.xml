@@ -14,9 +14,9 @@
 	<ImageView
 		android:id="@+id/widget_cover"
 		android:layout_width="48dp"
-		android:layout_height="64dp"
+		android:layout_height="match_parent"
 		android:background="@drawable/bg_appwidget_cover"
-		android:scaleType="centerCrop"
+		android:scaleType="fitXY"
 		android:contentDescription="@string/widget_cover_content_description"
 		tools:src="@color/kotatsu_surfaceContainerHigh" />
 

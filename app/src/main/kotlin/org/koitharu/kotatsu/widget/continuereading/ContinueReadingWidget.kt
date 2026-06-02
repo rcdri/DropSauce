@@ -38,7 +38,7 @@ class ContinueReadingWidget : AppWidgetProvider() {
 			// Pass 1: render text-only state immediately so the widget never sits blank.
 			for (widgetId in appWidgetIds) {
 				val views = if (manga != null) {
-					buildContent(appContext, manga, history, cover = null)
+					buildContent(appContext, manga, history, wideCover = null)
 				} else {
 					buildEmpty(appContext)
 				}
@@ -51,7 +51,7 @@ class ContinueReadingWidget : AppWidgetProvider() {
 			if (manga != null) {
 				for (widgetId in appWidgetIds) {
 					val (slotW, slotH) = coverSlotPx(appContext, appWidgetManager, widgetId)
-					val cover = WidgetCoverLoader.load(
+					val wideCover = WidgetCoverLoader.load(
 						context = appContext,
 						loader = entryPoint.imageLoader,
 						manga = manga,
@@ -59,10 +59,18 @@ class ContinueReadingWidget : AppWidgetProvider() {
 						targetHeight = slotH,
 						cornerRadiusPx = WidgetCoverLoader.dpToPx(appContext, 12).toFloat(),
 					)
-					if (cover != null) {
+					val compactCover = WidgetCoverLoader.load(
+						context = appContext,
+						loader = entryPoint.imageLoader,
+						manga = manga,
+						targetWidth = WidgetCoverLoader.dpToPx(appContext, 48),
+						targetHeight = WidgetCoverLoader.dpToPx(appContext, 64),
+						cornerRadiusPx = WidgetCoverLoader.dpToPx(appContext, 8).toFloat(),
+					)
+					if (wideCover != null || compactCover != null) {
 						appWidgetManager.updateAppWidget(
 							widgetId,
-							buildContent(appContext, manga, history, cover),
+							buildContent(appContext, manga, history, wideCover, compactCover),
 						)
 					} else {
 						Log.w(TAG, "cover bitmap null for manga=${manga.title}")
@@ -110,7 +118,8 @@ class ContinueReadingWidget : AppWidgetProvider() {
 		context: Context,
 		manga: Manga,
 		history: MangaHistory?,
-		cover: Bitmap?,
+		wideCover: Bitmap?,
+		compactCover: Bitmap? = wideCover,
 	): RemoteViews {
 		val percentFloat = (history?.percent ?: 0f).coerceIn(0f, 1f)
 		val percent = (percentFloat * 100f).roundToInt()
@@ -124,11 +133,11 @@ class ContinueReadingWidget : AppWidgetProvider() {
 		}
 
 		val wide = RemoteViews(context.packageName, R.layout.widget_continue_reading).also {
-			applyWide(it, manga.title, subtitle, chapterText, percent, cover)
+			applyWide(it, manga.title, subtitle, chapterText, percent, wideCover)
 			wirePendingIntents(context, it, manga, history, wide = true)
 		}
 		val small = RemoteViews(context.packageName, R.layout.widget_continue_reading_small).also {
-			applySmall(it, manga.title, percent, cover)
+			applySmall(it, manga.title, percent, compactCover)
 			wirePendingIntents(context, it, manga, history, wide = false)
 		}
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -211,6 +220,7 @@ class ContinueReadingWidget : AppWidgetProvider() {
 		when (intent.action) {
 			ACTION_REFRESH,
 			Intent.ACTION_BOOT_COMPLETED,
+			Intent.ACTION_CONFIGURATION_CHANGED,
 			Intent.ACTION_MY_PACKAGE_REPLACED -> nudgeAll(context)
 		}
 	}

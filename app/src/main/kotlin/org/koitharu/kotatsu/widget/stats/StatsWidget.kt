@@ -7,11 +7,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.content.ContextCompat
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.stats.ui.StatsActivity
 import org.koitharu.kotatsu.widget.common.WidgetCoverLoader
@@ -81,7 +83,7 @@ class StatsWidget : AppWidgetProvider() {
 		}).takeIf { it > 0 } ?: 110
 		// 12dp padding × 2 + header (~28dp) + value row (~32dp) + subtitle (~16dp) + 8dp gap.
 		val chartWidthDp = (widthDp - 24).coerceAtLeast(120)
-		val chartHeightDp = (heightDp - 24 - 28 - 32 - 16 - 8).coerceAtLeast(48)
+		val chartHeightDp = (heightDp - 24 - 28 - 32 - 16 - 8 - 26).coerceAtLeast(48)
 		return WidgetCoverLoader.dpToPx(context, chartWidthDp) to
 			WidgetCoverLoader.dpToPx(context, chartHeightDp)
 	}
@@ -101,8 +103,11 @@ class StatsWidget : AppWidgetProvider() {
 			if (snapshot.weekMillis > 0) {
 				it.setImageViewBitmap(R.id.widget_stats_chart, chart)
 				it.setViewVisibility(R.id.widget_stats_chart, View.VISIBLE)
+				it.setViewVisibility(R.id.widget_stats_weekdays, View.VISIBLE)
+				it.highlightToday(context, snapshot.todayBucket)
 			} else {
 				it.setViewVisibility(R.id.widget_stats_chart, View.GONE)
+				it.setViewVisibility(R.id.widget_stats_weekdays, View.GONE)
 			}
 			it.setOnClickPendingIntent(R.id.widget_stats_root, clickPi)
 		}
@@ -120,6 +125,28 @@ class StatsWidget : AppWidgetProvider() {
 			)
 		} else {
 			wide
+		}
+	}
+
+	private fun RemoteViews.highlightToday(context: Context, todayBucket: Int) {
+		val dayIds = intArrayOf(
+			R.id.widget_stats_weekday_monday,
+			R.id.widget_stats_weekday_tuesday,
+			R.id.widget_stats_weekday_wednesday,
+			R.id.widget_stats_weekday_thursday,
+			R.id.widget_stats_weekday_friday,
+			R.id.widget_stats_weekday_saturday,
+			R.id.widget_stats_weekday_sunday,
+		)
+		val normalColor = ContextCompat.getColor(context, R.color.kotatsu_onSurface)
+		val activeColor = ContextCompat.getColor(context, R.color.kotatsu_onPrimaryContainer)
+		for (id in dayIds) {
+			setInt(id, "setBackgroundColor", Color.TRANSPARENT)
+			setTextColor(id, normalColor)
+		}
+		dayIds.getOrNull(todayBucket)?.let { id ->
+			setInt(id, "setBackgroundResource", R.drawable.bg_appwidget_weekday_today)
+			setTextColor(id, activeColor)
 		}
 	}
 
@@ -149,6 +176,7 @@ class StatsWidget : AppWidgetProvider() {
 		when (intent.action) {
 			ACTION_REFRESH,
 			Intent.ACTION_BOOT_COMPLETED,
+			Intent.ACTION_CONFIGURATION_CHANGED,
 			Intent.ACTION_MY_PACKAGE_REPLACED -> {
 				val mgr = AppWidgetManager.getInstance(context)
 				val ids = mgr.getAppWidgetIds(ComponentName(context, StatsWidget::class.java))
