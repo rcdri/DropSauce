@@ -2,6 +2,8 @@ package org.koitharu.kotatsu.mihon
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.Headers
+import okhttp3.Response
 import org.koitharu.kotatsu.core.cache.MemoryContentCache
 import org.koitharu.kotatsu.core.exceptions.UnsupportedSourceException
 import org.koitharu.kotatsu.core.model.MissingMangaSource
@@ -57,19 +59,30 @@ class LazyMihonMangaRepository(
 	override suspend fun getList(offset: Int, order: SortOrder?, filter: MangaListFilter?): List<Manga> =
 		resolve().getList(offset, order, filter)
 
-	override suspend fun getDetails(manga: Manga): Manga = resolve().getDetails(manga)
+	override suspend fun getDetails(manga: Manga): Manga = resolve(manga).getDetails(manga)
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> = resolve().getPages(chapter)
 
 	override suspend fun getPageUrl(page: MangaPage): String = resolve().getPageUrl(page)
 
+	override suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? =
+		delegate?.getImageRequestHeaders(imageUrl, page)
+
+	override suspend fun getImageStream(pageUrl: String, page: MangaPage): Response? =
+		delegate?.getImageStream(pageUrl, page)
+
 	override suspend fun getFilterOptions(): MangaListFilterOptions = resolve().getFilterOptions()
 
 	override suspend fun getRelated(seed: Manga): List<Manga> = resolve().getRelated(seed)
 
-	override suspend fun find(manga: Manga): Manga? = resolve().find(manga)
+	override suspend fun find(manga: Manga): Manga? = resolve(manga).find(manga)
 
-	private suspend fun resolve(): MihonMangaRepository {
+	/**
+	 * Resolves to the real [MihonMangaRepository] by waiting for the extension manager to be ready.
+	 * [manga] is forwarded to [UnsupportedSourceException] so the UI can offer alternatives.
+	 * Throws [UnsupportedSourceException] if the extension is genuinely not installed.
+	 */
+	private suspend fun resolve(manga: Manga? = null): MihonMangaRepository {
 		delegate?.let { return it }
 		return resolveMutex.withLock {
 			// Re-check inside the lock — a concurrent caller may have already resolved.
@@ -78,7 +91,7 @@ class LazyMihonMangaRepository(
 			val mihonSource = extensionManager.getMihonMangaSourceByName(source.name)
 				?: throw UnsupportedSourceException(
 					"Install the matching Mihon extension to read this manga",
-					null,
+					manga,
 				)
 			val real = MihonMangaRepository(mihonSource, cache)
 			delegate = real

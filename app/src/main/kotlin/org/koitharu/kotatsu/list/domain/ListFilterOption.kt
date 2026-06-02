@@ -125,7 +125,9 @@ sealed interface ListFilterOption {
 
 		override val titleText: CharSequence?
 			get() = mangaSource.getStoredTitleOrNull() ?: when (val source = mangaSource.unwrap()) {
-				is MissingMangaSource -> source.name.ifBlank { null }
+				// For missing Mihon sources where the display name isn't yet known, show
+				// only the favicon icon rather than the raw "MIHON_<id>" internal name.
+				is MissingMangaSource -> if (source.name.startsWith("MIHON_")) null else source.name.ifBlank { null }
 				else -> null
 			}
 

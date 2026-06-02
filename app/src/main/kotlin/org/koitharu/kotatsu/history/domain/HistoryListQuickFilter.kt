@@ -5,12 +5,14 @@ import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.history.data.HistoryRepository
 import org.koitharu.kotatsu.list.domain.ListFilterOption
 import org.koitharu.kotatsu.list.domain.MangaListQuickFilter
+import org.koitharu.kotatsu.mihon.MihonExtensionManager
 import javax.inject.Inject
 
 class HistoryListQuickFilter @Inject constructor(
 	private val settings: AppSettings,
 	private val repository: HistoryRepository,
 	networkState: NetworkState,
+	private val mihonExtensionManager: MihonExtensionManager,
 ) : MangaListQuickFilter(settings) {
 
 	init {
@@ -31,6 +33,9 @@ class HistoryListQuickFilter @Inject constructor(
 		repository.getPopularTags(3).mapTo(this) {
 			ListFilterOption.Tag(it)
 		}
+		// Ensure extensions are loaded before reading source names from the DB, so
+		// MangaSource("MIHON_<id>") resolves to a real MihonMangaSource with a display name.
+		mihonExtensionManager.ensureReady()
 		repository.getPopularSources(3).mapTo(this) {
 			ListFilterOption.Source(it)
 		}

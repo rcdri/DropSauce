@@ -114,9 +114,21 @@ fun MangaSource.isExternalSource(): Boolean = when (val source = unwrap()) {
 
 fun MangaSource.getStoredTitleOrNull(): String? = when (val source = unwrap()) {
 	is MihonMangaSource -> source.displayName
-	is MissingMangaSource -> source.cachedDisplayNameOrNull()
+	is MissingMangaSource -> source.cachedDisplayNameOrNull() ?: source.liveDisplayNameOrNull()
 	LocalMangaSource -> null
 	else -> null
+}
+
+/**
+ * When a Mihon source was loaded from DB before its extension finished loading, the source
+ * object is a [MissingMangaSource].  Look it up by numeric ID in the running manager so the
+ * display name is shown correctly as soon as extensions are ready — without waiting for the
+ * DB entry to be re-saved in the new "MIHON_<id>:<name>" format.
+ */
+private fun MissingMangaSource.liveDisplayNameOrNull(): String? {
+	if (!name.startsWith("MIHON_")) return null
+	val id = name.removePrefix("MIHON_").substringBefore(':').toLongOrNull() ?: return null
+	return MihonExtensionManager.getById(id)?.displayName
 }
 
 private fun MissingMangaSource.resolveDisplayName(context: Context): String {

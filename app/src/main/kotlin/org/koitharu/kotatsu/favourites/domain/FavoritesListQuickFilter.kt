@@ -7,12 +7,14 @@ import org.koitharu.kotatsu.core.os.NetworkState
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.list.domain.ListFilterOption
 import org.koitharu.kotatsu.list.domain.MangaListQuickFilter
+import org.koitharu.kotatsu.mihon.MihonExtensionManager
 
 class FavoritesListQuickFilter @AssistedInject constructor(
 	@Assisted private val categoryId: Long,
 	private val settings: AppSettings,
 	private val repository: FavouritesRepository,
 	networkState: NetworkState,
+	private val mihonExtensionManager: MihonExtensionManager,
 ) : MangaListQuickFilter(settings) {
 
 	init {
@@ -25,6 +27,7 @@ class FavoritesListQuickFilter @AssistedInject constructor(
 			add(ListFilterOption.Macro.NEW_CHAPTERS)
 		}
 		add(ListFilterOption.Macro.COMPLETED)
+		mihonExtensionManager.ensureReady()
 		repository.findPopularSources(categoryId, 3).mapTo(this) {
 			ListFilterOption.Source(it)
 		}

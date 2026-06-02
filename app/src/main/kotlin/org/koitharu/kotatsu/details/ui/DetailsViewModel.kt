@@ -250,6 +250,7 @@ class DetailsViewModel @Inject constructor(
 
 	private fun doLoad(force: Boolean) = launchLoadingJob(Dispatchers.Default) {
 		detailsLoadUseCase.invoke(intent, force)
+			.withErrorHandling()
 			.collect {
 				if (it.allChapters.isNotEmpty()) {
 					val manga = it.toManga()

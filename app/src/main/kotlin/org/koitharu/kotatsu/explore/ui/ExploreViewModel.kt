@@ -74,6 +74,11 @@ class ExploreViewModel @Inject constructor(
 
 	init {
 		launchJob(Dispatchers.Default) {
+			// Ensure extensions are loaded so the source list is populated.
+			// This is a no-op if extensions are already loading or ready.
+			sourcesRepository.reloadMihonSources()
+		}
+		launchJob(Dispatchers.Default) {
 			if (!settings.isSuggestionsEnabled && settings.isTipEnabled(TIP_SUGGESTIONS)) {
 				onShowSuggestionsTip.call(Unit)
 			}
@@ -127,20 +132,23 @@ class ExploreViewModel @Inject constructor(
 	@Suppress("UNCHECKED_CAST")
 	private fun createContentFlow() = kotlinx.coroutines.flow.combine(
 		sourcesRepository.observeEnabledSources(),
+		sourcesRepository.observeMihonLoadingState(),
 		getSuggestionFlow(),
 		isGrid,
 		isRandomLoading,
 	) { args ->
 		buildList(
-			args[0] as List<MangaSourceInfo>,
-			args[1] as List<Manga>,
-			args[2] as Boolean,
-			args[3] as Boolean,
+			sources = args[0] as List<MangaSourceInfo>,
+			isExtensionsLoading = args[1] as Boolean,
+			recommendation = args[2] as List<Manga>,
+			isGrid = args[3] as Boolean,
+			randomLoading = args[4] as Boolean,
 		)
 	}.withErrorHandling()
 
 	private fun buildList(
 		sources: List<MangaSourceInfo>,
+		isExtensionsLoading: Boolean,
 		recommendation: List<Manga>,
 		isGrid: Boolean,
 		randomLoading: Boolean,
@@ -152,20 +160,15 @@ class ExploreViewModel @Inject constructor(
 			result += RecommendationsItem(recommendation.toRecommendationList())
 		}
 
-		if (sources.isNotEmpty()) {
-			result += ListHeader(
-				textRes = R.string.remote_sources,
-				buttonTextRes = R.string.manage,
-				buttonStyle = ListHeader.ButtonStyle.OUTLINED,
-			)
-			sources.mapTo(result) { MangaSourceItem(it, isGrid) }
-		} else {
-			result += ListHeader(
-				textRes = R.string.remote_sources,
-				buttonTextRes = R.string.manage,
-				buttonStyle = ListHeader.ButtonStyle.OUTLINED,
-			)
-			result += EmptyHint(
+		result += ListHeader(
+			textRes = R.string.remote_sources,
+			buttonTextRes = R.string.manage,
+			buttonStyle = ListHeader.ButtonStyle.OUTLINED,
+		)
+		when {
+			sources.isNotEmpty() -> sources.mapTo(result) { MangaSourceItem(it, isGrid) }
+			isExtensionsLoading -> result += LoadingState  // still loading — don't show "not installed"
+			else -> result += EmptyHint(
 				icon = R.drawable.ic_empty_common,
 				textPrimary = R.string.no_external_source_installed,
 				textSecondary = R.string.manage_manga_extensions_from_settings_icon,

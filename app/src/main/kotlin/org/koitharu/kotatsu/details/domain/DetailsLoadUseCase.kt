@@ -119,8 +119,11 @@ class DetailsLoadUseCase @Inject constructor(
 	}
 
 	/**
-	 * Load remote manga + saved one if available
-	 * Throw network errors after loading local manga only
+	 * Load remote manga + saved one if available.
+	 * Emits cached data immediately (if available), then refreshes from the extension.
+	 * If the extension is missing, emits the best available cached state first so the UI
+	 * shows something before the error snackbar appears, then re-throws so the error
+	 * can surface normally through withErrorHandling().
 	 */
 	private suspend fun FlowCollector<MangaDetails>.loadRemote(
 		manga: Manga,
@@ -142,7 +145,22 @@ class DetailsLoadUseCase @Inject constructor(
 				),
 			)
 		}
-		val remoteDetails = remoteDeferred.await().getOrThrow()
+		val remoteResult = remoteDeferred.await()
+		if (remoteResult.isFailure) {
+			// Emit a terminal "loaded" state with whatever we have cached so the UI
+			// shows the manga's info before the error snackbar appears.
+			emit(
+				MangaDetails(
+					manga = manga,
+					localManga = localManga,
+					override = override,
+					description = (manga.description ?: localManga?.manga?.description)
+						?.parseAsHtml(withImages = true),
+					isLoaded = true,
+				),
+			)
+		}
+		val remoteDetails = remoteResult.getOrThrow()  // re-throws so the caller shows error
 		val mangaDetails = MangaDetails(
 			manga = remoteDetails,
 			localManga = localManga,
@@ -158,9 +176,10 @@ class DetailsLoadUseCase @Inject constructor(
 	private suspend fun getDetails(seed: Manga, force: Boolean) = runCatchingCancellable {
 		loadDetails(seed, force, refreshExtensions = false)
 	}.recoverCatching { error ->
-		if (seed.source.name.startsWith("MIHON_")) {
-			loadDetails(seed, force, refreshExtensions = true)
-		} else if (error is UnsupportedSourceException && seed.source.isExternalSource()) {
+		// Only retry with extension refresh for UnsupportedSourceException on Mihon sources.
+		// Catching ALL errors from MIHON sources would hide network errors and cause
+		// infinite-retry behaviour on permanent failures.
+		if (error is UnsupportedSourceException && seed.source.isExternalSource()) {
 			loadDetails(seed, force, refreshExtensions = true)
 		} else {
 			throw error

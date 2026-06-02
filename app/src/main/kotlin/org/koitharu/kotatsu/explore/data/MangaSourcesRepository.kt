@@ -234,6 +234,12 @@ class MangaSourcesRepository @Inject constructor(
 		}.distinctUntilChanged()
 	}
 
+	/** Emits `true` while the Mihon extension manager is loading extensions, `false` otherwise. */
+	fun observeMihonLoadingState(): Flow<Boolean> {
+		val manager = mihonExtensionManager ?: return kotlinx.coroutines.flow.flowOf(false)
+		return manager.isLoading
+	}
+
 	fun observeAllMihonSources(): Flow<List<MihonMangaSource>> {
 		val manager = mihonExtensionManager ?: return kotlinx.coroutines.flow.flowOf(emptyList())
 		manager.initialize()
