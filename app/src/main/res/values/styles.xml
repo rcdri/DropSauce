@@ -341,6 +341,29 @@
 		<item name="elevation">24dp</item>
 	</style>
 
+	<style name="Widget.Kotatsu.ExploreButton.Secondary" parent="Widget.Material3.Button.TonalButton.Icon">
+		<item name="android:minHeight">68dp</item>
+		<item name="android:singleLine">false</item>
+		<item name="android:maxLines">2</item>
+		<item name="android:elegantTextHeight">false</item>
+		<item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+		<item name="shapeAppearance">?shapeAppearanceCornerLarge</item>
+		<item name="android:ellipsize">end</item>
+		<item name="iconSize">22dp</item>
+		<item name="iconPadding">4dp</item>
+		<item name="iconGravity">top</item>
+		<item name="iconTint">?attr/colorOnSurfaceVariant</item>
+		<item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+		<item name="android:insetTop">0dp</item>
+		<item name="android:insetBottom">0dp</item>
+		<item name="android:paddingStart">6dp</item>
+		<item name="android:paddingEnd">6dp</item>
+		<item name="android:paddingTop">10dp</item>
+		<item name="android:paddingBottom">8dp</item>
+		<item name="android:gravity">center</item>
+		<item name="backgroundTint">?attr/colorSurfaceContainerHigh</item>
+	</style>
+
 	<style name="Widget.Kotatsu.TextView.Indicator" parent="Widget.MaterialComponents.TextView">
 		<item name="android:drawablePadding">12dp</item>
 		<item name="android:gravity">center_vertical</item>

@@ -6,6 +6,8 @@
 /.idea/
 /.idea/**
 /.kotlin/
+/.guide/
+
 
 # macOS
 .DS_Store
@@ -13,6 +15,7 @@
 # Build outputs
 /build
 /captures
+CLAUDE.md
 .externalNativeBuild
 .cxx
 

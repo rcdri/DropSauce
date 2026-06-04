@@ -18,7 +18,6 @@ import org.koitharu.kotatsu.core.ui.BaseListAdapter
 import org.koitharu.kotatsu.core.ui.list.AdapterDelegateClickListenerAdapter
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.util.ext.drawableStart
-import org.koitharu.kotatsu.core.util.ext.setProgressIcon
 import org.koitharu.kotatsu.core.util.ext.setTooltipCompat
 import org.koitharu.kotatsu.databinding.ItemExploreButtonsBinding
 import org.koitharu.kotatsu.databinding.ItemExploreSourceGridBinding
@@ -42,16 +41,6 @@ fun exploreButtonsAD(
 	binding.buttonBookmarks.setOnClickListener(clickListener)
 	binding.buttonDownloads.setOnClickListener(clickListener)
 	binding.buttonLocal.setOnClickListener(clickListener)
-	binding.buttonRandom.setOnClickListener(clickListener)
-
-	bind {
-		if (item.isRandomLoading) {
-			binding.buttonRandom.setProgressIcon()
-		} else {
-			binding.buttonRandom.setIconResource(R.drawable.ic_dice)
-		}
-		binding.buttonRandom.isClickable = !item.isRandomLoading
-	}
 }
 
 fun exploreRecommendationItemAD(

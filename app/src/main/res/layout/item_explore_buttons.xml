@@ -7,47 +7,40 @@
 
 	<com.google.android.material.button.MaterialButton
 		android:id="@+id/button_local"
-		style="@style/Widget.Kotatsu.ExploreButton"
+		style="@style/Widget.Kotatsu.ExploreButton.Secondary"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
+		android:layout_marginEnd="4dp"
 		android:text="@string/local_storage"
-		app:icon="@drawable/ic_storage" />
+		app:icon="@drawable/ic_storage"
+		app:layout_constraintEnd_toStartOf="@id/button_bookmarks"
+		app:layout_constraintHorizontal_chainStyle="spread"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent" />
 
 	<com.google.android.material.button.MaterialButton
 		android:id="@+id/button_bookmarks"
-		style="@style/Widget.Kotatsu.ExploreButton"
+		style="@style/Widget.Kotatsu.ExploreButton.Secondary"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
+		android:layout_marginStart="4dp"
+		android:layout_marginEnd="4dp"
 		android:text="@string/bookmarks"
-		app:icon="@drawable/ic_bookmark" />
-
-	<com.google.android.material.button.MaterialButton
-		android:id="@+id/button_random"
-		style="@style/Widget.Kotatsu.ExploreButton"
-		android:layout_width="0dp"
-		android:layout_height="wrap_content"
-		android:text="@string/random"
-		app:icon="@drawable/ic_dice" />
+		app:icon="@drawable/ic_bookmark"
+		app:layout_constraintEnd_toStartOf="@id/button_downloads"
+		app:layout_constraintStart_toEndOf="@id/button_local"
+		app:layout_constraintTop_toTopOf="parent" />
 
 	<com.google.android.material.button.MaterialButton
 		android:id="@+id/button_downloads"
-		style="@style/Widget.Kotatsu.ExploreButton"
+		style="@style/Widget.Kotatsu.ExploreButton.Secondary"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
+		android:layout_marginStart="4dp"
 		android:text="@string/downloads"
-		app:icon="@drawable/ic_download" />
-
-	<androidx.constraintlayout.helper.widget.Flow
-		android:id="@+id/flow"
-		android:layout_width="0dp"
-		android:layout_height="wrap_content"
-		app:constraint_referenced_ids="button_local,button_bookmarks,button_random,button_downloads"
-		app:flow_horizontalGap="12dp"
-		app:flow_maxElementsWrap="@integer/explore_buttons_columns"
-		app:flow_verticalGap="8dp"
-		app:flow_wrapMode="aligned"
+		app:icon="@drawable/ic_download"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@id/button_bookmarks"
 		app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

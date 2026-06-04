@@ -38,21 +38,37 @@ import org.koitharu.kotatsu.explore.ui.adapter.ExploreListEventListener
 import org.koitharu.kotatsu.explore.ui.model.MangaSourceItem
 import org.koitharu.kotatsu.list.ui.adapter.TypedListSpacingDecoration
 import org.koitharu.kotatsu.list.ui.model.ListHeader
+import org.koitharu.kotatsu.main.ui.owners.MainFabInvalidator
+import org.koitharu.kotatsu.main.ui.owners.MainFabOwner
 import org.koitharu.kotatsu.parsers.model.Manga
 
 @AndroidEntryPoint
 class ExploreFragment :
 	BaseFragment<FragmentExploreBinding>(),
 	RecyclerViewOwner,
+	MainFabOwner,
 	ExploreListEventListener,
 	OnListItemClickListener<MangaSourceItem>, ListSelectionController.Callback {
 
 	private val viewModel by viewModels<ExploreViewModel>()
 	private var exploreAdapter: ExploreAdapter? = null
 	private var sourceSelectionController: ListSelectionController? = null
+	private var randomLoading = false
 
 	override val recyclerView: RecyclerView?
 		get() = viewBinding?.recyclerView
+
+	override val mainFabTextRes: Int
+		get() = R.string.random
+
+	override val mainFabIconRes: Int
+		get() = R.drawable.ic_dice
+
+	override val isMainFabEnabled: Boolean
+		get() = !isMainFabLoading
+
+	override val isMainFabLoading: Boolean
+		get() = randomLoading
 
 	override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentExploreBinding {
 		return FragmentExploreBinding.inflate(inflater, container, false)
@@ -87,6 +103,10 @@ class ExploreFragment :
 		viewModel.onOpenManga.observeEvent(viewLifecycleOwner, ::onOpenManga)
 		viewModel.onActionDone.observeEvent(viewLifecycleOwner, ReversibleActionObserver(binding.recyclerView))
 		viewModel.isGrid.observe(viewLifecycleOwner, ::onGridModeChanged)
+		viewModel.isRandomLoading.observe(viewLifecycleOwner) {
+			randomLoading = it
+			(requireActivity() as? MainFabInvalidator)?.invalidateMainFab()
+		}
 		viewModel.onShowSuggestionsTip.observeEvent(viewLifecycleOwner) {
 			showSuggestionsTip()
 		}
@@ -124,8 +144,11 @@ class ExploreFragment :
 			R.id.button_bookmarks -> router.openBookmarks()
 			R.id.button_more -> router.openSuggestions()
 			R.id.button_downloads -> router.openDownloads()
-			R.id.button_random -> viewModel.openRandom()
 		}
+	}
+
+	override fun onMainFabClick() {
+		viewModel.openRandom()
 	}
 
 	override fun onItemClick(item: MangaSourceItem, view: View) {

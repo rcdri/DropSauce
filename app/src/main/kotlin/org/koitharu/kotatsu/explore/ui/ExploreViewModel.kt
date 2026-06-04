@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
@@ -63,7 +64,8 @@ class ExploreViewModel @Inject constructor(
 	val onOpenManga = MutableEventFlow<Manga>()
 	val onActionDone = MutableEventFlow<ReversibleAction>()
 	val onShowSuggestionsTip = MutableEventFlow<Unit>()
-	private val isRandomLoading = MutableStateFlow(false)
+	private val mutableRandomLoading = MutableStateFlow(false)
+	val isRandomLoading = mutableRandomLoading.asStateFlow()
 
 	val content: StateFlow<List<ListModel>> = isLoading.flatMapLatest { loading ->
 		if (loading) {
@@ -87,16 +89,16 @@ class ExploreViewModel @Inject constructor(
 	}
 
 	fun openRandom() {
-		if (isRandomLoading.value) {
+		if (mutableRandomLoading.value) {
 			return
 		}
 		launchJob(Dispatchers.Default) {
-			isRandomLoading.value = true
+			mutableRandomLoading.value = true
 			try {
 				val manga = exploreRepository.findRandomManga(tagsLimit = 8)
 				onOpenManga.call(manga)
 			} finally {
-				isRandomLoading.value = false
+				mutableRandomLoading.value = false
 			}
 		}
 	}
@@ -149,7 +151,6 @@ class ExploreViewModel @Inject constructor(
 		sourcesRepository.observeMihonLoadingState(),
 		getSuggestionFlow(),
 		isGrid,
-		isRandomLoading,
 		sourcesRepository.observeHasMultiLanguageSources(),
 		settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_LANGUAGES) },
 	) { args ->
@@ -158,9 +159,8 @@ class ExploreViewModel @Inject constructor(
 			isExtensionsLoading = args[1] as Boolean,
 			recommendation = args[2] as List<Manga>,
 			isGrid = args[3] as Boolean,
-			randomLoading = args[4] as Boolean,
-			hasMultiLanguageSources = args[5] as Boolean,
-			isLanguageTipEnabled = args[6] as Boolean,
+			hasMultiLanguageSources = args[4] as Boolean,
+			isLanguageTipEnabled = args[5] as Boolean,
 		)
 	}.withErrorHandling()
 
@@ -169,12 +169,11 @@ class ExploreViewModel @Inject constructor(
 		isExtensionsLoading: Boolean,
 		recommendation: List<Manga>,
 		isGrid: Boolean,
-		randomLoading: Boolean,
 		hasMultiLanguageSources: Boolean,
 		isLanguageTipEnabled: Boolean,
 	): List<ListModel> {
 		val result = ArrayList<ListModel>(sources.size + 4)
-		result += ExploreButtons(randomLoading)
+		result += ExploreButtons
 		if (recommendation.isNotEmpty()) {
 			result += ListHeader(R.string.suggestions, R.string.more, R.id.nav_suggestions)
 			result += RecommendationsItem(recommendation.toRecommendationList())
@@ -211,7 +210,7 @@ class ExploreViewModel @Inject constructor(
 	}
 
 	private fun getLoadingStateList() = listOf(
-		ExploreButtons(isRandomLoading.value),
+		ExploreButtons,
 		LoadingState,
 	)
 

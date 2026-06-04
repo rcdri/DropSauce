@@ -256,7 +256,7 @@ class MainNavigationDelegate(
 		fragmentManager.beginTransaction()
 			.setReorderingAllowed(true)
 			.replace(R.id.container, fragmentClass, args, TAG_PRIMARY)
-			.runOnCommit { onFragmentChanged(fragment, fromUser = true) }
+			.runOnCommit { onFragmentChanged(primaryFragment ?: fragment, fromUser = true) }
 			.commit()
 		return true
 	}

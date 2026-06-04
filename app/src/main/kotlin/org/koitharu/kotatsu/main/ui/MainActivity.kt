@@ -34,6 +34,7 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.search.SearchView
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
@@ -64,6 +65,7 @@ import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.core.util.ext.printStackTraceDebug
 import org.koitharu.kotatsu.core.util.ext.setOptionalIconsVisibleCompat
+import org.koitharu.kotatsu.core.util.ext.setProgressIcon
 import org.koitharu.kotatsu.core.util.ext.start
 import org.koitharu.kotatsu.databinding.ActivityMainBinding
 import org.koitharu.kotatsu.details.service.MangaPrefetchService
@@ -73,6 +75,8 @@ import org.koitharu.kotatsu.local.ui.LocalIndexUpdateService
 import org.koitharu.kotatsu.local.ui.LocalStorageCleanupWorker
 import org.koitharu.kotatsu.main.ui.owners.AppBarOwner
 import org.koitharu.kotatsu.main.ui.owners.BottomNavOwner
+import org.koitharu.kotatsu.main.ui.owners.MainFabInvalidator
+import org.koitharu.kotatsu.main.ui.owners.MainFabOwner
 import org.koitharu.kotatsu.main.ui.welcome.OnboardingActivity
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.remotelist.ui.MangaSearchMenuProvider
@@ -85,7 +89,7 @@ import javax.inject.Inject
 import com.google.android.material.R as materialR
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNavOwner,
+class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNavOwner, MainFabInvalidator,
 	View.OnClickListener,
 	SearchSuggestionItemCallback.SuggestionItemListener,
 	MainNavigationDelegate.OnFragmentChangedListener,
@@ -106,6 +110,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	private lateinit var fadingAppbarMediator: FadingAppbarMediator
 	private val overflowMenuProviders = mutableListOf<OverflowMenuProviderEntry>()
 	private var isSearchFullyShown = false
+	private var mainFabModeKey: String? = null
 	private val shrinkFabRunnable = Runnable { viewBinding.fab?.shrink() }
 
 	override val appBar: AppBarLayout
@@ -222,8 +227,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 
 	override fun onClick(v: View) {
 		when (v.id) {
-			R.id.fab, R.id.railFab -> viewModel.openLastReader()
+			R.id.fab, R.id.railFab -> {
+				val fabOwner = navigationDelegate.primaryFragment as? MainFabOwner
+				if (fabOwner != null) {
+					fabOwner.onMainFabClick()
+				} else {
+					viewModel.openLastReader()
+				}
+			}
 		}
+	}
+
+	override fun invalidateMainFab() {
+		adjustFabVisibility()
 	}
 
 	private fun addMainOverflowMenuProvider(
@@ -362,8 +378,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	}
 
 	private fun onLoadingStateChanged(isLoading: Boolean) {
-		val fab = viewBinding.fab ?: viewBinding.navRail?.headerView ?: return
-		fab.isEnabled = !isLoading
+		adjustFabVisibility()
 	}
 
 	private fun onResumeEnabledChanged(isEnabled: Boolean) {
@@ -402,23 +417,72 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		topFragment: Fragment? = navigationDelegate.primaryFragment,
 		isSearchOpened: Boolean = viewBinding.searchView.isShowing,
 	) {
-		navigationDelegate.navRailHeader?.railFab?.isVisible = isResumeEnabled
-		val fab = viewBinding.fab ?: return
-		if (isResumeEnabled && !actionModeDelegate.isActionModeStarted && !isSearchOpened && topFragment is HistoryListFragment) {
-			if (!fab.isVisible) {
-				// Show the full "Continue" label, then collapse to just the icon after a short
-				// delay every time the history page is (re)opened.
-				fab.extend()
-				fab.show()
-				fab.removeCallbacks(shrinkFabRunnable)
-				fab.postDelayed(shrinkFabRunnable, FAB_SHRINK_DELAY_MS)
-			}
+		val fragment = if (topFragment?.isAdded == true) {
+			topFragment
 		} else {
-			if (fab.isVisible) {
-				fab.removeCallbacks(shrinkFabRunnable)
-				fab.hide()
-			}
+			navigationDelegate.primaryFragment
 		}
+		val fabOwner = fragment as? MainFabOwner
+		if (fabOwner != null && !actionModeDelegate.isActionModeStarted && !isSearchOpened) {
+			showMainFab("owner:${fragment::class.java.name}") { fab ->
+				configureOwnerFab(fab, fabOwner)
+			}
+		} else if (isResumeEnabled && !actionModeDelegate.isActionModeStarted && !isSearchOpened && fragment is HistoryListFragment) {
+			showMainFab("continue", ::configureContinueFab)
+		} else {
+			hideMainFab()
+		}
+	}
+
+	private fun showMainFab(
+		modeKey: String,
+		configure: (ExtendedFloatingActionButton) -> Unit,
+	) {
+		navigationDelegate.navRailHeader?.railFab?.let { railFab ->
+			configure(railFab)
+			railFab.isVisible = true
+		}
+		val fab = viewBinding.fab ?: run {
+			mainFabModeKey = modeKey
+			return
+		}
+		configure(fab)
+		val isModeChanged = mainFabModeKey != modeKey
+		mainFabModeKey = modeKey
+		if (!fab.isVisible || isModeChanged) {
+			// Show the full label, then collapse to just the icon after a short delay every time the
+			// owning page is (re)opened.
+			fab.extend()
+			fab.show()
+			fab.removeCallbacks(shrinkFabRunnable)
+			fab.postDelayed(shrinkFabRunnable, FAB_SHRINK_DELAY_MS)
+		}
+	}
+
+	private fun hideMainFab() {
+		navigationDelegate.navRailHeader?.railFab?.isVisible = false
+		mainFabModeKey = null
+		val fab = viewBinding.fab ?: return
+		if (fab.isVisible) {
+			fab.removeCallbacks(shrinkFabRunnable)
+			fab.hide()
+		}
+	}
+
+	private fun configureContinueFab(fab: ExtendedFloatingActionButton) {
+		fab.setText(R.string._continue)
+		fab.setIconResource(R.drawable.ic_read)
+		fab.isEnabled = !viewModel.isLoading.value
+	}
+
+	private fun configureOwnerFab(fab: ExtendedFloatingActionButton, owner: MainFabOwner) {
+		fab.setText(owner.mainFabTextRes)
+		if (owner.isMainFabLoading) {
+			fab.setProgressIcon()
+		} else {
+			fab.setIconResource(owner.mainFabIconRes)
+		}
+		fab.isEnabled = owner.isMainFabEnabled
 	}
 
 	private fun adjustSearchUI(isOpened: Boolean) {
