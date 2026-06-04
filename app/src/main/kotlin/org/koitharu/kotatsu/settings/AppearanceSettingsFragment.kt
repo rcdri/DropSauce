@@ -521,7 +521,7 @@ private fun AppearanceScreen(
 						subtitle = stringResource(R.string.use_legacy_navigation_bar_summary),
 						checked = navLegacy,
 						onCheckedChange = { navLegacy = it },
-						icon = R.drawable.ic_drawer_menu,
+						icon = R.drawable.ic_bottom_navigation,
 
 						shape = pos.shape,
 					)

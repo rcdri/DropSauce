@@ -503,12 +503,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	}
 
 	private fun updateContainerBottomMargin() {
-		val bottomNavBar = viewBinding.bottomNav ?: return
-		val newMargin = if (bottomNavBar.isPinned && bottomNavBar.isShownOrShowing) bottomNavBar.height else 0
+		// The bottom navigation bar is a floating pill. Even when it's pinned (kept from hiding on
+		// scroll), the content must keep filling the full height *behind* it — otherwise the strip
+		// under the pill falls back to the solid window background and the bar stops looking
+		// floating. So the container never gets a bottom margin for the pinned bar; pinning only
+		// affects whether the bar/search hide on scroll.
 		with(viewBinding.container) {
 			val params = layoutParams as MarginLayoutParams
-			if (params.bottomMargin != newMargin) {
-				params.bottomMargin = newMargin
+			if (params.bottomMargin != 0) {
+				params.bottomMargin = 0
 				layoutParams = params
 			}
 		}
