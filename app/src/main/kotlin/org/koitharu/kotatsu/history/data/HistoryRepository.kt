@@ -33,6 +33,7 @@ import org.koitharu.kotatsu.scrobbling.common.domain.Scrobbler
 import org.koitharu.kotatsu.scrobbling.common.domain.tryScrobble
 import org.koitharu.kotatsu.search.domain.SearchKind
 import org.koitharu.kotatsu.tracker.domain.CheckNewChaptersUseCase
+import kotlin.math.ceil
 import javax.inject.Inject
 import javax.inject.Provider
 
@@ -220,9 +221,8 @@ class HistoryRepository @Inject constructor(
 		if (manga.isLocal || chapters.isNullOrEmpty() || chapters.findById(chapterId) != null) {
 			return this
 		}
-		val newChapterId = chapters.getOrNull(
-			(chapters.size * percent).toInt(),
-		)?.id ?: return this
+		val index = ceil(chapters.size * percent.toDouble()).toInt() - 1
+		val newChapterId = chapters.getOrNull(index.coerceIn(chapters.indices))?.id ?: return this
 		val newEntity = copy(chapterId = newChapterId)
 		db.getHistoryDao().update(newEntity)
 		return newEntity

@@ -255,7 +255,7 @@ class ReaderViewModel @Inject constructor(
         historyUpdateUseCase.invokeAsync(
             manga = getMangaOrNull() ?: return,
             readerState = readerState,
-            percent = computePercent(readerState.chapterId, readerState.page),
+            percent = computePercent(readerState.chapterId),
         )
     }
 
@@ -393,7 +393,7 @@ class ReaderViewModel @Inject constructor(
                     scroll = state.scroll,
                     imageUrl = page.preview.ifNullOrEmpty { page.url },
                     createdAt = Instant.now(),
-                    percent = computePercent(state.chapterId, state.page),
+                    percent = computePercent(state.chapterId),
                 )
                 bookmarksRepository.addBookmark(bookmark)
                 onShowToast.call(R.string.bookmark_added)
@@ -450,7 +450,7 @@ class ReaderViewModel @Inject constructor(
                         // save state
                         if (!isIncognitoMode.firstNotNull()) {
                             readingState.value?.let {
-                                val percent = computePercent(it.chapterId, it.page)
+                                val percent = computePercent(it.chapterId)
                                 historyUpdateUseCase(manga, it, percent)
                             }
                         }
@@ -525,7 +525,7 @@ class ReaderViewModel @Inject constructor(
             chaptersTotal = m.chapters[chapter.branch].sizeOrZero(),
             totalPages = chaptersLoader.getPagesCount(chapter.id),
             currentPage = state.page,
-            percent = computePercent(state.chapterId, state.page),
+            percent = computePercent(state.chapterId),
             incognito = isIncognitoMode.value == true,
         )
         uiState.value = newState
@@ -535,18 +535,15 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    private fun computePercent(chapterId: Long, pageIndex: Int): Float {
+    private fun computePercent(chapterId: Long): Float {
         val branch = chaptersLoader.peekChapter(chapterId)?.branch
         val chapters = mangaDetails.value?.chapters?.get(branch) ?: return PROGRESS_NONE
         val chaptersCount = chapters.size
         val chapterIndex = chapters.indexOfFirst { x -> x.id == chapterId }
-        val pagesCount = chaptersLoader.getPagesCount(chapterId)
-        if (chaptersCount == 0 || pagesCount == 0) {
+        if (chaptersCount == 0 || chapterIndex < 0) {
             return PROGRESS_NONE
         }
-        val pagePercent = (pageIndex + 1) / pagesCount.toFloat()
-        val ppc = 1f / chaptersCount
-        return ppc * chapterIndex + ppc * pagePercent
+        return (chapterIndex + 1) / chaptersCount.toFloat()
     }
 
     private fun observeIsWebtoonZoomEnabled() = settings.observeAsFlow(

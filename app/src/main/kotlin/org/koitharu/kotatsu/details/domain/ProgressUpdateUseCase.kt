@@ -23,8 +23,8 @@ class ProgressUpdateUseCase @Inject constructor(
 		} else {
 			manga
 		}
-			if (!seed.isLocal && !networkState.value) {
-				return history.percent
+		if (!seed.isLocal && !networkState.value) {
+			return history.percent
 		}
 		val repo = mangaRepositoryFactory.create(seed.source)
 		val details = if (manga.source != seed.source || seed.chapters.isNullOrEmpty()) {
@@ -32,35 +32,24 @@ class ProgressUpdateUseCase @Inject constructor(
 		} else {
 			seed
 		}
-			val cachedChapterUrl = database.getChaptersDao().findAll(manga.id)
-				.firstOrNull { it.chapterId == history.chapterId }
-				?.url
-			val chapter = details.findChapterById(history.chapterId)
-				?: cachedChapterUrl?.let { url ->
-					details.chapters?.firstOrNull { it.url == url }
-				}
-				?: return history.percent
-		val chapters = details.getChapters(chapter.branch)
-		val chapterRepo = if (repo.source == chapter.source) {
-			repo
-		} else {
-			mangaRepositoryFactory.create(chapter.source)
-		}
-		val chaptersCount = chapters.size
-			if (chaptersCount == 0) {
-				return history.percent
-		}
-			val chapterIndex = chapters.indexOfFirst { x -> x.id == chapter.id }
-			if (chapterIndex < 0) {
-				return history.percent
+		val cachedChapterUrl = database.getChaptersDao().findAll(manga.id)
+			.firstOrNull { it.chapterId == history.chapterId }
+			?.url
+		val chapter = details.findChapterById(history.chapterId)
+			?: cachedChapterUrl?.let { url ->
+				details.chapters?.firstOrNull { it.url == url }
 			}
-		val pagesCount = chapterRepo.getPages(chapter).size
-			if (pagesCount == 0) {
-				return history.percent
+			?: return history.percent
+		val chapters = details.getChapters(chapter.branch)
+		val chaptersCount = chapters.size
+		if (chaptersCount == 0) {
+			return history.percent
 		}
-		val pagePercent = (history.page + 1) / pagesCount.toFloat()
-		val ppc = 1f / chaptersCount
-		val result = ppc * chapterIndex + ppc * pagePercent
+		val chapterIndex = chapters.indexOfFirst { x -> x.id == chapter.id }
+		if (chapterIndex < 0) {
+			return history.percent
+		}
+		val result = (chapterIndex + 1) / chaptersCount.toFloat()
 		if (result != history.percent) {
 			database.getHistoryDao().update(
 				history.copy(

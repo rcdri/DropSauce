@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.CHAPTERS_READ
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.NONE
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_LEFT
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_READ
+import kotlin.math.roundToInt
 
 data class ReadingProgress(
 	val percent: Float,
@@ -17,10 +18,10 @@ data class ReadingProgress(
 		get() = 1f - percent
 
 	val chapters: Int
-		get() = (totalChapters * percent).toInt()
+		get() = (totalChapters * percent).roundToInt().coerceIn(0, totalChapters)
 
 	val chaptersLeft: Int
-		get() = (totalChapters * percentLeft).toInt()
+		get() = (totalChapters - chapters).coerceIn(0, totalChapters)
 
 	fun isValid() = when (mode) {
 		NONE -> false

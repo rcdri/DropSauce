@@ -151,7 +151,10 @@ class DownloadDialogViewModel @Inject constructor(
 			val history = historyRepository.getOne(m)
 			if (history != null) {
 				currentChaptersIds[m.id] = history.chapterId
-				val unreadChaptersCount = m.chapters?.dropWhile { it.id != history.chapterId }.sizeOrZero()
+				val unreadChaptersCount = m.chapters
+					?.dropWhile { it.id != history.chapterId }
+					?.drop(1)
+					.sizeOrZero()
 				maxUnreadChapters = maxOf(maxUnreadChapters, unreadChaptersCount)
 			} else {
 				maxUnreadChapters = maxOf(maxUnreadChapters, m.chapters.sizeOrZero())

@@ -55,10 +55,18 @@ class DetailsLoadUseCase @Inject constructor(
 			"Cannot resolve intent $intent"
 		}
 		val override = mangaDataRepository.getOverride(manga.id)
+		// Pre-fetch local manga before the first emit so that the chapters map in ChaptersLoader
+		// is populated with LocalMangaSource entries from the start. Without this, the reader
+		// receives a remote-sourced chapter list first and loads pages from the network even
+		// when the chapter is already downloaded. The localMangaIndex cache makes subsequent
+		// calls inside loadRemote() free.
+		val initialLocalManga = if (!manga.isLocal) {
+			localMangaRepository.findSavedManga(manga, withDetails = true)
+		} else null
 		emit(
 			MangaDetails(
 				manga = manga,
-				localManga = null,
+				localManga = initialLocalManga,
 				override = override,
 				description = manga.description?.parseAsHtml(withImages = false),
 				isLoaded = false,

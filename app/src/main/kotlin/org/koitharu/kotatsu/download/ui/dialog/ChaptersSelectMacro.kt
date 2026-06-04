@@ -78,6 +78,7 @@ interface ChaptersSelectMacro {
 					if (c.id == currentChapterId) {
 						branch = c.branch
 						isAdding = true
+						continue
 					}
 				}
 				if (isAdding) {

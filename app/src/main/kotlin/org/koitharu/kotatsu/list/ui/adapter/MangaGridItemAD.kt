@@ -56,11 +56,6 @@ fun mangaGridItemAD(
 		binding.textViewTitleOverlay.isVisible = isTitleOverCover
 		binding.viewScrim.isVisible = isTitleOverCover
 		binding.textViewTitle.isVisible = !item.isTitleHidden && !isTitleOverCover
-		// Let the overlay title span almost the full width, only reserving room for the progress
-		// ring when one is actually shown.
-		binding.textViewTitleOverlay.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-			marginEnd = ((if (item.progress != null) 44f else 12f) * density).toInt()
-		}
 		binding.progressView.setProgress(item.progress, PAYLOAD_PROGRESS_CHANGED in payloads)
 		with(binding.iconsView) {
 			clearIcons()
@@ -79,5 +74,16 @@ fun mangaGridItemAD(
 		binding.imageViewCover.setImageAsync(item.coverUrl, item.manga)
 		binding.badge.number = item.counter
 		binding.badge.isVisible = item.counter > 0
+		// Counter badge shares the top-right corner with the progress ring: when a ring is shown,
+		// shift the badge left of it so they don't overlap.
+		binding.badge.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+			marginEnd = if (item.progress != null) {
+				context.resources.getDimensionPixelOffset(R.dimen.card_indicator_offset) +
+					context.resources.getDimensionPixelOffset(R.dimen.card_indicator_size) +
+					(4f * density).toInt()
+			} else {
+				context.resources.getDimensionPixelOffset(R.dimen.margin_small)
+			}
+		}
 	}
 }

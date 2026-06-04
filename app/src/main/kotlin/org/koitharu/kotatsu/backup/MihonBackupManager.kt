@@ -324,8 +324,6 @@ class MihonBackupManager @Inject constructor(
                     percent = computeHistoryPercent(
                         chapterIndex = chapterIndex,
                         chaptersCount = chapters.size,
-                        isChapterMarkedRead = backupChapter?.read == true,
-                        lastPageRead = restoredPage,
                     ),
                     deletedAt = 0,
                     chaptersCount = chapters.size,
@@ -507,18 +505,10 @@ class MihonBackupManager @Inject constructor(
   private fun computeHistoryPercent(
     chapterIndex: Int,
     chaptersCount: Int,
-    isChapterMarkedRead: Boolean,
-    lastPageRead: Int,
   ): Float {
     if (chaptersCount <= 0) return 0f
     val normalizedIndex = chapterIndex.coerceIn(0, chaptersCount - 1)
-    val inChapterProgress = when {
-      isChapterMarkedRead -> 1f
-      lastPageRead > 0 -> 0.5f
-      else -> 0f
-    }
-    val completed = (normalizedIndex + inChapterProgress).coerceAtMost(chaptersCount.toFloat())
-    return completed / chaptersCount.toFloat()
+    return (normalizedIndex + 1) / chaptersCount.toFloat()
   }
 }
 

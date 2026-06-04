@@ -203,7 +203,7 @@ abstract class ChaptersPagesViewModel(
 			val chapters = checkNotNull(manga.chapters[selectedBranch.value])
 			val chapterIndex = chapters.indexOfFirst { it.id == chapterId }
 			check(chapterIndex in chapters.indices) { "Chapter not found" }
-			val percent = chapterIndex / chapters.size.toFloat()
+			val percent = (chapterIndex + 1) / chapters.size.toFloat()
 			historyRepository.addOrUpdate(
 				manga = manga.toManga(),
 				chapterId = chapterId,

@@ -39,32 +39,34 @@ fun MangaDetails.mapChapters(
 	if (!isDownloadedOnly || local?.manga?.chapters == null) {
 		for (chapter in remoteChapters) {
 			val local = localMap?.remove(chapter.id)
-			if (chapter.id == currentChapterId) {
-				isUnread = true
-			}
+			val isCurrent = chapter.id == currentChapterId
 			result += (local ?: chapter).toListItem(
-				isCurrent = chapter.id == currentChapterId,
-				isUnread = isUnread,
-				isNew = isUnread && result.size >= newFrom,
+				isCurrent = isCurrent,
+				isUnread = isUnread && !isCurrent,
+				isNew = !isCurrent && isUnread && result.size >= newFrom,
 				isDownloaded = local != null,
 				isBookmarked = chapter.id in bookmarked,
 				isGrid = isGrid,
 			)
+			if (isCurrent) {
+				isUnread = true
+			}
 		}
 	}
 	if (!localMap.isNullOrEmpty()) {
 		for (chapter in localMap.values) {
-			if (chapter.id == currentChapterId) {
-				isUnread = true
-			}
+			val isCurrent = chapter.id == currentChapterId
 			result += chapter.toListItem(
-				isCurrent = chapter.id == currentChapterId,
-				isUnread = isUnread,
+				isCurrent = isCurrent,
+				isUnread = isUnread && !isCurrent,
 				isNew = false,
 				isDownloaded = !isLocal,
 				isBookmarked = chapter.id in bookmarked,
 				isGrid = isGrid,
 			)
+			if (isCurrent) {
+				isUnread = true
+			}
 		}
 	}
 	return result

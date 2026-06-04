@@ -72,7 +72,13 @@ class DeleteReadChaptersUseCase @Inject constructor(
 			return null
 		}
 		val branch = (chapters.findById(history.chapterId) ?: return null).branch
-		val filteredChapters = chapters.filter { x -> x.branch == branch }.takeWhile { it.id != history.chapterId }
+		val branchChapters = chapters.filter { x -> x.branch == branch }
+		val currentIndex = branchChapters.indexOfFirst { it.id == history.chapterId }
+		val filteredChapters = if (currentIndex >= 0) {
+			branchChapters.take(currentIndex + 1)
+		} else {
+			emptyList()
+		}
 		return if (filteredChapters.isEmpty()) {
 			null
 		} else {
