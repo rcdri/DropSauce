@@ -143,6 +143,12 @@
 		<item name="bottomNavigationStyle">@style/Widget.Material3Expressive.BottomNavigationView</item>
 		<item name="navigationRailStyle">@style/Widget.Material3Expressive.NavigationRailView</item>
 
+		<!-- Collapsing top bars blend with the window background (no grey surface overlay) -->
+		<item name="appBarLayoutStyle">@style/Widget.Kotatsu.AppBarLayout</item>
+		<item name="collapsingToolbarLayoutStyle">@style/Widget.Kotatsu.CollapsingToolbar</item>
+		<item name="collapsingToolbarLayoutMediumStyle">@style/Widget.Kotatsu.CollapsingToolbar.Medium</item>
+		<item name="collapsingToolbarLayoutLargeStyle">@style/Widget.Kotatsu.CollapsingToolbar.Large</item>
+
 		<!-- Custom views -->
 		<item name="fastScrollerStyle">@style/Widget.Kotatsu.FastScroller</item>
 		<item name="listItemTextViewStyle">@style/Widget.Kotatsu.ListItemTextView</item>
@@ -169,7 +175,10 @@
 
 	<!-- Expressive Monet theme -->
 	<style name="ThemeOverlay.Kotatsu.Expressive" parent="ThemeOverlay.Material3Expressive.DynamicColors.DayNight">
-		<item name="appBarLayoutStyle">@style/Widget.Material3Expressive.AppBarLayout</item>
+		<item name="appBarLayoutStyle">@style/Widget.Kotatsu.AppBarLayout</item>
+		<item name="collapsingToolbarLayoutStyle">@style/Widget.Kotatsu.CollapsingToolbar</item>
+		<item name="collapsingToolbarLayoutMediumStyle">@style/Widget.Kotatsu.CollapsingToolbar.Medium</item>
+		<item name="collapsingToolbarLayoutLargeStyle">@style/Widget.Kotatsu.CollapsingToolbar.Large</item>
 		<!-- The Expressive collapsing-toolbar styles shift the expanded title so the source
 		     name no longer lines up with the filter/sort button. Use the default collapsing
 		     toolbar (which keeps them aligned) on every theme. -->

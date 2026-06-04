@@ -145,6 +145,28 @@
 		<item name="chipIconVisible">true</item>
 	</style>
 
+	<!-- Top bars blend with the window background instead of painting a lighter surface scrim /
+	     lift tint, which read as a jarring grey "overlay" when collapsing on the black theme. -->
+	<style name="Widget.Kotatsu.AppBarLayout" parent="Widget.Material3.AppBarLayout">
+		<item name="android:background">?android:attr/colorBackground</item>
+		<item name="liftOnScrollColor">?android:attr/colorBackground</item>
+	</style>
+
+	<style name="Widget.Kotatsu.CollapsingToolbar" parent="Widget.Material3.CollapsingToolbar">
+		<item name="contentScrim">?android:attr/colorBackground</item>
+		<item name="statusBarScrim">?android:attr/colorBackground</item>
+	</style>
+
+	<style name="Widget.Kotatsu.CollapsingToolbar.Medium" parent="Widget.Material3.CollapsingToolbar.Medium">
+		<item name="contentScrim">?android:attr/colorBackground</item>
+		<item name="statusBarScrim">?android:attr/colorBackground</item>
+	</style>
+
+	<style name="Widget.Kotatsu.CollapsingToolbar.Large" parent="Widget.Material3.CollapsingToolbar.Large">
+		<item name="contentScrim">?android:attr/colorBackground</item>
+		<item name="statusBarScrim">?android:attr/colorBackground</item>
+	</style>
+
 	<style name="Widget.Kotatsu.Button.More" parent="Widget.Material3Expressive.Button.TextButton">
 		<item name="android:minWidth">48dp</item>
 	</style>
