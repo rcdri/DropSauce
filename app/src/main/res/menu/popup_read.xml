@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
-	xmlns:android="http://schemas.android.com/apk/res/android">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<group android:id="@+id/group_read_actions">
 		<item
@@ -16,29 +17,30 @@
 			android:title="@string/remove_from_history" />
 	</group>
 
-	<group
-		android:id="@+id/group_chapter_options"
-		android:checkableBehavior="all">
+	<group android:id="@+id/group_chapter_options">
 		<item
 			android:id="@+id/action_downloaded"
 			android:checkable="true"
-			android:icon="@drawable/ic_storage_checked"
+			android:icon="@drawable/ic_storage"
 			android:orderInCategory="30"
-			android:title="@string/on_device" />
+			android:title="@string/on_device"
+			app:showAsAction="never" />
 
 		<item
 			android:id="@+id/action_reversed"
 			android:checkable="true"
 			android:icon="@drawable/ic_revert"
 			android:orderInCategory="40"
-			android:title="@string/reverse_list" />
+			android:title="@string/reverse_list"
+			app:showAsAction="never" />
 
 		<item
 			android:id="@+id/action_grid_view"
 			android:checkable="true"
 			android:icon="@drawable/ic_grid"
 			android:orderInCategory="50"
-			android:title="@string/chapters_grid_view" />
+			android:title="@string/chapters_grid_view"
+			app:showAsAction="never" />
 	</group>
 
 </menu>
