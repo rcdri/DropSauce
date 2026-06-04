@@ -39,7 +39,9 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 				ContextCompat.getColor(ctx, materialR.color.m3_appbar_overlay_color),
 				ctx.getThemeColor(materialR.attr.colorSurface),
 			)
+			@Suppress("DEPRECATION")
 			defaultStatusBarColor = window.statusBarColor
+			@Suppress("DEPRECATION")
 			window.statusBarColor = actionModeColor
 			val insets = ViewCompat.getRootWindowInsets(window.decorView)
 				?.getInsets(WindowInsetsCompat.Type.systemBars()) ?: return
@@ -57,6 +59,7 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 		isEnabled = false
 		listeners?.forEach { it.onActionModeFinished(mode) }
 		if (window != null) {
+			@Suppress("DEPRECATION")
 			window.statusBarColor = defaultStatusBarColor
 		}
 	}

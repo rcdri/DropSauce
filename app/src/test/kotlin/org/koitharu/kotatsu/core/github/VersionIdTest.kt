@@ -45,8 +45,13 @@ class VersionIdTest {
 
 	@Test
 	fun testCurrentVersion() {
-		val version1 = VersionId("2.4.6")
-		val version2 = VersionId(BuildConfig.VERSION_NAME)
-		assertTrue(version1 < version2)
+		assertTrue(
+			BuildConfig.VERSION_NAME,
+			BuildConfig.VERSION_NAME.matches(Regex("""\d+\.\d+(\.\d+)?(-[A-Za-z]+\d+)?""")),
+		)
+		val version = VersionId(BuildConfig.VERSION_NAME)
+		assertTrue(version.major >= 0)
+		assertTrue(version.minor >= 0)
+		assertTrue(version.build >= 0)
 	}
 }

@@ -98,10 +98,6 @@ object WidgetCoverLoader {
 				Log.w(TAG, "ErrorResult for $url", r.throwable)
 				null
 			}
-			else -> {
-				Log.w(TAG, "unknown result type ${r.javaClass.name} for $url")
-				null
-			}
 		}
 	}
 
@@ -121,7 +117,6 @@ object WidgetCoverLoader {
 		null -> null
 		is SuccessResult -> r.toBitmapOrNull()
 		is ErrorResult -> null
-		else -> null
 	}
 
 	private fun Bitmap.roundedCenterCrop(

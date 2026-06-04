@@ -58,6 +58,7 @@ class MemoryContentCache @Inject constructor(application: Application) : Compone
 
 	override fun onConfigurationChanged(newConfig: Configuration) = Unit
 
+	@Deprecated("Deprecated in Java")
 	override fun onLowMemory() = Unit
 
 	override fun onTrimMemory(level: Int) {
@@ -66,6 +67,7 @@ class MemoryContentCache @Inject constructor(application: Application) : Compone
 		trimCache(relatedMangaCache, level)
 	}
 
+	@Suppress("DEPRECATION")
 	private fun trimCache(cache: ExpiringLruCache<*>, level: Int) {
 		when (level) {
 			ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL,

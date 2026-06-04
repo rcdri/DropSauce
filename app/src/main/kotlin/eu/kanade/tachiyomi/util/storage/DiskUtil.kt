@@ -5,7 +5,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
 import android.os.StatFs
-import androidx.core.content.ContextCompat
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.Hash
 import java.io.File
@@ -19,7 +18,7 @@ object DiskUtil {
 	 * Returns the root folders of all the available external storages.
 	 */
 	fun getExternalStorages(context: Context): List<File> {
-		return ContextCompat.getExternalFilesDirs(context, null)
+		return context.getExternalFilesDirs(null)
 			.filterNotNull()
 			.mapNotNull {
 				val file = File(it.absolutePath.substringBefore("/Android/"))

@@ -102,7 +102,7 @@ class FaviconView @JvmOverloads constructor(
 			scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
 			val padding = context.resources.resolveDp(1)
 			setPadding(padding, padding, padding, padding)
-			strokeWidth = context.resources.resolveDp(1f).toFloat()
+			strokeWidth = context.resources.resolveDp(1f)
 			background = defaultBackground
 		}
 	}

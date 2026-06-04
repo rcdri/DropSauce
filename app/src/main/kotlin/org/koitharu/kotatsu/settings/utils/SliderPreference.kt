@@ -10,6 +10,8 @@ import androidx.customview.view.AbsSavedState
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.slider.Slider
+import com.google.android.material.slider.TickVisibilityMode.TICK_VISIBILITY_AUTO_LIMIT
+import com.google.android.material.slider.TickVisibilityMode.TICK_VISIBILITY_HIDDEN
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.util.ext.setValueRounded
 
@@ -64,7 +66,7 @@ class SliderPreference @JvmOverloads constructor(
 		slider.valueFrom = valueFrom.toFloat()
 		slider.valueTo = valueTo.toFloat()
 		slider.stepSize = stepSize.toFloat()
-		slider.isTickVisible = isTickVisible
+		slider.tickVisibilityMode = if (isTickVisible) TICK_VISIBILITY_AUTO_LIMIT else TICK_VISIBILITY_HIDDEN
 		slider.setValueRounded(currentValue.toFloat())
 		slider.isEnabled = isEnabled
 	}

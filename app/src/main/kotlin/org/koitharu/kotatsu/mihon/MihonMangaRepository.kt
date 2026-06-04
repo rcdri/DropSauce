@@ -93,7 +93,7 @@ class MihonMangaRepository(
 
 		val mangasPage = when {
 			hasFilters -> {
-				mihonSource.getSearchManga(page, query, filter?.toMihonFilterList() ?: FilterList())
+				mihonSource.getSearchManga(page, query, filter.toMihonFilterList())
 			}
 			order == SortOrder.UPDATED && source.supportsLatest -> mihonSource.getLatestUpdates(page)
 			else -> mihonSource.getPopularManga(page)

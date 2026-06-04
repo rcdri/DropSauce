@@ -42,7 +42,6 @@ fun BufferedSource.readByteBuffer(): ByteBuffer {
 		.rewind() as ByteBuffer
 }
 
-@Deprecated("")
 fun InputStream.toByteBuffer(): ByteBuffer {
 	val outStream = ByteArrayOutputStream(available())
 	copyTo(outStream)

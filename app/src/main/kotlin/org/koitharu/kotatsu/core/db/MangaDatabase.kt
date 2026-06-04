@@ -7,6 +7,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -152,6 +153,7 @@ fun MangaDatabase(context: Context): MangaDatabase = Room
 	.addCallback(DatabasePrePopulateCallback(context.resources))
 	.build()
 
+@OptIn(DelicateCoroutinesApi::class)
 fun InvalidationTracker.removeObserverAsync(observer: InvalidationTracker.Observer) {
 	val scope = processLifecycleScope
 	if (scope.isActive) {

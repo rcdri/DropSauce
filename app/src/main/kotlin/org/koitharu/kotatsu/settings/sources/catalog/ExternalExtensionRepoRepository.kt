@@ -33,7 +33,7 @@ class ExternalExtensionRepoRepository @Inject constructor(
 			if (!response.isSuccessful) {
 				throw IllegalStateException("Unable to load repo: HTTP ${response.code}")
 			}
-			val body = response.body?.string().orEmpty()
+			val body = response.body.string()
 			if (body.isBlank()) {
 				emptyList()
 			} else {

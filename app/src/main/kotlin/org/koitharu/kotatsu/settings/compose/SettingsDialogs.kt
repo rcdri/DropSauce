@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -199,7 +200,7 @@ fun SliderDialog(
 	onConfirm: (Int) -> Unit,
 	onDismiss: () -> Unit,
 ) {
-	var value by remember { mutableStateOf(initialValue.toFloat()) }
+	var value by remember { mutableFloatStateOf(initialValue.toFloat()) }
 	val steps = if (stepSize > 0) ((valueTo - valueFrom) / stepSize - 1).coerceAtLeast(0) else 0
 	AlertDialog(
 		onDismissRequest = onDismiss,

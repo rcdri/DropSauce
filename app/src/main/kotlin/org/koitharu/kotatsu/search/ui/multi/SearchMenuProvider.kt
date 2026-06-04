@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.search.ui.multi
 
+import android.app.Activity
 import android.os.Build
 import android.view.Menu
 import android.view.MenuInflater
@@ -57,20 +58,32 @@ class SearchMenuProvider(
 				query = viewModel.query,
 				kind = newKind,
 			)
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-				activity.overridePendingTransition(
-					R.anim.m3_fade_through_enter,
-					R.anim.m3_fade_through_exit,
-					0,
-				)
-			} else {
-				activity.overridePendingTransition(
-					R.anim.m3_fade_through_enter,
-					R.anim.m3_fade_through_exit,
-				)
-			}
+			activity.overrideSearchKindTransition()
 			activity.finishAfterTransition()
 		}
 		return true
+	}
+
+	private fun SearchActivity.overrideSearchKindTransition() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+			overrideActivityTransition(
+				Activity.OVERRIDE_TRANSITION_OPEN,
+				R.anim.m3_fade_through_enter,
+				R.anim.m3_fade_through_exit,
+			)
+		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			@Suppress("DEPRECATION")
+			overridePendingTransition(
+				R.anim.m3_fade_through_enter,
+				R.anim.m3_fade_through_exit,
+				0,
+			)
+		} else {
+			@Suppress("DEPRECATION")
+			overridePendingTransition(
+				R.anim.m3_fade_through_enter,
+				R.anim.m3_fade_through_exit,
+			)
+		}
 	}
 }

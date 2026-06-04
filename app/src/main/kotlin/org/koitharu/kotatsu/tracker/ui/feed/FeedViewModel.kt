@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.tracker.ui.feed
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,6 +107,7 @@ class FeedViewModel @Inject constructor(
 		scheduler.startNow()
 	}
 
+	@OptIn(DelicateCoroutinesApi::class)
 	fun onItemClick(item: FeedItem) {
 		launchJob(Dispatchers.Default, CoroutineStart.ATOMIC) {
 			repository.markAsRead(item.id)

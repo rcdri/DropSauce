@@ -16,6 +16,7 @@ abstract class BaseFullscreenActivity<B : ViewBinding> :
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		@Suppress("DEPRECATION")
 		with(window) {
 			systemUiController = SystemUiController(this)
 			statusBarColor = Color.TRANSPARENT

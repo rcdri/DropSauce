@@ -297,7 +297,9 @@ class ReaderViewModel @Inject constructor(
         loadingJob = launchLoadingJob(Dispatchers.Default) {
             prevJob?.cancelAndJoin()
             content.value = ReaderContent(emptyList(), null)
-            chaptersLoader.loadSingleChapter(id)
+            if (!chaptersLoader.loadSingleChapter(id)) {
+                return@launchLoadingJob
+            }
             val newState = ReaderState(id, page, 0)
             content.value = ReaderContent(chaptersLoader.snapshot(), newState)
             saveCurrentState(newState)
@@ -321,7 +323,9 @@ class ReaderViewModel @Inject constructor(
                 prevState.chapterId
             }
             content.value = ReaderContent(emptyList(), null)
-            chaptersLoader.loadSingleChapter(newChapterId)
+            if (!chaptersLoader.loadSingleChapter(newChapterId)) {
+                return@launchLoadingJob
+            }
             val newState = ReaderState(
                 chapterId = newChapterId,
                 page = if (delta == 0) prevState.page else 0,
@@ -431,7 +435,10 @@ class ReaderViewModel @Inject constructor(
                             selectedBranch.value = branch
                             readerMode.value = mode
                             try {
-                                chaptersLoader.loadSingleChapter(newState.chapterId)
+                                if (!chaptersLoader.loadSingleChapter(newState.chapterId)) {
+                                    readingState.value = null
+                                    return@collect
+                                }
                             } catch (e: Exception) {
                                 readingState.value = null // try next time
                                 exception = e.mergeWith(exception)

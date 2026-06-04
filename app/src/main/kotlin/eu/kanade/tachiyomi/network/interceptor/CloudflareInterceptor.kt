@@ -66,8 +66,9 @@ class CloudflareInterceptor(
 		val headers = parseHeaders(originalRequest.headers)
 
 		executor.execute {
-			webView = createWebView(originalRequest)
-			webView?.webViewClient = object : WebViewClient() {
+			val view = createWebView(originalRequest)
+			webView = view
+			view.webViewClient = object : WebViewClient() {
 				override fun onPageFinished(view: WebView, url: String) {
 					val newCookie = cookieManager.get(requestUrl.toHttpUrl())
 						.firstOrNull { it.name == "cf_clearance" }
@@ -94,7 +95,7 @@ class CloudflareInterceptor(
 					}
 				}
 			}
-			webView?.loadUrl(requestUrl, headers)
+			view.loadUrl(requestUrl, headers)
 		}
 
 		latch.awaitFor30Seconds()

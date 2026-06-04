@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.history.domain
 
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ class HistoryUpdateUseCase @Inject constructor(
 		)
 	}
 
+	@OptIn(DelicateCoroutinesApi::class)
 	fun invokeAsync(
 		manga: Manga,
 		readerState: ReaderState,

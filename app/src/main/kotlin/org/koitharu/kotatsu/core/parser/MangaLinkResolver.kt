@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.core.model.isNsfw
 import org.koitharu.kotatsu.core.util.ext.isHttpUrl
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.exception.NotFoundException
+import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaListFilter
 import org.koitharu.kotatsu.parsers.model.MangaSource
@@ -73,9 +74,9 @@ class MangaLinkResolver @Inject constructor(
 		)
 		return runCatchingCancellable {
 			val seedTitle = seed.title.ifEmpty {
-				seed.altTitle
+				seed.altTitles.firstOrNull()
 			}.ifNullOrEmpty {
-				seed.author
+				seed.authors.firstOrNull()
 			} ?: return@runCatchingCancellable null
 			val seedList = getList(0, null, MangaListFilter(query = seedTitle))
 			seedList.first { x -> x.url == url }
@@ -100,15 +101,15 @@ class MangaLinkResolver @Inject constructor(
 			h
 		},
 		title = title.orEmpty(),
-		altTitle = null,
+		altTitles = emptySet(),
 		url = url,
 		publicUrl = "",
 		rating = 0.0f,
-		isNsfw = source.isNsfw(),
+		contentRating = if (source.isNsfw()) ContentRating.ADULT else null,
 		coverUrl = "",
 		tags = emptySet(),
 		state = null,
-		author = null,
+		authors = emptySet(),
 		largeCoverUrl = null,
 		description = null,
 		chapters = null,

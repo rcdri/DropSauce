@@ -18,7 +18,6 @@ import rx.Subscription
 import java.io.IOException
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 val jsonMime = "application/json; charset=utf-8".toMediaType()
@@ -72,8 +71,8 @@ private suspend fun Call.await(callStack: Array<StackTraceElement>): Response {
 	return suspendCancellableCoroutine { continuation ->
 		val callback = object : Callback {
 			override fun onResponse(call: Call, response: Response) {
-				continuation.resume(response) {
-					response.body.close()
+				continuation.resume(response) { _, value, _ ->
+					value.body.close()
 				}
 			}
 

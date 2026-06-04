@@ -63,7 +63,9 @@ class PagePickerViewModel @Inject constructor(
 		chaptersLoader.init(details)
 		val initialChapterId = details.allChapters.firstOrNull()?.id ?: return
 		if (!chaptersLoader.hasPages(initialChapterId)) {
-			chaptersLoader.loadSingleChapter(initialChapterId)
+			if (!chaptersLoader.loadSingleChapter(initialChapterId)) {
+				return
+			}
 		}
 		updateList()
 	}

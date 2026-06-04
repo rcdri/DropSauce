@@ -109,6 +109,7 @@ class RegionBitmapDecoder(
 			dstWidth = dstWidth.toDouble(),
 			dstHeight = dstHeight.toDouble(),
 			scale = options.scale,
+			maxSize = Size.ORIGINAL,
 		)
 
 		// Only upscale the image if the options require an exact size.

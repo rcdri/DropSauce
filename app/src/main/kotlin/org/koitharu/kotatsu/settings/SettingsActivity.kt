@@ -100,7 +100,7 @@ class SettingsActivity :
 		openFragment(
 			fragmentClass = FragmentFactory.loadFragmentClass(classLoader, fragmentName),
 			args = pref.peekExtras(),
-			isFromRoot = caller is RootSettingsFragment,
+			isFromRoot = false,
 		)
 		return true
 	}

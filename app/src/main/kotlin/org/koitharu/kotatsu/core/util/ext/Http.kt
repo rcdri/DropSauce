@@ -16,9 +16,9 @@ fun JSONObject.toRequestBody() = toString().toRequestBody(TYPE_JSON)
 fun Response.parseJsonOrNull(): JSONObject? {
 	return try {
 		when {
-			!isSuccessful -> throw IOException(body?.string())
+			!isSuccessful -> throw IOException(body.string())
 			code == HttpURLConnection.HTTP_NO_CONTENT -> null
-			else -> JSONObject(body?.string() ?: return null)
+			else -> JSONObject(body.string())
 		}
 	} finally {
 		closeQuietly()

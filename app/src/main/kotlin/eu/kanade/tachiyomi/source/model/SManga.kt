@@ -1,4 +1,4 @@
-@file:Suppress("PropertyName")
+@file:Suppress("DEPRECATION", "PropertyName")
 
 package eu.kanade.tachiyomi.source.model
 

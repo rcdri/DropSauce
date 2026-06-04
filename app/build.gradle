@@ -3,10 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
 	id 'com.android.application'
-	id 'kotlin-android'
 	id 'com.google.devtools.ksp'
-	id 'kotlin-parcelize'
-	id 'dagger.hilt.android.plugin'
+	id 'org.jetbrains.kotlin.plugin.parcelize'
+	id 'com.google.dagger.hilt.android'
 	id 'androidx.room'
 	id 'org.jetbrains.kotlin.plugin.serialization'
 	id 'org.jetbrains.kotlin.plugin.compose'
@@ -17,24 +16,28 @@ configurations.configureEach {
 }
 
 android {
-	compileSdk = 36
-	buildToolsVersion = '36.0.0'
+	compileSdk {
+		version = release(37) {
+			minorApiLevel = 0
+		}
+	}
+	buildToolsVersion = '37.0.0'
 	namespace = 'org.koitharu.kotatsu'
 
 	defaultConfig {
-		applicationId 'org.haziffe.dropsauce'
+		applicationId = 'org.haziffe.dropsauce'
 		minSdk = 23
-		targetSdk = 36
+		targetSdk = 37
 		versionCode = 38
 		versionName = '0.1.0'
 		generatedDensities = []
-		testInstrumentationRunner 'org.koitharu.kotatsu.HiltTestRunner'
+		testInstrumentationRunner = 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
 			arg('room.generateKotlin', 'true')
 		}
 		androidResources {
 			// https://issuetracker.google.com/issues/408030127
-			generateLocaleConfig false
+			generateLocaleConfig = false
 		}
 	}
 	signingConfigs {
@@ -52,8 +55,8 @@ android {
 			applicationIdSuffix = '.debug'
 		}
 		release {
-			minifyEnabled true
-			shrinkResources true
+			minifyEnabled = true
+			shrinkResources = true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 			if (signingConfigs.findByName('release')) {
 				signingConfig signingConfigs.release
@@ -68,9 +71,9 @@ android {
 		}
 	}
 	buildFeatures {
-		viewBinding true
-		buildConfig true
-		compose true
+		viewBinding = true
+		buildConfig = true
+		compose = true
 	}
 	packaging {
 		resources {
@@ -79,16 +82,21 @@ android {
 			//noinspection GrDeprecatedAPIUsage
 			exclude 'META-INF/NOTICE.md'
 		}
-        jniLibs {
-            useLegacyPackaging true
-        }
-    }
+		jniLibs {
+			useLegacyPackaging = true
+			keepDebugSymbols += [
+				'**/libandroidx.graphics.path.so',
+				'**/libavif_android.so',
+				'**/libquickjs.so',
+			]
+		}
+	}
 	sourceSets {
 		androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
-		main.java.srcDirs += 'src/main/kotlin/'
+		main.kotlin.srcDirs += 'src/main/kotlin/'
 	}
 	compileOptions {
-		coreLibraryDesugaringEnabled true
+		coreLibraryDesugaringEnabled = true
 		sourceCompatibility JavaVersion.VERSION_11
 		targetCompatibility JavaVersion.VERSION_11
 	}
@@ -96,12 +104,45 @@ android {
 		schemaDirectory "$projectDir/schemas"
 	}
 	lint {
-		abortOnError true
-		disable 'MissingTranslation', 'PrivateResource', 'SetJavaScriptEnabled', 'SimpleDateFormat'
+		abortOnError = true
+		warningsAsErrors = true
+		checkDependencies = true
+		disable 'MissingTranslation',
+			'PrivateResource',
+			'SetJavaScriptEnabled',
+			'SimpleDateFormat',
+			'UnusedResources',
+			'Untranslatable',
+			'UnusedAttribute',
+			'LocalContextResourcesRead',
+			'UseKtx',
+			'Overdraw',
+			'ContentDescription',
+			'TypographyEllipsis',
+			'UnusedTranslation',
+			'InconsistentLayout',
+			'NewerVersionAvailable',
+			'GradleDependency',
+			'HardcodedText',
+			'PluralsCandidate',
+			'Typos',
+			'VectorPath',
+			'BatteryLife',
+			'VisibleForTests',
+			'RtlSymmetry',
+			'ObsoleteSdkInt',
+			'IconXmlAndPng',
+			'SmallSp',
+			'ModifierParameter',
+			'InflateParams',
+			'CustomViewStyleable',
+			'ClickableViewAccessibility',
+			'SetTextI18n',
+			'NotifyDataSetChanged'
 	}
 	testOptions {
-		unitTests.includeAndroidResources true
-		unitTests.returnDefaultValues false
+		unitTests.includeAndroidResources = true
+		unitTests.returnDefaultValues = false
 	}
 }
 
@@ -120,7 +161,6 @@ kotlin {
 			'-opt-in=kotlinx.serialization.ExperimentalSerializationApi',
 			'-Xjspecify-annotations=strict',
 			'-Xannotation-default-target=first-only',
-			'-Xtype-enhancement-improvements-strict-mode',
 			'-Xcontext-parameters'
 		])
 	}
@@ -181,7 +221,7 @@ dependencies {
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.material.icons.core
     implementation libs.androidx.compose.activity
-    implementation "androidx.graphics:graphics-shapes:1.0.1"
+    implementation libs.androidx.graphics.shapes
     debugImplementation libs.androidx.compose.ui.tooling
 
 	implementation libs.androidx.room.runtime

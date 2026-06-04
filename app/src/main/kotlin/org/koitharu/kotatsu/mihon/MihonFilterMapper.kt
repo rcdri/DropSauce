@@ -35,14 +35,10 @@ object MihonFilterMapper {
 				}
 				is Filter.Separator -> { }
 				is Filter.Group<*> -> {
-					val state = filter.state
-					if (state is List<*>) {
-						state.forEach { subItem ->
-							if (subItem is Filter<*>) {
-								val tags = mapFilterToTags(subItem, filter.name, source)
-								allTags.addAll(tags)
-							}
-						}
+					filter.state.forEach { subItem ->
+						val sub = subItem as? Filter<*> ?: return@forEach
+						val tags = mapFilterToTags(sub, filter.name, source)
+						allTags.addAll(tags)
 					}
 				}
 				else -> {
@@ -91,11 +87,10 @@ object MihonFilterMapper {
 			}
 			is Filter.Group<*> -> {
 				val nestedTags = mutableListOf<MangaTag>()
-				(filter.state as? List<*>)?.forEach { subItem ->
-					if (subItem is Filter<*>) {
-						val nestedPrefix = if (parentName != null) "$parentName/${filter.name}" else filter.name
-						nestedTags.addAll(mapFilterToTags(subItem, nestedPrefix, source))
-					}
+				filter.state.forEach { subItem ->
+					val sub = subItem as? Filter<*> ?: return@forEach
+					val nestedPrefix = if (parentName != null) "$parentName/${filter.name}" else filter.name
+					nestedTags.addAll(mapFilterToTags(sub, nestedPrefix, source))
 				}
 				nestedTags
 			}
@@ -113,7 +108,7 @@ object MihonFilterMapper {
 		mihonFilters.forEach { filter ->
 			when (filter) {
 				is Filter.Group<*> -> {
-					(filter.state as? List<*>)?.forEach { subItem ->
+					filter.state.forEach { subItem ->
 						val sub = subItem as? Filter<*> ?: return@forEach
 						updateSingleFilter(sub, filter.name, selectedTags, excludedTags)
 					}
@@ -174,15 +169,13 @@ object MihonFilterMapper {
 				}
 			}
 			is Filter.Group<*> -> {
-				(filter.state as? List<*>)?.forEach { subItem ->
-					if (subItem is Filter<*>) {
-						val nestedPrefix = if (parentName != null) "$parentName/${filter.name}" else filter.name
-						updateSingleFilter(subItem, nestedPrefix, selectedTags, excludedTags)
-					}
+				filter.state.forEach { subItem ->
+					val sub = subItem as? Filter<*> ?: return@forEach
+					val nestedPrefix = if (parentName != null) "$parentName/${filter.name}" else filter.name
+					updateSingleFilter(sub, nestedPrefix, selectedTags, excludedTags)
 				}
 			}
 			is Filter.Header, is Filter.Separator -> { }
-			else -> {}
 		}
 	}
 }

@@ -169,7 +169,6 @@
 					android:layout_marginEnd="16dp"
 					android:drawablePadding="4dp"
 					android:gravity="center_vertical"
-					android:labelFor="@id/imageView_state"
 					android:singleLine="true"
 					android:textColor="?colorTertiary"
 					android:textStyle="bold"

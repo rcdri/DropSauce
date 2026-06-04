@@ -7,7 +7,6 @@ import android.os.Build
 import android.view.Gravity
 import android.widget.ImageButton
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MarginLayoutParamsCompat
 import androidx.core.view.children
 import androidx.core.view.updateLayoutParams
 import org.koitharu.kotatsu.R
@@ -25,7 +24,7 @@ fun Toolbar.applyTonalNavigationButtonStyle() {
 			width = size
 			height = size
 			gravity = Gravity.START or Gravity.CENTER_VERTICAL
-			MarginLayoutParamsCompat.setMarginStart(this, startMargin)
+			marginStart = startMargin
 		}
 		navigationButton.background = createTonalNavigationBackground()
 		navigationButton.imageTintList = ColorStateList.valueOf(

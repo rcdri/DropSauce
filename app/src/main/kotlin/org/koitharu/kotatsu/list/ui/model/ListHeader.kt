@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.core.model.getLocalizedTitle
 import org.koitharu.kotatsu.core.ui.model.DateTimeAgo
 import org.koitharu.kotatsu.parsers.model.MangaChapter
 
+@ConsistentCopyVisibility
 data class ListHeader private constructor(
 	private val textRaw: Any,
 	@StringRes val buttonTextRes: Int,

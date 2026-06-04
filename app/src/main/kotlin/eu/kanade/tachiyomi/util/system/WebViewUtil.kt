@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.util.system
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -24,6 +25,9 @@ object WebViewUtil {
 	}
 
 	fun getVersion(context: Context): String {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+			return ""
+		}
 		val webView = WebView.getCurrentWebViewPackage() ?: return ""
 		val label = webView.applicationInfo?.loadLabel(context.packageManager)?.toString().orEmpty()
 		return "$label ${webView.versionName}"

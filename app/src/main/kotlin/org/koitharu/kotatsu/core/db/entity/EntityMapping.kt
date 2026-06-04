@@ -76,7 +76,7 @@ fun Manga.toEntity() = MangaEntity(
 	coverUrl = coverUrl.orEmpty(),
 	altTitles = altTitles.joinToString(VALUES_DIVIDER.toString()),
 	rating = rating,
-	isNsfw = isNsfw,
+	isNsfw = contentRating == ContentRating.ADULT,
 	contentRating = contentRating?.name,
 	state = state?.name,
 	title = title,

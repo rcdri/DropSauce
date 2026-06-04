@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.os.Build
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.snackbar.Snackbar
 import org.koitharu.kotatsu.R
@@ -29,7 +30,7 @@ fun Snackbar.addCopyErrorAction(error: Throwable): Snackbar {
 	copyAction.apply {
 		tag = COPY_ERROR_ACTION_TAG
 		text = context.getString(R.string.copy)
-		isAllCaps = originalAction?.isAllCaps ?: true
+		isAllCaps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) originalAction?.isAllCaps ?: true else true
 		minWidth = 0
 		minHeight = originalAction?.minHeight ?: 0
 		minimumWidth = 0
