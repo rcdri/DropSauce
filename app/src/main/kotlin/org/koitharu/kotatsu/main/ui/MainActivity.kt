@@ -59,6 +59,7 @@ import org.koitharu.kotatsu.core.prefs.NavItem
 import org.koitharu.kotatsu.core.ui.BaseActivity
 import org.koitharu.kotatsu.core.ui.util.FadingAppbarMediator
 import org.koitharu.kotatsu.core.ui.widgets.SlidingBottomNavigationView
+import org.koitharu.kotatsu.core.util.ext.applySystemAnimatorScale
 import org.koitharu.kotatsu.core.util.ext.consume
 import org.koitharu.kotatsu.core.util.ext.end
 import org.koitharu.kotatsu.core.util.ext.observe
@@ -345,7 +346,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		super.onSupportActionModeStarted(mode)
 		adjustFabVisibility()
 		bottomNav?.hide()
-		viewBinding.layoutSearch.isInvisible = true
+		viewBinding.layoutSearch.fadeOutForActionMode()
 		updateContainerBottomMargin()
 	}
 
@@ -353,8 +354,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		super.onSupportActionModeFinished(mode)
 		adjustFabVisibility()
 		bottomNav?.show()
-		viewBinding.layoutSearch.isInvisible = false
-		updateContainerBottomMargin()
+		actionModeDelegate.runAfterActionModeExit {
+			viewBinding.layoutSearch.fadeInAfterActionMode()
+			updateContainerBottomMargin()
+		}
 	}
 
 	private fun onOpenReader(manga: Manga) {
@@ -581,6 +584,35 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		}
 	}
 
+	private fun View.fadeOutForActionMode() {
+		animate().cancel()
+		isInvisible = false
+		animate()
+			.alpha(0f)
+			.setDuration(ACTION_MODE_TOP_BAR_FADE_DURATION_MS)
+			.applySystemAnimatorScale(context)
+			.withEndAction {
+				isInvisible = true
+				alpha = 0f
+			}
+			.start()
+	}
+
+	private fun View.fadeInAfterActionMode() {
+		animate().cancel()
+		val targetAlpha = fadingAppbarMediator.targetAlpha
+		alpha = 0f
+		isInvisible = false
+		animate()
+			.alpha(targetAlpha)
+			.setDuration(ACTION_MODE_TOP_BAR_FADE_DURATION_MS)
+			.applySystemAnimatorScale(context)
+			.withEndAction {
+				alpha = targetAlpha
+			}
+			.start()
+	}
+
 	private fun observeFoldHinge() {
 		val spacer = viewBinding.foldHingeSpacer ?: return
 		lifecycleScope.launch {
@@ -612,6 +644,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 	private companion object {
 
 		private const val FAB_SHRINK_DELAY_MS = 1500L
+		private const val ACTION_MODE_TOP_BAR_FADE_DURATION_MS = 150L
 	}
 }
 

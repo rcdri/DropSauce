@@ -9,6 +9,8 @@ class FadingAppbarMediator(
 ) : AppBarLayout.OnOffsetChangedListener {
 
 	private var isBound: Boolean = false
+	var targetAlpha: Float = 1f
+		private set
 
 	fun bind() {
 		if (!isBound) {
@@ -22,6 +24,7 @@ class FadingAppbarMediator(
 			appBarLayout.removeOnOffsetChangedListener(this)
 			isBound = false
 		}
+		targetAlpha = 1f
 		target.alpha = 1f
 	}
 
@@ -31,6 +34,7 @@ class FadingAppbarMediator(
 			return
 		}
 
-		target.alpha = 1f + verticalOffset / (scrollRange / 2f)
+		targetAlpha = (1f + verticalOffset / (scrollRange / 2f)).coerceIn(0f, 1f)
+		target.alpha = targetAlpha
 	}
 }
