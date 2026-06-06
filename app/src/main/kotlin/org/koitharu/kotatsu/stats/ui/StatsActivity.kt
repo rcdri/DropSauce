@@ -29,7 +29,6 @@ import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.util.KotatsuColors
 import org.koitharu.kotatsu.core.util.ext.end
-import org.koitharu.kotatsu.core.util.ext.getQuantityStringSafe
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.core.util.ext.setTextAndVisible
@@ -37,11 +36,15 @@ import org.koitharu.kotatsu.core.util.ext.showOrHide
 import org.koitharu.kotatsu.core.util.ext.start
 import org.koitharu.kotatsu.databinding.ActivityStatsBinding
 import org.koitharu.kotatsu.databinding.ItemEmptyStateBinding
+import org.koitharu.kotatsu.details.data.ReadingTime
 import org.koitharu.kotatsu.list.ui.adapter.ListItemType
 import org.koitharu.kotatsu.parsers.model.Manga
+import org.koitharu.kotatsu.parsers.util.format
+import org.koitharu.kotatsu.stats.data.ReadingStatsSummary
 import org.koitharu.kotatsu.stats.domain.StatsPeriod
 import org.koitharu.kotatsu.stats.domain.StatsRecord
 import org.koitharu.kotatsu.stats.ui.views.PieChartView
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class StatsActivity : BaseActivity<ActivityStatsBinding>(),
@@ -74,13 +77,7 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 		}
 		viewModel.favoriteCategories.observe(this, ::createCategoriesChips)
 		viewModel.onActionDone.observeEvent(this, ReversibleActionObserver(viewBinding.recyclerView))
-		viewModel.totalChaptersRead.observe(this) { chapters ->
-			viewBinding.textViewChaptersRead.text = resources.getQuantityStringSafe(
-				R.plurals.chapters_read_total,
-				chapters,
-				chapters,
-			)
-		}
+		viewModel.summary.observe(this, ::onSummaryChanged)
 		viewModel.readingStats.observe(this) {
 			val sum = it.sumOf { it.duration }
 			viewBinding.chart.setData(
@@ -112,9 +109,14 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 		val badgePadding = resources.getDimensionPixelOffset(R.dimen.list_spacing_large)
 		viewBinding.scrollViewChips.updatePaddingRelative(
 			start = badgePadding + if (isTablet) 0 else bars.start(v),
-			end = badgePadding + bars.end(v),
-			top = if (isTablet) bars.top else 0,
+			end = badgePadding + if (isTablet) 0 else bars.end(v),
+			top = 0,
 		)
+		viewBinding.layoutStatsSummary.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+			val horizontalMargin = resources.getDimensionPixelOffset(R.dimen.screen_padding)
+			marginStart = horizontalMargin + bars.start(v)
+			marginEnd = if (isTablet) horizontalMargin else horizontalMargin + bars.end(v)
+		}
 		viewBinding.recyclerView.updatePaddingRelative(
 			start = if (isTablet) 0 else bars.start(v),
 			end = bars.end(v),
@@ -182,6 +184,35 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 		stubBinding.textPrimary.setText(R.string.text_empty_holder_primary)
 		stubBinding.textSecondary.setTextAndVisible(R.string.empty_stats_text)
 		stubBinding.buttonRetry.isVisible = false
+	}
+
+	private fun onSummaryChanged(summary: ReadingStatsSummary) {
+		with(viewBinding.layoutStatsSummary) {
+			textViewTotalChaptersValue.text = summary.chapters.toString()
+			textViewTotalTimeValue.text = formatDurationShort(summary.totalDuration)
+			textViewReadingRateValue.text = formatReadingRate(summary)
+		}
+	}
+
+	private fun formatDurationShort(duration: Long): String {
+		val minutes = TimeUnit.MILLISECONDS.toMinutes(duration).toInt()
+		if (minutes <= 0) {
+			return getString(R.string.minutes_short, 0)
+		}
+		return ReadingTime(
+			minutes = minutes % 60,
+			hours = minutes / 60,
+			isContinue = false,
+		).formatShort(resources) ?: getString(R.string.minutes_short, 0)
+	}
+
+	private fun formatReadingRate(summary: ReadingStatsSummary): String {
+		if (summary.chapters <= 0 || summary.chapterDuration <= 0L) {
+			return getString(R.string.minutes_per_chapter_short, "0")
+		}
+		val minutesPerChapter = summary.chapterDuration.toDouble() / summary.chapters / TimeUnit.MINUTES.toMillis(1)
+		val precision = if (minutesPerChapter < 10) 1 else 0
+		return getString(R.string.minutes_per_chapter_short, minutesPerChapter.format(precision))
 	}
 
 	private fun createCategoriesChips(categories: List<FavouriteCategory>) {

@@ -13,6 +13,7 @@ import org.koitharu.kotatsu.core.ui.util.ReversibleAction
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.favourites.domain.FavouritesRepository
+import org.koitharu.kotatsu.stats.data.ReadingStatsSummary
 import org.koitharu.kotatsu.stats.data.StatsRepository
 import org.koitharu.kotatsu.stats.domain.StatsPeriod
 import org.koitharu.kotatsu.stats.domain.StatsRecord
@@ -31,7 +32,7 @@ class StatsViewModel @Inject constructor(
 		.take(1)
 
 	val readingStats = MutableStateFlow<List<StatsRecord>>(emptyList())
-	val totalChaptersRead = MutableStateFlow(0)
+	val summary = MutableStateFlow(ReadingStatsSummary())
 
 	init {
 		launchJob(Dispatchers.Default) {
@@ -42,7 +43,7 @@ class StatsViewModel @Inject constructor(
 			).collectLatest { p ->
 				readingStats.value = withLoading {
 					val stats = repository.getReadingStats(p.first, p.second)
-					totalChaptersRead.value = repository.getChapterReadingStats().chapters
+					summary.value = repository.getReadingStatsSummary()
 					stats
 				}
 			}
@@ -63,7 +64,7 @@ class StatsViewModel @Inject constructor(
 		launchLoadingJob(Dispatchers.Default) {
 			repository.clearStats()
 			readingStats.value = emptyList()
-			totalChaptersRead.value = 0
+			summary.value = ReadingStatsSummary()
 			onActionDone.call(ReversibleAction(R.string.stats_cleared, null))
 		}
 	}

@@ -695,6 +695,10 @@
     <string name="single_cbz_file">Single CBZ file</string>
     <string name="multiple_cbz_files">Multiple CBZ files</string>
     <string name="reading_stats">Reading statistics</string>
+    <string name="total_chapters">Total chapters</string>
+    <string name="total_read_time">Total read time</string>
+    <string name="reading_rate">Reading rate</string>
+    <string name="minutes_per_chapter_short" translatable="false">%1$s min/ch</string>
     <string name="other_manga">Other manga</string>
     <string name="less_than_minute">Less than a minute</string>
     <string name="statistics">Statistics</string>

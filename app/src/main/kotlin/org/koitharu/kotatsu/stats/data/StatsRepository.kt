@@ -69,6 +69,15 @@ class StatsRepository @Inject constructor(
 		)
 	}
 
+	suspend fun getReadingStatsSummary(): ReadingStatsSummary = db.withTransaction {
+		val dao = db.getStatsDao()
+		ReadingStatsSummary(
+			totalDuration = dao.getTotalReadDuration(),
+			chapterDuration = dao.getTotalReadDurationWithChapters(),
+			chapters = dao.getTotalReadChapters(),
+		)
+	}
+
 	suspend fun getTotalPagesRead(mangaId: Long): Int {
 		return db.getStatsDao().getReadPagesCount(mangaId)
 	}
@@ -100,4 +109,10 @@ class StatsRepository @Inject constructor(
 data class ChapterReadingStats(
 	val totalDuration: Long,
 	val chapters: Int,
+)
+
+data class ReadingStatsSummary(
+	val totalDuration: Long = 0L,
+	val chapterDuration: Long = 0L,
+	val chapters: Int = 0,
 )
