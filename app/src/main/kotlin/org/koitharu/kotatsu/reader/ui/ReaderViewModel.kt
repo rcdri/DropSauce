@@ -518,19 +518,20 @@ class ReaderViewModel @Inject constructor(
         val chapter = chaptersLoader.peekChapter(state.chapterId) ?: return
         val m = mangaDetails.value ?: return
         val chapterIndex = m.chapters[chapter.branch]?.indexOfFirst { it.id == chapter.id } ?: -1
+        val totalPages = chaptersLoader.getPagesCount(chapter.id)
         val newState = ReaderUiState(
             mangaName = m.toManga().title,
             chapter = chapter,
             chapterIndex = chapterIndex,
             chaptersTotal = m.chapters[chapter.branch].sizeOrZero(),
-            totalPages = chaptersLoader.getPagesCount(chapter.id),
+            totalPages = totalPages,
             currentPage = state.page,
             percent = computePercent(state.chapterId),
             incognito = isIncognitoMode.value == true,
         )
         uiState.value = newState
         if (isIncognitoMode.value == false) {
-            statsCollector.onStateChanged(m.id, state)
+            statsCollector.onStateChanged(m.id, state, totalPages)
             discordRpc.updateRpc(m.toManga(), newState)
         }
     }

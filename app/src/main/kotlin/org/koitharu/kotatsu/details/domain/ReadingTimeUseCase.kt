@@ -4,11 +4,9 @@ import org.koitharu.kotatsu.core.model.MangaHistory
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.details.data.MangaDetails
 import org.koitharu.kotatsu.details.data.ReadingTime
-import org.koitharu.kotatsu.parsers.util.findById
+import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.stats.data.StatsRepository
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.math.ceil
 
 class ReadingTimeUseCase @Inject constructor(
 	private val settings: AppSettings,
@@ -23,25 +21,22 @@ class ReadingTimeUseCase @Inject constructor(
 		if (chapters.isNullOrEmpty()) {
 			return null
 		}
-		val isOnHistoryBranch = history != null && chapters.findById(history.chapterId) != null
-		val averageChapterMillis = statsRepository.getAverageTimePerChapterMillis()
-		if (averageChapterMillis <= 0L) {
-			return null
-		}
-		val remainingChapters = if (isOnHistoryBranch) {
-			ceil(chapters.size * (1f - history.percent).coerceIn(0f, 1f).toDouble()).toInt()
+		val currentChapterIndex = if (history != null) {
+			chapters.indexOfFirst { it.id == history.chapterId }
 		} else {
-			chapters.size
+			-1
 		}
-		if (remainingChapters <= 0) {
-			return null
-		}
-		val estimatedTimeSec = TimeUnit.MILLISECONDS.toSeconds(averageChapterMillis * remainingChapters)
-		if (estimatedTimeSec < 60) return null
-		return ReadingTime(
-			minutes = ((estimatedTimeSec / 60) % 60).toInt(),
-			hours = (estimatedTimeSec / 3600).toInt(),
-			isContinue = isOnHistoryBranch,
+		val remainingChapters = ReadingTimeEstimator.getRemainingChapters(
+			totalChapters = chapters.size,
+			currentChapterIndex = currentChapterIndex,
+			isCompleted = history?.percent?.let { ReadingProgress.isCompleted(it) } == true,
+		)
+		val stats = statsRepository.getChapterReadingStats()
+		return ReadingTimeEstimator.estimate(
+			remainingChapters = remainingChapters,
+			totalDurationMillis = stats.totalDuration,
+			chaptersRead = stats.chapters,
+			isContinue = currentChapterIndex >= 0,
 		)
 	}
 }

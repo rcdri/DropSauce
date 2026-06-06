@@ -26,15 +26,17 @@ class StatsCollector @Inject constructor(
 	private val stats = LongSparseArray<Entry>(1)
 
 	@Synchronized
-	fun onStateChanged(mangaId: Long, state: ReaderState) {
+	fun onStateChanged(mangaId: Long, state: ReaderState, totalPages: Int) {
 		if (!settings.isStatsEnabled) {
 			return
 		}
 		val now = System.currentTimeMillis()
 		val entry = stats[mangaId]
+		val pagesCount = totalPages.coerceAtLeast(0)
 		if (entry == null) {
 			stats[mangaId] = Entry(
 				state = state,
+				totalPages = pagesCount,
 				stats = StatsEntity(
 					mangaId = mangaId,
 					startedAt = now,
@@ -45,12 +47,16 @@ class StatsCollector @Inject constructor(
 			return
 		}
 		val pagesDelta = if (entry.state.page != state.page || entry.state.chapterId != state.chapterId) 1 else 0
+		val chaptersDelta = entry.getChaptersDelta(state, pagesCount)
 		val newEntry = entry.copy(
+			state = state,
+			totalPages = pagesCount,
 			stats = StatsEntity(
 				mangaId = mangaId,
 				startedAt = entry.stats.startedAt,
 				duration = now - entry.stats.startedAt,
 				pages = entry.stats.pages + pagesDelta,
+				chapters = entry.stats.chapters + chaptersDelta,
 			),
 		)
 		stats[mangaId] = newEntry
@@ -59,6 +65,14 @@ class StatsCollector @Inject constructor(
 
 	@Synchronized
 	fun onPause(mangaId: Long) {
+		val entry = stats[mangaId]
+		if (entry != null) {
+			commit(
+				entry.stats.copy(
+					duration = System.currentTimeMillis() - entry.stats.startedAt,
+				),
+			)
+		}
 		stats.remove(mangaId)
 	}
 
@@ -74,6 +88,35 @@ class StatsCollector @Inject constructor(
 
 	private data class Entry(
 		val state: ReaderState,
+		val totalPages: Int,
 		val stats: StatsEntity,
-	)
+		val countedChapters: MutableSet<Long> = HashSet(),
+	) {
+
+		fun getChaptersDelta(newState: ReaderState, newTotalPages: Int): Int {
+			var result = 0
+			if (state.chapterId != newState.chapterId && isChapterCompleted(state, totalPages)) {
+				result += countChapter(state.chapterId)
+			}
+			if (
+				state.chapterId == newState.chapterId &&
+				!isChapterCompleted(state, totalPages) &&
+				isChapterCompleted(newState, newTotalPages)
+			) {
+				result += countChapter(newState.chapterId)
+			}
+			return result
+		}
+
+		private fun countChapter(chapterId: Long): Int {
+			return if (countedChapters.add(chapterId)) 1 else 0
+		}
+	}
+
+	private companion object {
+
+		fun isChapterCompleted(state: ReaderState, totalPages: Int): Boolean {
+			return totalPages > 0 && state.page >= totalPages - 1
+		}
+	}
 }
