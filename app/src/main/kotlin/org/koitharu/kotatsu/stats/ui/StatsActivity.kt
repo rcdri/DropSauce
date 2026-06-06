@@ -29,6 +29,7 @@ import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.util.KotatsuColors
 import org.koitharu.kotatsu.core.util.ext.end
+import org.koitharu.kotatsu.core.util.ext.getQuantityStringSafe
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.core.util.ext.setTextAndVisible
@@ -73,6 +74,13 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 		}
 		viewModel.favoriteCategories.observe(this, ::createCategoriesChips)
 		viewModel.onActionDone.observeEvent(this, ReversibleActionObserver(viewBinding.recyclerView))
+		viewModel.totalChaptersRead.observe(this) { chapters ->
+			viewBinding.textViewChaptersRead.text = resources.getQuantityStringSafe(
+				R.plurals.chapters_read_total,
+				chapters,
+				chapters,
+			)
+		}
 		viewModel.readingStats.observe(this) {
 			val sum = it.sumOf { it.duration }
 			viewBinding.chart.setData(

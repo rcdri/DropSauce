@@ -31,6 +31,7 @@ class StatsViewModel @Inject constructor(
 		.take(1)
 
 	val readingStats = MutableStateFlow<List<StatsRecord>>(emptyList())
+	val totalChaptersRead = MutableStateFlow(0)
 
 	init {
 		launchJob(Dispatchers.Default) {
@@ -40,7 +41,9 @@ class StatsViewModel @Inject constructor(
 				::Pair,
 			).collectLatest { p ->
 				readingStats.value = withLoading {
-					repository.getReadingStats(p.first, p.second)
+					val stats = repository.getReadingStats(p.first, p.second)
+					totalChaptersRead.value = repository.getChapterReadingStats().chapters
+					stats
 				}
 			}
 		}
@@ -60,6 +63,7 @@ class StatsViewModel @Inject constructor(
 		launchLoadingJob(Dispatchers.Default) {
 			repository.clearStats()
 			readingStats.value = emptyList()
+			totalChaptersRead.value = 0
 			onActionDone.call(ReversibleAction(R.string.stats_cleared, null))
 		}
 	}

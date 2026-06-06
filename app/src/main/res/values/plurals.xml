@@ -16,6 +16,10 @@
 		<item quantity="one">%1$d chapter</item>
 		<item quantity="other">%1$d chapters</item>
 	</plurals>
+	<plurals name="chapters_read_total">
+		<item quantity="one">%1$d chapter read</item>
+		<item quantity="other">%1$d chapters read</item>
+	</plurals>
 	<plurals name="minutes_ago">
 		<item quantity="one">%1$d minute ago</item>
 		<item quantity="other">%1$d minutes ago</item>
