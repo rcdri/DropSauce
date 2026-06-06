@@ -46,10 +46,10 @@ import org.koitharu.kotatsu.settings.compose.CategoryPalette
 import org.koitharu.kotatsu.settings.compose.ComposeOwnedScreen
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
-import org.koitharu.kotatsu.settings.compose.InfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
 import org.koitharu.kotatsu.settings.compose.MultiSelectSettingsItem
 import org.koitharu.kotatsu.settings.compose.NavigationSettingsItem
+import org.koitharu.kotatsu.settings.compose.PlainInfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
 import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
@@ -357,16 +357,13 @@ private fun TrackerScreen(
 						)
 					}
 				}
-				item { pos ->
-					InfoSettingsItem(
-						title = stringResource(R.string.tracker_warning),
-						subtitle = "dontkillmyapp.com",
-						icon = R.drawable.ic_info_outline,
-						
-						shape = pos.shape,
-					)
-				}
 			}
+		}
+		item {
+			PlainInfoSettingsItem(
+				text = stringResource(R.string.tracker_warning),
+				icon = R.drawable.ic_info_outline,
+			)
 		}
 		item { Spacer(Modifier.height(24.dp).fillMaxWidth()) }
 	}

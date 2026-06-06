@@ -55,8 +55,8 @@ import org.koitharu.kotatsu.parsers.util.names
 import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
-import org.koitharu.kotatsu.settings.compose.InfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
+import org.koitharu.kotatsu.settings.compose.PlainInfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
 import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
@@ -299,7 +299,6 @@ private fun DownloadsScreen(
 						shape = pos.shape,
 					)
 				}
-				// (Removed download-slowdown info row per user request.)
 				if (showDoze) {
 					item { pos ->
 						ActionSettingsItem(
@@ -313,6 +312,12 @@ private fun DownloadsScreen(
 					}
 				}
 			}
+		}
+		item {
+			PlainInfoSettingsItem(
+				text = stringResource(R.string.downloads_settings_info),
+				icon = R.drawable.ic_info_outline,
+			)
 		}
 		item { Spacer(Modifier.height(8.dp).fillMaxWidth()) }
 		item {

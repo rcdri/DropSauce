@@ -33,8 +33,8 @@ import org.koitharu.kotatsu.core.util.ext.tryLaunch
 import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
-import org.koitharu.kotatsu.settings.compose.InfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
+import org.koitharu.kotatsu.settings.compose.PlainInfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
 import org.koitharu.kotatsu.settings.compose.SliderSettingsItem
@@ -178,20 +178,14 @@ private fun PeriodicalBackupScreen(
 			}
 		}
 		if (lastBackup != null) {
-			item { Spacer(Modifier.height(8.dp).fillMaxWidth()) }
 			item {
-				SettingsGroup {
-					item { pos ->
-						InfoSettingsItem(
-							title = stringResource(
-								R.string.last_successful_backup,
-								DateUtils.getRelativeTimeSpanString(lastBackup!!.time),
-							),
-							icon = R.drawable.ic_history,
-							shape = pos.shape,
-						)
-					}
-				}
+				PlainInfoSettingsItem(
+					text = stringResource(
+						R.string.last_successful_backup,
+						DateUtils.getRelativeTimeSpanString(lastBackup!!.time),
+					),
+					icon = R.drawable.ic_info_outline,
+				)
 			}
 		}
 		item { Spacer(Modifier.height(24.dp).fillMaxWidth()) }

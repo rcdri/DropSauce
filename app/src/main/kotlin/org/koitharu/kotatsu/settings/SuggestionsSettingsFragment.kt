@@ -39,7 +39,7 @@ import org.koitharu.kotatsu.parsers.util.replaceWith
 import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
-import org.koitharu.kotatsu.settings.compose.InfoSettingsItem
+import org.koitharu.kotatsu.settings.compose.PlainInfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
 import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
@@ -182,17 +182,11 @@ private fun SuggestionsScreen(
 				}
 			}
 		}
-		item { Spacer(Modifier.height(8.dp).fillMaxWidth()) }
 		item {
-			SettingsGroup {
-				item { pos ->
-					InfoSettingsItem(
-						title = stringResource(R.string.suggestions_info),
-						icon = R.drawable.ic_info_outline,
-						shape = pos.shape,
-					)
-				}
-			}
+			PlainInfoSettingsItem(
+				text = stringResource(R.string.suggestions_info),
+				icon = R.drawable.ic_info_outline,
+			)
 		}
 		item { Spacer(Modifier.height(24.dp).fillMaxWidth()) }
 	}
