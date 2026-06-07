@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -156,6 +157,8 @@ class ChipsView @JvmOverloads constructor(
 		private var defaultChipIconSize = 0f
 		private var defaultMinimumWidth = 0
 		private var defaultMinimumHeight = 0
+		private var defaultMinWidth = 0
+		private var defaultGravity = Gravity.CENTER_VERTICAL
 
 		init {
 			val drawable = ChipDrawable.createFromAttributes(context, null, 0, chipStyle)
@@ -170,6 +173,8 @@ class ChipsView @JvmOverloads constructor(
 			defaultChipIconSize = chipIconSize
 			defaultMinimumWidth = minimumWidth
 			defaultMinimumHeight = minimumHeight
+			defaultMinWidth = minWidth
+			defaultGravity = gravity
 			isChipIconVisible = false
 			setOnCloseIconClickListener(chipOnCloseListener)
 			setEnsureMinTouchTargetSize(false)
@@ -247,7 +252,9 @@ class ChipsView @JvmOverloads constructor(
 				val iconSize = resources.getDimension(materialR.dimen.m3_chip_icon_size)
 				val horizontalPadding = (chipSize - iconSize) / 2f
 				minimumWidth = chipSize.toInt()
+				minWidth = chipSize.toInt()
 				minimumHeight = chipSize.toInt()
+				gravity = Gravity.CENTER
 				chipMinHeight = chipSize
 				chipIconSize = iconSize
 				chipStartPadding = horizontalPadding
@@ -258,7 +265,9 @@ class ChipsView @JvmOverloads constructor(
 				textEndPadding = 0f
 			} else {
 				minimumWidth = defaultMinimumWidth
+				minWidth = defaultMinWidth
 				minimumHeight = defaultMinimumHeight
+				gravity = defaultGravity
 				chipMinHeight = defaultChipMinHeight
 				chipIconSize = defaultChipIconSize
 				chipStartPadding = defaultChipStartPadding
