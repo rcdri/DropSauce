@@ -5,9 +5,12 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
-	android:background="@drawable/list_selector"
-	android:paddingVertical="4dp"
-	android:paddingStart="?android:listPreferredItemPaddingStart"
+	android:layout_marginHorizontal="12dp"
+	android:layout_marginVertical="3dp"
+	android:background="@drawable/bg_settings_tile"
+	android:paddingVertical="@dimen/margin_small"
+	android:paddingStart="20dp"
+	android:paddingEnd="8dp"
 	tools:ignore="RtlSymmetry">
 
 	<org.koitharu.kotatsu.image.ui.CoverStackView

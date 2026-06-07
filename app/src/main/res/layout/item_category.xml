@@ -5,9 +5,12 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
-	android:background="@drawable/list_selector"
-	android:paddingVertical="4dp"
-	android:paddingStart="?android:listPreferredItemPaddingStart"
+	android:layout_marginHorizontal="12dp"
+	android:layout_marginVertical="3dp"
+	android:background="@drawable/bg_settings_tile"
+	android:paddingVertical="@dimen/margin_small"
+	android:paddingStart="20dp"
+	android:paddingEnd="8dp"
 	tools:ignore="RtlSymmetry">
 
 	<org.koitharu.kotatsu.image.ui.CoverStackView
@@ -63,7 +66,7 @@
 		android:contentDescription="@string/check_for_new_chapters"
 		android:tooltipText="@string/check_for_new_chapters"
 		app:layout_constraintBottom_toBottomOf="@id/textView_subtitle"
-		app:layout_constraintEnd_toStartOf="@id/imageView_hidden"
+		app:layout_constraintEnd_toStartOf="@id/imageView_download"
 		app:layout_constraintStart_toEndOf="@id/textView_subtitle"
 		app:layout_constraintTop_toTopOf="@id/textView_subtitle"
 		app:srcCompat="@drawable/ic_notification" />
