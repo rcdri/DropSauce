@@ -93,7 +93,11 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 				title = viewBinding.editName.text?.toString()?.trim(),
 			)
 
-			materialR.id.text_input_end_icon -> viewBinding.editName.text?.clear()
+			materialR.id.text_input_end_icon -> {
+				if (isCustomNameTyped()) {
+					viewBinding.editName.text?.clear()
+				}
+			}
 
 			R.id.button_reset_cover -> viewModel.updateCover(null)
 			R.id.button_pick_gallery -> {
@@ -147,7 +151,8 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 	private fun updateOriginalNamePreview() {
 		val original = originalTitle?.trim().orEmpty()
 		val current = viewBinding.editName.text?.toString()?.trim().orEmpty()
-		val changed = original.isNotEmpty() && current.isNotEmpty() && current != original
+		val changed = isCustomNameTyped(original, current)
+		setNameResetEnabled(changed)
 		viewBinding.textViewOriginalName.isVisible = changed
 		if (changed) {
 			viewBinding.textViewOriginalName.text = getString(
@@ -155,6 +160,18 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 				getString(R.string.original_name),
 				original,
 			)
+		}
+	}
+
+	private fun isCustomNameTyped(
+		original: String = originalTitle?.trim().orEmpty(),
+		current: String = viewBinding.editName.text?.toString()?.trim().orEmpty(),
+	): Boolean = original.isNotEmpty() && current.isNotEmpty() && current != original
+
+	private fun setNameResetEnabled(isEnabled: Boolean) {
+		viewBinding.layoutName.findViewById<View>(materialR.id.text_input_end_icon)?.let { icon ->
+			icon.isEnabled = isEnabled
+			icon.alpha = if (isEnabled) 1f else DISABLED_ICON_ALPHA
 		}
 	}
 
@@ -174,5 +191,9 @@ class OverrideConfigActivity : BaseActivity<ActivityOverrideEditBinding>(), View
 	private fun onDataSaved() {
 		setResult(RESULT_OK)
 		finish()
+	}
+
+	private companion object {
+		const val DISABLED_ICON_ALPHA = 0.38f
 	}
 }

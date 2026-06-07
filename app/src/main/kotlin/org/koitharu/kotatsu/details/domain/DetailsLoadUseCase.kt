@@ -121,7 +121,7 @@ class DetailsLoadUseCase @Inject constructor(
 			)
 			emit(mangaDetails)
 			if (remoteDetails != null) {
-				mangaDataRepository.updateChapters(mangaDetails.toManga())
+				mangaDataRepository.storeManga(remoteDetails, replaceExisting = true, stripAppliedOverride = false)
 			}
 		}
 	}
@@ -178,7 +178,7 @@ class DetailsLoadUseCase @Inject constructor(
 			isLoaded = true,
 		)
 		emit(mangaDetails)
-		mangaDataRepository.updateChapters(mangaDetails.toManga())
+		mangaDataRepository.storeManga(remoteDetails, replaceExisting = true, stripAppliedOverride = false)
 	}
 
 	private suspend fun getDetails(seed: Manga, force: Boolean) = runCatchingCancellable {

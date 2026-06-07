@@ -21,6 +21,7 @@ import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.core.util.ext.isFileUri
 import org.koitharu.kotatsu.core.util.ext.openSource
 import org.koitharu.kotatsu.core.util.ext.require
+import org.koitharu.kotatsu.core.util.ext.toFileOrNull
 import org.koitharu.kotatsu.core.util.ext.toMimeTypeOrNull
 import org.koitharu.kotatsu.core.util.ext.toUriOrNull
 import org.koitharu.kotatsu.parsers.model.Manga
@@ -53,13 +54,16 @@ class OverrideConfigViewModel @Inject constructor(
 
 	fun save(title: String?) {
 		launchLoadingJob(Dispatchers.Default) {
-			val override = checkNotNull(data.value).second.let {
+			val (sourceManga, draftOverride) = checkNotNull(data.value)
+			val previousCover = dataRepository.getOverride(sourceManga.id)?.coverUrl
+			val override = draftOverride.let {
 				it.copy(
 					title = title,
 					coverUrl = it.coverUrl?.cachedFile(),
 				)
 			}
-			dataRepository.setOverride(manga, override)
+			val savedOverride = dataRepository.setOverride(sourceManga, override)
+			deleteStaleCachedCover(previousCover, savedOverride?.coverUrl)
 			onSaved.call(Unit)
 		}
 	}
@@ -97,6 +101,21 @@ class OverrideConfigViewModel @Inject constructor(
 			}
 			dest
 		}.toUri().toString()
+	}
+
+	private suspend fun deleteStaleCachedCover(oldCover: String?, newCover: String?) {
+		if (oldCover.isNullOrEmpty() || oldCover == newCover) {
+			return
+		}
+		withContext(Dispatchers.IO) {
+			runCatching {
+				val cacheDir = context.getExternalFilesDir(DIR_COVERS)?.canonicalFile ?: return@runCatching
+				val file = oldCover.toUriOrNull()?.toFileOrNull()?.canonicalFile ?: return@runCatching
+				if (file.parentFile?.canonicalPath == cacheDir.canonicalPath) {
+					file.delete()
+				}
+			}
+		}
 	}
 
 	private fun emptyOverride() = MangaOverride(null, null, null)

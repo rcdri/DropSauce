@@ -13,6 +13,7 @@ import org.koitharu.kotatsu.core.db.TABLE_FAVOURITES
 import org.koitharu.kotatsu.core.db.TABLE_FAVOURITE_CATEGORIES
 import org.koitharu.kotatsu.core.db.TABLE_PREFERENCES
 import org.koitharu.kotatsu.core.db.entity.ContentRating
+import org.koitharu.kotatsu.core.db.entity.MangaEntity
 import org.koitharu.kotatsu.core.db.entity.MangaPrefsEntity
 import org.koitharu.kotatsu.core.db.entity.toEntities
 import org.koitharu.kotatsu.core.db.entity.toEntity
@@ -45,7 +46,7 @@ class MangaDataRepository @Inject constructor(
 
 	suspend fun saveReaderMode(manga: Manga, mode: ReaderMode) {
 		db.withTransaction {
-			storeManga(manga, replaceExisting = false)
+			storeMangaLocked(manga, replaceExisting = false)
 			val entity = db.getPreferencesDao().find(manga.id) ?: newEntity(manga.id)
 			db.getPreferencesDao().upsert(entity.copy(mode = mode.id))
 		}
@@ -53,7 +54,7 @@ class MangaDataRepository @Inject constructor(
 
 	suspend fun saveColorFilter(manga: Manga, colorFilter: ReaderColorFilter?) {
 		db.withTransaction {
-			storeManga(manga, replaceExisting = false)
+			storeMangaLocked(manga, replaceExisting = false)
 			val entity = db.getPreferencesDao().find(manga.id) ?: newEntity(manga.id)
 			db.getPreferencesDao().upsert(
 				entity.copy(
@@ -91,18 +92,21 @@ class MangaDataRepository @Inject constructor(
 		return map
 	}
 
-	suspend fun setOverride(manga: Manga, override: MangaOverride?) {
-		db.withTransaction {
-			storeManga(manga, replaceExisting = false)
+	suspend fun setOverride(manga: Manga, override: MangaOverride?): MangaOverride? {
+		return db.withTransaction {
+			storeMangaLocked(manga, replaceExisting = false)
 			val dao = db.getPreferencesDao()
+			val source = db.getMangaDao().find(manga.id)?.manga ?: manga.toEntity()
 			val entity = dao.find(manga.id) ?: newEntity(manga.id)
+			val normalizedOverride = override.normalizedAgainst(source)
 			dao.upsert(
 				entity.copy(
-					titleOverride = override?.title?.nullIfEmpty(),
-					coverUrlOverride = override?.coverUrl?.nullIfEmpty(),
-					contentRatingOverride = override?.contentRating?.name,
+					titleOverride = normalizedOverride?.title?.nullIfEmpty(),
+					coverUrlOverride = normalizedOverride?.coverUrl?.nullIfEmpty(),
+					contentRatingOverride = normalizedOverride?.contentRating?.name,
 				),
 			)
+			normalizedOverride
 		}
 	}
 
@@ -142,28 +146,12 @@ class MangaDataRepository @Inject constructor(
 		else -> null
 	}
 
-	suspend fun storeManga(manga: Manga, replaceExisting: Boolean) {
-		if (!replaceExisting && db.getMangaDao().find(manga.id) != null) {
-			return
-		}
-		db.withTransaction {
-			// avoid storing local manga if remote one is already stored
-			val existing = if (manga.isLocal) {
-				db.getMangaDao().find(manga.id)?.manga
-			} else {
-				null
-			}
-			if (existing == null || existing.source == manga.source.name) {
-				val tags = manga.tags.toEntities()
-				db.getTagsDao().upsert(tags)
-				db.getMangaDao().upsert(manga.toEntity(), tags)
-				if (!manga.isLocal) {
-					manga.chapters?.let { chapters ->
-						db.getChaptersDao().replaceAll(manga.id, chapters.withIndex().toEntities(manga.id))
-					}
-				}
-			}
-		}
+	suspend fun storeManga(
+		manga: Manga,
+		replaceExisting: Boolean,
+		stripAppliedOverride: Boolean = true,
+	) = db.withTransaction {
+		storeMangaLocked(manga, replaceExisting, stripAppliedOverride)
 	}
 
 	suspend fun updateChapters(manga: Manga) {
@@ -217,6 +205,76 @@ class MangaDataRepository @Inject constructor(
 		}
 	} else {
 		this
+	}
+
+	private suspend fun storeMangaLocked(
+		manga: Manga,
+		replaceExisting: Boolean,
+		stripAppliedOverride: Boolean = true,
+	) {
+		val mangaDao = db.getMangaDao()
+		val existing = mangaDao.find(manga.id)?.manga
+		if (!replaceExisting && existing != null) {
+			return
+		}
+		// Avoid storing local manga if a remote one is already stored.
+		if (manga.isLocal && existing != null && existing.source != manga.source.name) {
+			return
+		}
+		val override = if (stripAppliedOverride) {
+			db.getPreferencesDao().find(manga.id)?.getOverrideOrNull()
+		} else {
+			null
+		}
+		val sourceManga = manga.withoutAppliedOverride(existing, override)
+		val tags = sourceManga.tags.toEntities()
+		db.getTagsDao().upsert(tags)
+		mangaDao.upsert(sourceManga.toEntity(), tags)
+		if (!sourceManga.isLocal) {
+			sourceManga.chapters?.let { chapters ->
+				db.getChaptersDao().replaceAll(sourceManga.id, chapters.withIndex().toEntities(sourceManga.id))
+			}
+		}
+	}
+
+	private fun Manga.withoutAppliedOverride(existing: MangaEntity?, override: MangaOverride?): Manga {
+		if (existing == null || override == null) {
+			return this
+		}
+		var result = this
+		if (!override.title.isNullOrEmpty() && title == override.title) {
+			result = result.copy(title = existing.title)
+		}
+		if (!override.coverUrl.isNullOrEmpty()) {
+			result = result.copy(
+				coverUrl = if (coverUrl == override.coverUrl) existing.coverUrl else coverUrl,
+				largeCoverUrl = if (largeCoverUrl == override.coverUrl) existing.largeCoverUrl else largeCoverUrl,
+			)
+		}
+		if (override.contentRating != null && contentRating == override.contentRating) {
+			result = result.copy(contentRating = ContentRating(existing.contentRating))
+		}
+		return result
+	}
+
+	private fun MangaOverride?.normalizedAgainst(source: MangaEntity): MangaOverride? {
+		if (this == null) {
+			return null
+		}
+		val normalized = copy(
+			title = title?.trim()?.nullIfEmpty()?.takeUnless { it == source.title },
+			coverUrl = coverUrl?.nullIfEmpty()?.takeUnless { it == source.coverUrl || it == source.largeCoverUrl },
+			contentRating = contentRating?.takeUnless { it == ContentRating(source.contentRating) },
+		)
+		return if (
+			normalized.title.isNullOrEmpty() &&
+			normalized.coverUrl.isNullOrEmpty() &&
+			normalized.contentRating == null
+		) {
+			null
+		} else {
+			normalized
+		}
 	}
 
 	private fun MangaPrefsEntity.getColorFilterOrNull(): ReaderColorFilter? {
