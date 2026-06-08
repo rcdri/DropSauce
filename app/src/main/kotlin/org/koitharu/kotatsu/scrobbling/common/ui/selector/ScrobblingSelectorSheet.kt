@@ -2,12 +2,15 @@ package org.koitharu.kotatsu.scrobbling.common.ui.selector
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -21,7 +24,6 @@ import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.list.PaginationScrollListener
 import org.koitharu.kotatsu.core.ui.sheet.BaseAdaptiveSheet
-import org.koitharu.kotatsu.core.ui.util.CollapseActionViewCallback
 import org.koitharu.kotatsu.core.util.RecyclerViewScrollCallback
 import org.koitharu.kotatsu.core.util.ext.consume
 import org.koitharu.kotatsu.core.util.ext.firstVisibleItemPosition
@@ -46,15 +48,19 @@ class ScrobblingSelectorSheet :
 	OnListItemClickListener<ScrobblerManga>,
 	PaginationScrollListener.Callback,
 	View.OnClickListener,
-	MenuItem.OnActionExpandListener,
 	SearchView.OnQueryTextListener,
 	TabLayout.OnTabSelectedListener,
 	ListStateHolderListener,
 	AsyncListDiffer.ListListener<ListModel> {
 
-	private var collapsibleActionViewCallback: CollapseActionViewCallback? = null
 	private var paginationScrollListener: PaginationScrollListener? = null
 	private val viewModel by viewModels<ScrobblingSelectorViewModel>()
+
+	private val searchBackCallback = object : OnBackPressedCallback(false) {
+		override fun handleOnBackPressed() {
+			collapseSearch()
+		}
+	}
 
 	override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): SheetScrobblingSelectorBinding {
 		return SheetScrobblingSelectorBinding.inflate(inflater, container, false)
@@ -77,7 +83,8 @@ class ScrobblingSelectorSheet :
 			)
 		}
 		binding.buttonDone.setOnClickListener(this)
-		initOptionsMenu()
+		setupSearch(binding)
+		onBackPressedDispatcher.addCallback(viewLifecycleOwner, searchBackCallback)
 		initTabs()
 
 		viewModel.content.observe(viewLifecycleOwner, listAdapter)
@@ -94,7 +101,7 @@ class ScrobblingSelectorSheet :
 			if (isLoading) {
 				binding.buttonDone.setProgressIcon()
 			} else {
-				binding.buttonDone.setIconResource(R.drawable.ic_check)
+				binding.buttonDone.icon = null
 			}
 			binding.tabs.setTabsEnabled(!isLoading)
 		}
@@ -108,7 +115,6 @@ class ScrobblingSelectorSheet :
 
 	override fun onDestroyView() {
 		super.onDestroyView()
-		collapsibleActionViewCallback = null
 		paginationScrollListener = null
 	}
 
@@ -165,26 +171,12 @@ class ScrobblingSelectorSheet :
 		viewModel.loadNextPage()
 	}
 
-	override fun onMenuItemActionExpand(item: MenuItem): Boolean {
-		setExpanded(isExpanded = true, isLocked = true)
-		collapsibleActionViewCallback?.onMenuItemActionExpand(item)
-		return true
-	}
-
-	override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-		val searchView = (item.actionView as? SearchView) ?: return false
-		searchView.setQuery("", false)
-		searchView.post { setExpanded(isExpanded = false, isLocked = false) }
-		collapsibleActionViewCallback?.onMenuItemActionCollapse(item)
-		return true
-	}
-
 	override fun onQueryTextSubmit(query: String?): Boolean {
 		if (query == null || query.length < 3) {
 			return false
 		}
 		viewModel.search(query)
-		requireViewBinding().toolbar.menu.findItem(R.id.action_search)?.collapseActionView()
+		collapseSearch()
 		return true
 	}
 
@@ -204,27 +196,52 @@ class ScrobblingSelectorSheet :
 	}
 
 	private fun openSearch() {
-		val menuItem = requireViewBinding().toolbar.menu.findItem(R.id.action_search) ?: return
-		menuItem.expandActionView()
+		viewBinding?.searchView?.isIconified = false
+	}
+
+	private fun setupSearch(binding: SheetScrobblingSelectorBinding) {
+		with(binding.searchView) {
+			setIconifiedByDefault(true)
+			setOnQueryTextListener(this@ScrobblingSelectorSheet)
+			queryHint = getString(R.string.search)
+			setOnSearchClickListener {
+				setSearchExpanded(true)
+				setExpanded(isExpanded = true, isLocked = true)
+				searchBackCallback.isEnabled = true
+			}
+			setOnCloseListener {
+				setSearchExpanded(false)
+				setExpanded(isExpanded = false, isLocked = false)
+				searchBackCallback.isEnabled = false
+				false
+			}
+		}
+	}
+
+	// Collapsed: a search icon at the end of the bar next to the tabs and the done button. Expanded:
+	// the field takes the whole bar (tabs and done step aside).
+	private fun setSearchExpanded(expanded: Boolean) {
+		val binding = viewBinding ?: return
+		binding.tabs.isVisible = !expanded
+		binding.buttonDone.isVisible = !expanded
+		binding.searchView.updateLayoutParams<LinearLayout.LayoutParams> {
+			width = if (expanded) 0 else LinearLayout.LayoutParams.WRAP_CONTENT
+			weight = if (expanded) 1f else 0f
+		}
+	}
+
+	private fun collapseSearch() {
+		val searchView = viewBinding?.searchView ?: return
+		searchView.setQuery("", false)
+		if (!searchView.isIconified) {
+			searchView.isIconified = true
+		}
 	}
 
 	private fun onError(e: Throwable) {
 		Toast.makeText(requireContext(), e.getDisplayMessage(resources), Toast.LENGTH_LONG).show()
 		if (viewModel.isEmpty) {
 			dismissAllowingStateLoss()
-		}
-	}
-
-	private fun initOptionsMenu() {
-		requireViewBinding().toolbar.inflateMenu(R.menu.opt_shiki_selector)
-		val searchMenuItem = requireViewBinding().toolbar.menu.findItem(R.id.action_search)
-		searchMenuItem.setOnActionExpandListener(this)
-		val searchView = searchMenuItem.actionView as SearchView
-		searchView.setOnQueryTextListener(this)
-		searchView.setIconifiedByDefault(false)
-		searchView.queryHint = searchMenuItem.title
-		collapsibleActionViewCallback = CollapseActionViewCallback(searchMenuItem).also {
-			onBackPressedDispatcher.addCallback(it)
 		}
 	}
 

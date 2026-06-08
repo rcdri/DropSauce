@@ -18,38 +18,46 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		app:contentInsetStart="0dp"
-		tools:menu="@menu/opt_search">
+		app:contentInsetEnd="0dp">
 
-		<RelativeLayout
+		<LinearLayout
+			android:id="@+id/layout_toolbar_content"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content">
+			android:layout_height="wrap_content"
+			android:layout_marginStart="@dimen/list_spacing"
+			android:layout_marginEnd="12dp"
+			android:baselineAligned="false"
+			android:gravity="center_vertical"
+			android:orientation="horizontal">
 
 			<com.google.android.material.tabs.TabLayout
 				android:id="@+id/tabs"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
-				android:layout_alignParentStart="true"
-				android:layout_centerVertical="true"
-				android:layout_toStartOf="@id/button_done"
+				android:layout_weight="1"
 				android:background="@android:color/transparent"
 				android:clipToPadding="false"
-				android:paddingStart="@dimen/list_spacing"
-				android:scrollIndicators="start|end"
 				app:tabGravity="start"
 				app:tabMode="scrollable"
-				tools:ignore="RtlSymmetry,UnusedAttribute" />
+				tools:ignore="UnusedAttribute" />
+
+			<androidx.appcompat.widget.SearchView
+				android:id="@+id/searchView"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				app:iconifiedByDefault="true"
+				app:queryHint="@string/search" />
 
 			<com.google.android.material.button.MaterialButton
 				android:id="@+id/button_done"
-				style="?materialIconButtonFilledStyle"
+				style="@style/Widget.Material3Expressive.Button"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
-				android:layout_centerVertical="true"
-				android:layout_marginHorizontal="@dimen/toolbar_button_margin"
-				app:icon="@drawable/ic_check" />
+				android:layout_marginStart="4dp"
+				android:text="@string/done"
+				app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Kotatsu.Circle" />
 
-		</RelativeLayout>
+		</LinearLayout>
 
 	</com.google.android.material.appbar.MaterialToolbar>
 
