@@ -4,7 +4,6 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.slider.LabelFormatter
@@ -25,7 +24,7 @@ class ChapterPagesMenuProvider(
 	private val sheet: BaseAdaptiveSheet<*>,
 	private val pager: ViewPager2,
 	private val settings: AppSettings,
-) : OnBackPressedCallback(false), MenuProvider, SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener,
+) : OnBackPressedCallback(false), MenuProvider, MenuItem.OnActionExpandListener,
 	Slider.OnChangeListener {
 
 	private var expandedItemRef: WeakReference<MenuItem>? = null
@@ -33,14 +32,8 @@ class ChapterPagesMenuProvider(
 	override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 		val tab = getCurrentTab()
 		when (tab) {
-			TAB_CHAPTERS -> {
-				menuInflater.inflate(R.menu.opt_chapters, menu)
-				menu.findItem(R.id.action_search)?.run {
-					setOnActionExpandListener(this@ChapterPagesMenuProvider)
-					(actionView as? SearchView)?.setupChaptersSearchView()
-				}
-				menu.findItem(R.id.action_search)?.isVisible = viewModel.emptyReason.value == null
-			}
+			// Chapter search now lives inline in the sheet toolbar, not in the menu.
+			TAB_CHAPTERS -> Unit
 
 			TAB_PAGES, TAB_BOOKMARKS -> {
 				menuInflater.inflate(R.menu.opt_pages, menu)
@@ -68,16 +61,7 @@ class ChapterPagesMenuProvider(
 	override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
 		expandedItemRef = null
 		isEnabled = false
-		(item.actionView as? SearchView)?.setQuery("", false)
-		viewModel.performChapterSearch(null)
 		sheet.unlock()
-		return true
-	}
-
-	override fun onQueryTextSubmit(query: String?): Boolean = false
-
-	override fun onQueryTextChange(newText: String?): Boolean {
-		viewModel.performChapterSearch(newText)
 		return true
 	}
 
@@ -85,12 +69,6 @@ class ChapterPagesMenuProvider(
 		if (fromUser) {
 			settings.gridSizePages = value.toInt()
 		}
-	}
-
-	private fun SearchView.setupChaptersSearchView() {
-		setOnQueryTextListener(this@ChapterPagesMenuProvider)
-		setIconifiedByDefault(false)
-		queryHint = context.getString(R.string.search_chapters)
 	}
 
 	private fun Slider.setupPagesSizeSlider() {

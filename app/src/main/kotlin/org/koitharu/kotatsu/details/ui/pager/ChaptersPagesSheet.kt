@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.R as AppCompatR
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -51,6 +55,12 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 	lateinit var settings: AppSettings
 
 	private val viewModel by ChaptersPagesViewModel.ActivityVMLazy(this)
+
+	private val searchBackCallback = object : OnBackPressedCallback(false) {
+		override fun handleOnBackPressed() {
+			collapseSearch()
+		}
+	}
 
 	override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): SheetChaptersPagesBinding {
 		return SheetChaptersPagesBinding.inflate(inflater, container, false)
@@ -99,6 +109,9 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		val menuProvider = ChapterPagesMenuProvider(viewModel, this, binding.pager, settings)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, menuProvider)
 		binding.toolbar.addMenuProvider(menuProvider)
+		onBackPressedDispatcher.addCallback(viewLifecycleOwner, searchBackCallback)
+		setupSearch(binding)
+		updateSearchVisibility()
 
 		val menuInvalidator = MenuInvalidator(binding.toolbar)
 		viewModel.isChaptersReversed.observe(viewLifecycleOwner, menuInvalidator)
@@ -134,10 +147,12 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 			binding.splitButtonRead.isVisible = newState != STATE_EXPANDED && !isActionModeStarted
 				&& viewModel is DetailsViewModel
 		}
+		updateSearchVisibility()
 	}
 
 	override fun onActionModeStarted(mode: ActionMode) {
 		viewBinding?.toolbar?.menuView?.isVisible = false
+		updateSearchVisibility()
 		view?.post(::expandAndLock)
 	}
 
@@ -145,6 +160,7 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		unlock()
 		val state = behavior?.state ?: STATE_EXPANDED
 		viewBinding?.toolbar?.menuView?.isVisible = state != STATE_COLLAPSED
+		updateSearchVisibility()
 	}
 
 	override fun onTabSelected(tab: TabLayout.Tab?) = Unit
@@ -182,6 +198,67 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 	private fun onPageChanged(position: Int) {
 		viewBinding?.toolbar?.invalidateMenu()
 		settings.lastDetailsTab = position
+		updateSearchVisibility()
+	}
+
+	private fun setupSearch(binding: SheetChaptersPagesBinding) {
+		with(binding.searchView) {
+			queryHint = getString(R.string.search_chapters)
+			setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+				override fun onQueryTextSubmit(query: String?): Boolean = false
+
+				override fun onQueryTextChange(newText: String?): Boolean {
+					viewModel.performChapterSearch(newText)
+					return true
+				}
+			})
+			setOnSearchClickListener {
+				setSearchFieldExpanded(true)
+				searchBackCallback.isEnabled = true
+			}
+			setOnCloseListener {
+				setSearchFieldExpanded(false)
+				viewModel.performChapterSearch(null)
+				searchBackCallback.isEnabled = false
+				false
+			}
+		}
+	}
+
+	// The search lives only on the Chapters tab and only while the bar is fully pulled up.
+	private fun updateSearchVisibility() {
+		val binding = viewBinding ?: return
+		val isActionModeStarted = actionModeDelegate?.isActionModeStarted == true
+		val isExpanded = dialog != null || behavior?.state == STATE_EXPANDED
+		val show = isExpanded && !isActionModeStarted && binding.pager.currentItem == TAB_CHAPTERS
+		if (binding.searchView.isVisible != show) {
+			binding.searchView.isVisible = show
+		}
+		if (!show && !binding.searchView.isIconified) {
+			collapseSearch()
+		}
+	}
+
+	// Collapsed: the search is a single icon at the end of the bar (tabs keep the weight). Expanded:
+	// the field takes the empty space to the right of the tabs (the weights are swapped).
+	private fun setSearchFieldExpanded(expanded: Boolean) {
+		val binding = viewBinding ?: return
+		binding.tabs.updateLayoutParams<LinearLayout.LayoutParams> {
+			width = if (expanded) LinearLayout.LayoutParams.WRAP_CONTENT else 0
+			weight = if (expanded) 0f else 1f
+		}
+		binding.searchView.updateLayoutParams<LinearLayout.LayoutParams> {
+			width = if (expanded) 0 else LinearLayout.LayoutParams.WRAP_CONTENT
+			weight = if (expanded) 1f else 0f
+		}
+	}
+
+	private fun collapseSearch() {
+		val searchView = viewBinding?.searchView ?: return
+		searchView.setQuery("", false)
+		if (!searchView.isIconified) {
+			searchView.isIconified = true
+		}
 	}
 
 	private fun onNewChaptersChanged(counter: Int) {

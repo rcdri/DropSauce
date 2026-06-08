@@ -56,6 +56,11 @@ class ChaptersFragment :
 	private var chaptersAdapter: ChaptersAdapter? = null
 	private var selectionController: ListSelectionController? = null
 
+	// When the user toggles "reverse list" we keep the scrollbar where it was instead of letting the
+	// RecyclerView follow the (now relocated) anchor item all the way to the bottom of the list.
+	private var isInitialReverseValue = true
+	private var pendingReverseScroll: Pair<Int, Int>? = null
+
 	override val recyclerView: RecyclerView?
 		get() = viewBinding?.recyclerViewChapters
 
@@ -92,6 +97,14 @@ class ChaptersFragment :
 		}
 		binding.chipsFilter.onChipClickListener = this
 		viewModel.isLoading.observe(viewLifecycleOwner, this::onLoadingStateChanged)
+		viewModel.isChaptersReversed.observe(viewLifecycleOwner) {
+			// Skip the initial value; only react to actual toggles.
+			if (isInitialReverseValue) {
+				isInitialReverseValue = false
+			} else {
+				captureScrollForReverse()
+			}
+		}
 		viewModel.chapters
 			.map { it.withVolumeHeaders(requireContext()) }
 			.flowOn(Dispatchers.Default)
@@ -159,20 +172,48 @@ class ChaptersFragment :
 
 	private fun onChaptersChanged(list: List<ListModel>) {
 		val adapter = chaptersAdapter ?: return
-		if (adapter.itemCount == 0) {
-			val position = list.indexOfFirst { it is ChapterListItem && it.isCurrent } - 1
-			if (position > 0) {
-				val offset = (resources.getDimensionPixelSize(R.dimen.chapter_list_item_height) * 0.6).roundToInt()
+		val reverseScroll = pendingReverseScroll
+		when {
+			adapter.itemCount == 0 -> {
+				val position = list.indexOfFirst { it is ChapterListItem && it.isCurrent } - 1
+				if (position > 0) {
+					val offset = (resources.getDimensionPixelSize(R.dimen.chapter_list_item_height) * 0.6).roundToInt()
+					adapter.setItems(
+						list,
+						RecyclerViewScrollCallback(requireViewBinding().recyclerViewChapters, position, offset),
+					)
+				} else {
+					adapter.items = list
+				}
+			}
+
+			reverseScroll != null -> {
+				// Reverse toggled: restore the previous scrollbar position rather than chasing the
+				// anchor item, which the diff moves to the opposite end of the list.
+				pendingReverseScroll = null
 				adapter.setItems(
 					list,
-					RecyclerViewScrollCallback(requireViewBinding().recyclerViewChapters, position, offset),
+					RecyclerViewScrollCallback(
+						requireViewBinding().recyclerViewChapters,
+						reverseScroll.first,
+						reverseScroll.second,
+					),
 				)
-			} else {
-				adapter.items = list
 			}
-		} else {
-			adapter.items = list
+
+			else -> adapter.items = list
 		}
+	}
+
+	private fun captureScrollForReverse() {
+		val rv = viewBinding?.recyclerViewChapters ?: return
+		val lm = rv.layoutManager as? LinearLayoutManager ?: return
+		val position = lm.findFirstVisibleItemPosition()
+		if (position == RecyclerView.NO_POSITION) {
+			return
+		}
+		val offset = (lm.findViewByPosition(position)?.top ?: 0) - rv.paddingTop
+		pendingReverseScroll = position to offset
 	}
 
 	private fun onFilterChanged(list: List<ChipsView.ChipModel>) {

@@ -1,15 +1,15 @@
 package org.koitharu.kotatsu.core.ui.util
 
-import android.graphics.Color
+import android.annotation.SuppressLint
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.Window
+import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.ActionBarContextView
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
@@ -17,15 +17,13 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.getThemeDimensionPixelOffset
-import com.google.android.material.R as materialR
 
+@SuppressLint("RestrictedApi") // intentional access to AppCompat's ActionBarContextView for edge-to-edge handling
 class ActionModeDelegate : OnBackPressedCallback(false) {
 
 	private var activeActionMode: ActionMode? = null
 	private var exitingActionMode: ActionMode? = null
-	private var exitingWindow: Window? = null
 	private var listeners: MutableList<ActionModeListener>? = null
-	private var defaultStatusBarColor = Color.TRANSPARENT
 	private var actionModePreDraw: Pair<ActionBarContextView, ViewTreeObserver.OnPreDrawListener>? = null
 	private var exitCompleteActions: MutableList<() -> Unit>? = null
 
@@ -37,30 +35,28 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 	}
 
 	fun onSupportActionModeStarted(mode: ActionMode, window: Window?) {
-		val wasExiting = exitingActionMode != null
 		exitingActionMode = null
-		exitingWindow = null
 		exitCompleteActions = null
 		activeActionMode = mode
 		isEnabled = true
 		listeners?.forEach { it.onActionModeStarted(mode) }
 		if (window != null) {
 			val ctx = window.context
-			val actionModeColor = ColorUtils.compositeColors(
-				ContextCompat.getColor(ctx, materialR.color.m3_appbar_overlay_color),
-				ctx.getThemeColor(materialR.attr.colorSurface),
-			)
-			@Suppress("DEPRECATION")
-			if (!wasExiting) {
-				defaultStatusBarColor = window.statusBarColor
-			}
-			@Suppress("DEPRECATION")
-			window.statusBarColor = actionModeColor
+			// The contextual bar is drawn as a single continuous surface that extends edge-to-edge
+			// behind the (transparent) status bar, so the status region and the icons region are one
+			// view that fades in/out as a unit. Painting window.statusBarColor separately created a
+			// second surface that snapped in instantly while the bar faded — that mismatch was the
+			// "split top bar" that flickered on selection. We keep the status bar transparent and let
+			// the bar paint the whole area in the window background, matching every other top bar.
+			val actionModeColor = ctx.getThemeColor(android.R.attr.colorBackground)
 			val statusBarHeight = ViewCompat.getRootWindowInsets(window.decorView)
 				?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: 0
 			window.decorView.findViewById<ActionBarContextView?>(androidx.appcompat.R.id.action_mode_bar)?.apply {
 				applyEdgeToEdgeActionMode(color = actionModeColor, statusBarHeight = statusBarHeight)
 				keepActionModeEdgeToEdge(mode, color = actionModeColor, statusBarHeight = statusBarHeight)
+				// Wrap the close "X" in a tonal circle to match the back buttons in the rest of the app.
+				findViewById<ImageView?>(androidx.appcompat.R.id.action_mode_close_button)
+					?.applyTonalIconButtonStyle()
 			}
 		}
 	}
@@ -68,7 +64,6 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 	fun onSupportActionModeFinished(mode: ActionMode, window: Window?) {
 		activeActionMode = null
 		exitingActionMode = mode
-		exitingWindow = window
 		isEnabled = false
 		listeners?.forEach { it.onActionModeFinished(mode) }
 		val actionModeView = actionModePreDraw?.first
@@ -114,27 +109,45 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 		}
 	}
 
-	private fun ActionBarContextView.applyEdgeToEdgeActionMode(color: Int, statusBarHeight: Int) {
+	/**
+	 * Forces the contextual bar to span edge-to-edge under the status bar. Returns `true` when it had
+	 * to mutate layout-affecting state (content height / padding / margin) — the caller skips drawing
+	 * that frame so the bar is never shown in its transient, mis-positioned state (the visible "jump
+	 * down" flicker that happened on invalidate and on back-gesture exit).
+	 */
+	private fun ActionBarContextView.applyEdgeToEdgeActionMode(color: Int, statusBarHeight: Int): Boolean {
 		val actionBarHeight = context.getThemeDimensionPixelOffset(
 			androidx.appcompat.R.attr.actionBarSize,
 			contentHeight,
 		)
 		val totalHeight = actionBarHeight + statusBarHeight
-		setBackgroundColor(color)
-		setPadding(paddingLeft, statusBarHeight, paddingRight, paddingBottom)
+		if ((background as? ColorDrawable)?.color != color) {
+			setBackgroundColor(color)
+		}
+		var needsLayout = false
+		if (paddingTop != statusBarHeight) {
+			setPadding(paddingLeft, statusBarHeight, paddingRight, paddingBottom)
+			needsLayout = true
+		}
 		if (contentHeight != totalHeight) {
 			setContentHeight(totalHeight)
-			requestLayout()
+			needsLayout = true
 		}
 		if (minimumHeight != totalHeight) {
 			minimumHeight = totalHeight
+			needsLayout = true
 		}
 		val params = layoutParams as? ViewGroup.MarginLayoutParams
 		if (params != null && params.topMargin != 0) {
 			params.topMargin = 0
 			layoutParams = params
+			needsLayout = true
 		}
 		hideStatusGuard(statusBarHeight)
+		if (needsLayout) {
+			requestLayout()
+		}
+		return needsLayout
 	}
 
 	// AppCompat draws an anonymous status guard above overlaid action modes.
@@ -165,10 +178,12 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 		val listener = ViewTreeObserver.OnPreDrawListener {
 			when {
 				activeActionMode === mode -> {
-					applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
+					// Skip drawing this frame if we had to re-fix the layout, so the bar is never
+					// painted in its transient (shrunk / shifted) state.
+					!applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
 				}
 				exitingActionMode === mode && visibility == View.VISIBLE -> {
-					applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
+					!applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
 				}
 				else -> {
 					if (exitingActionMode === mode) {
@@ -176,9 +191,9 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 					} else {
 						clearActionModePreDraw()
 					}
+					true
 				}
 			}
-			true
 		}
 		viewTreeObserver.addOnPreDrawListener(listener)
 		actionModePreDraw = this to listener
@@ -193,19 +208,11 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 	}
 
 	private fun completeActionModeExit() {
-		restoreStatusBarColor()
 		exitingActionMode = null
-		exitingWindow = null
 		clearActionModePreDraw()
 		val actions = exitCompleteActions ?: return
 		exitCompleteActions = null
 		actions.forEach { it() }
-	}
-
-	private fun restoreStatusBarColor() {
-		val window = exitingWindow ?: return
-		@Suppress("DEPRECATION")
-		window.statusBarColor = defaultStatusBarColor
 	}
 
 	private companion object {
