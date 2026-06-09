@@ -743,7 +743,7 @@ class DetailsActivity :
 		// Opacity of the frosted detail box (0 = fully transparent, 1 = fully opaque/solid surface).
 		private const val BACKDROP_BOX_ALPHA = 0.76f
 		// How much of the cover accent is blended into the box background (0 = none, 1 = full accent).
-		private const val BACKDROP_BOX_TINT = 0.22f
+		private const val BACKDROP_BOX_TINT = 0.12f
 		// Where the backdrop fully fades out, in dp below the detail box's bottom (+ = lower, − = higher).
 		private const val BACKDROP_END_OFFSET_DP = 14f
 		// Height in dp of the fade — the gradient ends at the edge above and fades upward. Bigger = longer.
