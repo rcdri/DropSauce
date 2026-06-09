@@ -162,7 +162,7 @@ class BackdropController(
 		if (onColorExtracted == null) return
 		val bitmap = try {
 			drawableToBitmap(drawable)
-		} catch (e: Throwable) {
+		} catch (_: Throwable) {
 			return
 		}
 		Palette.from(bitmap)
