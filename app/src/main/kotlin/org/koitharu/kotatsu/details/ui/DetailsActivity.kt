@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.app.assist.AssistContent
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.RippleDrawable
@@ -12,6 +15,7 @@ import android.text.SpannedString
 import android.view.Gravity
 import androidx.annotation.ColorInt
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.Toast
@@ -184,6 +188,7 @@ class DetailsActivity :
 			lifecycle = this,
 			settings = settings,
 			isExtended = isExtendedBackdrop,
+			backdropBoxBlur = infoBinding.imageBoxBlur,
 		)
 		if (settings.isDetailsDynamicColorEnabled) {
 			backdropController.onColorExtracted = ::applyAccentColor
@@ -305,7 +310,7 @@ class DetailsActivity :
 			}
 			R.id.chip_favorite -> {
 				val manga = viewModel.getMangaOrNull() ?: return
-				router.showFavoriteDialog(manga)
+				router.showFavoriteDialog(manga, viewModel.accentColor.value)
 			}
 			R.id.imageView_cover -> {
 				val manga = viewModel.getMangaOrNull() ?: return
@@ -605,9 +610,32 @@ class DetailsActivity :
 	 * it) clear of the backdrop's bottom fade.
 	 */
 	private fun setupColoredBackdropBox() {
-		infoBinding.cardDetails.setCardBackgroundColor(
-			getThemeColor(materialR.attr.colorSurfaceContainerHighest, BACKDROP_BOX_ALPHA),
-		)
+		// The card is just the rounded shape; the frosted fill is the blurred cover (imageBoxBlur) on top,
+		// which lives in the scrolling content so it stays locked to the card (no scroll "split").
+		infoBinding.cardDetails.setCardBackgroundColor(Color.TRANSPARENT)
+		// A thin border around the box; recolored to the cover accent once it loads (applyAccentColor).
+		infoBinding.cardDetails.strokeWidth = dp(BACKDROP_BOX_STROKE_DP)
+		infoBinding.cardDetails.setStrokeColor(getThemeColor(materialR.attr.colorOutlineVariant))
+		val boxBlur = infoBinding.imageBoxBlur
+		// A translucent surface scrim over the blur keeps the text legible; the accent is layered in once
+		// the cover loads (see applyAccentColor).
+		boxBlur.setColorFilter(boxScrim(null), PorterDuff.Mode.SRC_OVER)
+		// Clip the blur to the card's rounded rectangle, inset by the stroke width so the accent border
+		// around the card stays visible (otherwise the blur would paint right over it).
+		val strokeInset = dp(BACKDROP_BOX_STROKE_DP)
+		boxBlur.outlineProvider = object : ViewOutlineProvider() {
+			override fun getOutline(view: View, outline: Outline) {
+				outline.setRoundRect(
+					strokeInset,
+					strokeInset,
+					view.width - strokeInset,
+					view.height - strokeInset,
+					(infoBinding.cardDetails.radius - strokeInset).coerceAtLeast(0f),
+				)
+			}
+		}
+		boxBlur.clipToOutline = true
+		boxBlur.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> boxBlur.invalidateOutline() }
 		// The fade gradient sits at the bottom of the backdrop and fades UPWARD into it, finishing exactly
 		// at the backdrop's bottom edge. Its height = how long/gradual the fade is.
 		viewBinding.backdropGradient.updateLayoutParams<ViewGroup.LayoutParams> {
@@ -624,15 +652,15 @@ class DetailsActivity :
 		val container = viewBinding.backdropContainer
 		val card = infoBinding.cardDetails
 		if (card.height == 0) return
-		val loc = IntArray(2)
-		card.getLocationInWindow(loc)
-		val cardBottom = loc[1] + card.height
-		container.getLocationInWindow(loc)
-		val containerTop = loc[1]
+		val cardLoc = IntArray(2)
+		card.getLocationInWindow(cardLoc)
+		val containerLoc = IntArray(2)
+		container.getLocationInWindow(containerLoc)
+		val cardBottom = (cardLoc[1] - containerLoc[1]) + card.height
 		// The backdrop and content scroll together, so this delta is scroll-invariant. The backdrop ends
 		// (fully faded) at BACKDROP_END_OFFSET_DP below the box bottom; the gradient does the fading in the
 		// stretch *above* this edge, so the container stops exactly here.
-		val target = (cardBottom - containerTop) + dp(BACKDROP_END_OFFSET_DP)
+		val target = cardBottom + dp(BACKDROP_END_OFFSET_DP)
 		if (target > 0 && kotlin.math.abs(container.height - target) > 1) {
 			container.updateLayoutParams<ViewGroup.MarginLayoutParams> { height = target }
 		}
@@ -656,22 +684,35 @@ class DetailsActivity :
 			button.rippleColor = ColorStateList.valueOf(ColorUtils.setAlphaComponent(color, 40))
 		}
 		infoBinding.progress.setIndicatorColor(color)
+		// The "Add to favourites" chip: tint its icon, label and outline to the accent.
 		viewBinding.chipFavorite.chipIconTint = tint
+		viewBinding.chipFavorite.setTextColor(color)
+		viewBinding.chipFavorite.chipStrokeColor = tint
 		viewBinding.swipeRefreshLayout.setIndicatorColor(color)
+		// The refresh circle's container also picks up an accent-tinted "familiar" surface tone.
+		viewBinding.swipeRefreshLayout.setContainerColor(
+			ColorUtils.blendARGB(getThemeColor(materialR.attr.colorSurfaceContainerHighest), color, 0.25f),
+		)
 		// The clickable author name is drawn with the link color, so steer that to the accent too.
 		infoBinding.textViewAuthor.setLinkTextColor(color)
 		// The tinted frosted box only exists in extended mode; leave the classic box untinted.
 		if (isExtendedBackdrop) {
-			infoBinding.cardDetails.setCardBackgroundColor(coloredBoxBackground(color))
+			infoBinding.imageBoxBlur.setColorFilter(boxScrim(color), PorterDuff.Mode.SRC_OVER)
+			// Thin accent line around the box.
+			infoBinding.cardDetails.setStrokeColor(color)
 		}
 	}
 
-	// Box background = the theme surface tinted toward the cover accent, at the box's translucency.
+	// Scrim drawn over the frosted box blur: the theme surface (optionally tinted toward the cover
+	// accent), pushed darker in dark mode / lighter in light mode for text contrast, at the box's
+	// translucency, so the blurred cover still reads as frosted glass behind the text.
 	@ColorInt
-	private fun coloredBoxBackground(@ColorInt accent: Int): Int {
+	private fun boxScrim(@ColorInt accent: Int?): Int {
 		val surface = getThemeColor(materialR.attr.colorSurfaceContainerHighest)
-		val tinted = ColorUtils.blendARGB(surface, accent, BACKDROP_BOX_TINT)
-		return ColorUtils.setAlphaComponent(tinted, (BACKDROP_BOX_ALPHA * 255).roundToInt())
+		var base = if (accent != null) ColorUtils.blendARGB(surface, accent, BACKDROP_BOX_TINT) else surface
+		val isDark = ColorUtils.calculateLuminance(getThemeColor(android.R.attr.colorBackground)) < 0.5
+		base = ColorUtils.blendARGB(base, if (isDark) Color.BLACK else Color.WHITE, BACKDROP_BOX_CONTRAST)
+		return ColorUtils.setAlphaComponent(base, (BACKDROP_BOX_ALPHA * 255).roundToInt())
 	}
 
 	private fun updateAppBarScrim(scrollY: Int) {
@@ -741,9 +782,14 @@ class DetailsActivity :
 
 		// ── Backdrop tuning knobs ──────────────────────────────────────────────────────────────────
 		// Opacity of the frosted detail box (0 = fully transparent, 1 = fully opaque/solid surface).
-		private const val BACKDROP_BOX_ALPHA = 0.76f
+		// Kept fairly translucent so the heavy Gaussian blur behind the box reads as frosted glass.
+		private const val BACKDROP_BOX_ALPHA = 0.62f
 		// How much of the cover accent is blended into the box background (0 = none, 1 = full accent).
 		private const val BACKDROP_BOX_TINT = 0.12f
+		// How far the box background is pushed toward black (dark mode) / white (light mode) for contrast.
+		private const val BACKDROP_BOX_CONTRAST = 0.30f
+		// Thickness in dp of the accent line drawn around the detail box.
+		private const val BACKDROP_BOX_STROKE_DP = 1.5f
 		// Where the backdrop fully fades out, in dp below the detail box's bottom (+ = lower, − = higher).
 		private const val BACKDROP_END_OFFSET_DP = 14f
 		// Height in dp of the fade — the gradient ends at the edge above and fades upward. Bigger = longer.

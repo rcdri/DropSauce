@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.favourites.ui.categories.select.adapter
 
+import android.content.res.ColorStateList
 import androidx.core.text.buildSpannedString
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
 import org.koitharu.kotatsu.R
@@ -12,12 +13,18 @@ import org.koitharu.kotatsu.list.ui.model.ListModel
 
 fun mangaCategoryAD(
 	clickListener: OnListItemClickListener<MangaCategoryItem>,
+	accentColor: Int? = null,
 ) = adapterDelegateViewBinding<MangaCategoryItem, ListModel, ItemCategoryCheckableBinding>(
 	{ inflater, parent -> ItemCategoryCheckableBinding.inflate(inflater, parent, false) },
 ) {
 
 	itemView.setOnClickListener {
 		clickListener.onItemClick(item, itemView)
+	}
+
+	// Tint the checkbox to the cover accent so the dialog matches the details page it was opened from.
+	if (accentColor != null) {
+		binding.checkBox.buttonTintList = ColorStateList.valueOf(accentColor)
 	}
 
 	bind { payloads ->

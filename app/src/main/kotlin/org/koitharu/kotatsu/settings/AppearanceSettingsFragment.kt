@@ -41,7 +41,6 @@ import org.koitharu.kotatsu.core.prefs.AppProtectionTimeout
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.ColorScheme
 import org.koitharu.kotatsu.core.prefs.ListMode
-import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode
 import org.koitharu.kotatsu.core.prefs.ScreenshotsPolicy
 import org.koitharu.kotatsu.core.prefs.SearchSuggestionType
 import org.koitharu.kotatsu.core.ui.util.ActivityRecreationHandle
@@ -217,8 +216,6 @@ private fun AppearanceScreen(
 	val colorSchemeValues = remember(colorSchemes) { colorSchemes.map { it.name } }
 	val listModeEntries = remember { ctx.resources.getStringArray(R.array.list_modes).toList() }
 	val listModeValues = remember { ListMode.entries.names().toList() }
-	val progressEntries = remember { ctx.resources.getStringArray(R.array.progress_indicators).toList() }
-	val progressValues = remember { ProgressIndicatorMode.entries.names().toList() }
 	val badgeEntries = remember { ctx.resources.getStringArray(R.array.list_badges).toList() }
 	val badgeValues = remember { ctx.resources.getStringArray(R.array.values_list_badges).toList() }
 	val detailsTabEntries = remember { ctx.resources.getStringArray(R.array.details_tabs).toList() }
@@ -253,10 +250,7 @@ private fun AppearanceScreen(
 	var listMode by rememberStringPref(AppSettings.KEY_LIST_MODE, ListMode.GRID.name)
 	var gridSize by rememberIntPref(AppSettings.KEY_GRID_SIZE, 100)
 	var quickFilter by rememberBooleanPref(AppSettings.KEY_QUICK_FILTER, true)
-	var progressIndicators by rememberStringPref(
-		AppSettings.KEY_PROGRESS_INDICATORS,
-		ProgressIndicatorMode.PERCENT_READ.name,
-	)
+	var readingIndicator by rememberBooleanPref(AppSettings.KEY_PROGRESS_INDICATORS, true)
 	var mangaListBadges by rememberStringSetPref(AppSettings.KEY_MANGA_LIST_BADGES, emptySet())
 
 	var descriptionCollapse by rememberBooleanPref(AppSettings.KEY_COLLAPSE_DESCRIPTION, true)
@@ -385,12 +379,10 @@ private fun AppearanceScreen(
 					)
 				}
 				item { pos ->
-					ListSettingsItem(
+					SwitchSettingsItem(
 						title = stringResource(R.string.show_reading_indicators),
-						entries = progressEntries,
-						entryValues = progressValues,
-						selectedValue = progressIndicators,
-						onValueChange = { progressIndicators = it },
+						checked = readingIndicator,
+						onCheckedChange = { readingIndicator = it },
 						icon = R.drawable.ic_read,
 						
 						shape = pos.shape,

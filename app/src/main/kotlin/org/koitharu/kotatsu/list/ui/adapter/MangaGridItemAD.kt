@@ -2,7 +2,9 @@ package org.koitharu.kotatsu.list.ui.adapter
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -70,6 +72,10 @@ fun mangaGridItemAD(
 		binding.viewScrim.isVisible = isTitleOverCover
 		binding.textViewTitle.isVisible = !item.isTitleHidden && !isTitleOverCover
 		binding.progressView.setProgress(item.progress, PAYLOAD_PROGRESS_CHANGED in payloads)
+		// Pill goes top-right when the title is inside the cover, bottom-right when it's below it.
+		binding.progressView.updateLayoutParams<FrameLayout.LayoutParams> {
+			gravity = Gravity.END or if (isTitleOverCover) Gravity.TOP else Gravity.BOTTOM
+		}
 		with(binding.iconsView) {
 			clearIcons()
 			if (item.isSaved) addIcon(R.drawable.ic_storage)
@@ -87,10 +93,10 @@ fun mangaGridItemAD(
 		binding.imageViewCover.setImageAsync(item.coverUrl, item.manga)
 		binding.badge.number = item.counter
 		binding.badge.isVisible = item.counter > 0
-		// Counter badge shares the top-right corner with the progress ring: when a ring is shown,
-		// shift the badge left of it so they don't overlap.
+		// Counter badge sits at the top-right; the progress pill only shares that corner when the title
+		// is over the cover. In that case shift the badge left of the pill so they don't overlap.
 		binding.badge.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-			marginEnd = if (item.progress != null) {
+			marginEnd = if (item.progress != null && isTitleOverCover) {
 				context.resources.getDimensionPixelOffset(R.dimen.card_indicator_offset) +
 					context.resources.getDimensionPixelOffset(R.dimen.card_indicator_size) +
 					(4f * density).toInt()

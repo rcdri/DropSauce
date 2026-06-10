@@ -55,7 +55,7 @@
 			android:layout_height="match_parent"
 			android:clipToPadding="false"
 			android:paddingTop="?attr/actionBarSize"
-			android:scrollbars="vertical">
+			android:scrollbars="none">
 
 			<FrameLayout
 				android:layout_width="match_parent"

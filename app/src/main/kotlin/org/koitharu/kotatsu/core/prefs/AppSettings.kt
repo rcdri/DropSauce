@@ -305,8 +305,13 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_UPDATED_GROUPING, true)
 		set(value) = prefs.edit { putBoolean(KEY_UPDATED_GROUPING, value) }
 
+	// A single on/off toggle now: on = show the read-percentage pill, off = no indicator.
 	val progressIndicatorMode: ProgressIndicatorMode
-		get() = prefs.getEnumValue(KEY_PROGRESS_INDICATORS, ProgressIndicatorMode.PERCENT_READ)
+		get() = if (prefs.getBoolean(KEY_PROGRESS_INDICATORS, true)) {
+			ProgressIndicatorMode.PERCENT_READ
+		} else {
+			ProgressIndicatorMode.NONE
+		}
 
 	var detailsUiMode: DetailsUiMode
 		get() = prefs.getEnumValue(KEY_DETAILS_UI, MODERN)
@@ -902,7 +907,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_ZOOM_MODE = "zoom_mode"
 		const val KEY_HISTORY_GROUPING = "history_grouping"
 		const val KEY_UPDATED_GROUPING = "updated_grouping"
-		const val KEY_PROGRESS_INDICATORS = "progress_indicators"
+		const val KEY_PROGRESS_INDICATORS = "reading_indicator_enabled"
 		const val KEY_DETAILS_UI = "details_ui"
 		const val KEY_REVERSE_CHAPTERS = "reverse_chapters"
 		const val KEY_GRID_VIEW_CHAPTERS = "grid_view_chapters"

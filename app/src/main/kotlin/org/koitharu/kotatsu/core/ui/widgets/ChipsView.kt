@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.core.ui.widgets
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
@@ -11,6 +12,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.text.buildSpannedString
 import androidx.core.text.inSpans
 import androidx.core.view.children
@@ -73,6 +75,14 @@ class ChipsView @JvmOverloads constructor(
 	var onChipCloseClickListener: OnChipCloseClickListener? = null
 
 	var onChipLongClickListener: OnChipLongClickListener? = null
+
+	// Cover accent shared from the details page; recolors the checked chip to match the rest of the UI.
+	var chipAccentColor: Int? = null
+		set(value) {
+			if (field == value) return
+			field = value
+			children.forEach { (it as? DataChip)?.applyAccent() }
+		}
 
 	init {
 		val ta = context.obtainStyledAttributes(attrs, R.styleable.ChipsView, defStyleAttr, 0)
@@ -147,6 +157,8 @@ class ChipsView @JvmOverloads constructor(
 
 		private val defaultStrokeColor = chipStrokeColor
 		private val defaultTextColor = textColors
+		private val defaultBackgroundColor = chipBackgroundColor
+		private val defaultCheckedIconTint = checkedIconTint
 		private var defaultChipStartPadding = 0f
 		private var defaultChipEndPadding = 0f
 		private var defaultIconStartPadding = 0f
@@ -243,6 +255,28 @@ class ChipsView @JvmOverloads constructor(
 				false
 			}
 			tag = model.data
+			applyAccent()
+		}
+
+		// When an accent is set, the checked chip fills with a TONED-DOWN tint of it (a subtle tonal
+		// container rather than the full vibrant accent, which had visibility issues); otherwise the
+		// style/model defaults are restored.
+		fun applyAccent() {
+			val accent = chipAccentColor
+			if (accent != null && isChecked) {
+				val container = context.getThemeColor(materialR.attr.colorSurfaceContainerHighest, Color.GRAY)
+				val muted = ColorUtils.blendARGB(container, accent, CHIP_ACCENT_BLEND)
+				val onMuted = context.getThemeColor(materialR.attr.colorOnSurface, Color.BLACK)
+				chipBackgroundColor = ColorStateList.valueOf(muted)
+				setTextColor(onMuted)
+				checkedIconTint = ColorStateList.valueOf(onMuted)
+			} else {
+				chipBackgroundColor = defaultBackgroundColor
+				checkedIconTint = defaultCheckedIconTint
+				if (model?.tint == 0) {
+					setTextColor(defaultTextColor)
+				}
+			}
 		}
 
 		private fun applyIconOnlyStyle(isIconOnly: Boolean) {
@@ -357,5 +391,12 @@ class ChipsView @JvmOverloads constructor(
 	fun interface OnChipLongClickListener {
 
 		fun onChipLongClick(chip: Chip, data: Any?): Boolean
+	}
+
+	private companion object {
+
+		// How far the checked chip's background is blended from the surface toward the accent.
+		// Low so the chip stays a subtle tonal container (legible) rather than a vivid fill.
+		const val CHIP_ACCENT_BLEND = 0.30f
 	}
 }

@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.details.ui.adapter
 
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import androidx.core.view.isVisible
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
@@ -15,6 +16,7 @@ import com.google.android.material.R as materialR
 
 fun chapterGridItemAD(
 	clickListener: OnListItemClickListener<ChapterListItem>,
+	accentColorProvider: () -> Int? = { null },
 ) = adapterDelegateViewBinding<ChapterListItem, ListModel, ItemChapterGridBinding>(
 	viewBinding = { inflater, parent -> ItemChapterGridBinding.inflate(inflater, parent, false) },
 	on = { item, _, _ -> item is ChapterListItem && item.isGrid },
@@ -29,6 +31,8 @@ fun chapterGridItemAD(
 		}
 		binding.imageViewNew.isVisible = item.isNew
 		binding.imageViewBookmarked.isVisible = item.isBookmarked
+		binding.imageViewBookmarked.imageTintList = accentColorProvider()?.let { ColorStateList.valueOf(it) }
+			?: context.getThemeColorStateList(androidx.appcompat.R.attr.colorPrimary)
 		binding.imageViewDownloaded.isVisible = item.isDownloaded
 
 		when {

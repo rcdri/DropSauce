@@ -1,147 +1,129 @@
 package org.koitharu.kotatsu.history.ui.util
 
-import android.animation.Animator
-import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Outline
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.View
-import android.view.ViewOutlineProvider
-import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.annotation.AttrRes
-import androidx.annotation.StyleRes
 import org.koitharu.kotatsu.R
-import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.CHAPTERS_LEFT
-import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.CHAPTERS_READ
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.NONE
-import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_LEFT
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_READ
-import org.koitharu.kotatsu.core.util.ext.getAnimationDuration
 import org.koitharu.kotatsu.list.domain.ReadingProgress
-import org.koitharu.kotatsu.list.domain.ReadingProgress.Companion.PROGRESS_NONE
 
+/**
+ * A small frosted "pill" badge that shows the read percentage (e.g. "29%") over a cover.
+ * It auto-sizes to its text, so layouts should give it wrap_content bounds.
+ */
 class ReadingProgressView @JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	@AttrRes defStyleAttr: Int = 0,
-) : View(context, attrs, defStyleAttr), ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
+) : View(context, attrs, defStyleAttr) {
 
+	private val hPadding = dp(10f)
+	private val vPadding = dp(5f)
+	private val textSizeNormal = sp(12.5f)
+	private val textSizeSmall = sp(10.5f)
+
+	private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+		color = SCRIM_COLOR
+		style = Paint.Style.FILL
+	}
+	private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+		color = Color.WHITE
+		textAlign = Paint.Align.CENTER
+		typeface = Typeface.DEFAULT_BOLD
+		textSize = textSizeNormal
+	}
+	private val rectF = RectF()
 	private val percentPattern = context.getString(R.string.percent_string_pattern)
-	private var percentAnimator: ValueAnimator? = null
-	private val animationDuration = context.getAnimationDuration(android.R.integer.config_shortAnimTime)
 
-	@StyleRes
-	private val drawableStyle: Int
+	private var text: String = ""
 
 	var progress: ReadingProgress? = null
 		set(value) {
 			field = value
-			cancelAnimation()
-			getProgressDrawable().also {
-				it.percent = value?.percent ?: PROGRESS_NONE
-				it.text = when (value?.mode) {
-					null,
-					NONE -> ""
-
-					PERCENT_READ -> percentPattern.format(ReadingProgress.percentToString(value.percent))
-					PERCENT_LEFT -> "-" + percentPattern.format(ReadingProgress.percentToString(value.percentLeft))
-
-					CHAPTERS_READ -> value.chapters.toString()
-					CHAPTERS_LEFT -> "-" + value.chaptersLeft.toString()
+			val newText = when (value?.mode) {
+				null, NONE -> ""
+				PERCENT_READ -> if (value.percent in 0f..1f) {
+					percentPattern.format(ReadingProgress.percentToString(value.percent))
+				} else {
+					""
 				}
+			}
+			if (newText != text) {
+				text = newText
+				requestLayout()
+				invalidate()
 			}
 		}
 
 	init {
-		val ta = context.obtainStyledAttributes(attrs, R.styleable.ReadingProgressView, defStyleAttr, 0)
-		drawableStyle = ta.getResourceId(R.styleable.ReadingProgressView_progressStyle, R.style.ProgressDrawable)
-		ta.recycle()
-		outlineProvider = OutlineProvider()
 		if (isInEditMode) {
-			progress = ReadingProgress(
-				percent = 0.27f,
-				totalChapters = 20,
-				mode = PERCENT_READ,
-			)
+			progress = ReadingProgress(0.29f, 20, PERCENT_READ)
 		}
 	}
 
-	override fun onDetachedFromWindow() {
-		super.onDetachedFromWindow()
-		percentAnimator?.run {
-			if (isRunning) end()
-		}
-		percentAnimator = null
+	fun setProgress(percent: Float, @Suppress("UNUSED_PARAMETER") animate: Boolean) {
+		progress = ReadingProgress(percent, 1, PERCENT_READ)
 	}
 
-	override fun onAnimationUpdate(animation: ValueAnimator) {
-		val p = animation.animatedValue as Float
-		getProgressDrawable().percent = p
+	fun setProgress(value: ReadingProgress?, @Suppress("UNUSED_PARAMETER") animate: Boolean) {
+		progress = value
 	}
 
-	override fun onAnimationStart(animation: Animator) = Unit
-
-	override fun onAnimationEnd(animation: Animator) {
-		if (percentAnimator === animation) {
-			percentAnimator = null
+	/** Picks a smaller text size for compact (small) grid cells. */
+	fun setSmall(small: Boolean) {
+		val size = if (small) textSizeSmall else textSizeNormal
+		if (textPaint.textSize != size) {
+			textPaint.textSize = size
+			requestLayout()
+			invalidate()
 		}
 	}
 
-	override fun onAnimationCancel(animation: Animator) = Unit
-
-	override fun onAnimationRepeat(animation: Animator) = Unit
-
-	fun setProgress(percent: Float, animate: Boolean) {
-		setProgress(
-			value = ReadingProgress(percent, 1, PERCENT_READ),
-			animate = animate,
+	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+		if (text.isEmpty()) {
+			setMeasuredDimension(0, 0)
+			return
+		}
+		val fm = textPaint.fontMetrics
+		val w = (textPaint.measureText(text) + hPadding * 2f).toInt()
+		val h = (fm.descent - fm.ascent + vPadding * 2f).toInt()
+		setMeasuredDimension(
+			resolveSize(w, widthMeasureSpec),
+			resolveSize(h, heightMeasureSpec),
 		)
 	}
 
-	fun setProgress(value: ReadingProgress?, animate: Boolean) {
-		val currentDrawable = peekProgressDrawable()
-		if (!animate || currentDrawable == null || value == null) {
-			progress = value
+	override fun onDraw(canvas: Canvas) {
+		if (text.isEmpty()) {
 			return
 		}
-		percentAnimator?.cancel()
-		val currentPercent = currentDrawable.percent.coerceAtLeast(0f)
-		progress = value.copy(percent = currentPercent)
-		percentAnimator = ValueAnimator.ofFloat(
-			currentDrawable.percent.coerceAtLeast(0f),
-			value.percent,
-		).apply {
-			duration = animationDuration
-			interpolator = AccelerateDecelerateInterpolator()
-			addUpdateListener(this@ReadingProgressView)
-			addListener(this@ReadingProgressView)
-			start()
-		}
+		rectF.set(0f, 0f, width.toFloat(), height.toFloat())
+		val radius = height / 2f
+		canvas.drawRoundRect(rectF, radius, radius, bgPaint)
+		val fm = textPaint.fontMetrics
+		val baseline = height / 2f - (fm.ascent + fm.descent) / 2f
+		canvas.drawText(text, width / 2f, baseline, textPaint)
 	}
 
-	private fun cancelAnimation() {
-		percentAnimator?.cancel()
-		percentAnimator = null
-	}
+	private fun dp(value: Float) = TypedValue.applyDimension(
+		TypedValue.COMPLEX_UNIT_DIP, value, resources.displayMetrics,
+	)
 
-	private fun peekProgressDrawable(): ReadingProgressDrawable? {
-		return background as? ReadingProgressDrawable
-	}
+	private fun sp(value: Float) = TypedValue.applyDimension(
+		TypedValue.COMPLEX_UNIT_SP, value, resources.displayMetrics,
+	)
 
-	private fun getProgressDrawable(): ReadingProgressDrawable {
-		var d = peekProgressDrawable()
-		if (d != null) {
-			return d
-		}
-		d = ReadingProgressDrawable(context, drawableStyle)
-		background = d
-		return d
-	}
+	companion object {
 
-	private class OutlineProvider : ViewOutlineProvider() {
-
-		override fun getOutline(view: View, outline: Outline) {
-			outline.setOval(0, 0, view.width, view.height)
-		}
+		// Translucent dark "frosted" scrim — keeps the white text legible over any cover.
+		private const val SCRIM_COLOR = 0x99000000.toInt()
 	}
 }

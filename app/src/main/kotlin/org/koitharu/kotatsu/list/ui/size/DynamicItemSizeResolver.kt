@@ -86,19 +86,8 @@ class DynamicItemSizeResolver(
 		}
 
 		private fun ReadingProgressView.adjustSize(width: Int) {
-			val lp = layoutParams
-			val size = resources.getDimensionPixelSize(
-				if (width < widthThreshold) {
-					R.dimen.card_indicator_size_small
-				} else {
-					R.dimen.card_indicator_size
-				},
-			)
-			if (lp.width != size || lp.height != size) {
-				lp.width = size
-				lp.height = size
-				layoutParams = lp
-			}
+			// The pill auto-sizes to its text now; just pick a smaller text size for compact cells.
+			setSmall(width < widthThreshold)
 		}
 
 		private fun TextView.adjustTextAppearance(width: Int) {

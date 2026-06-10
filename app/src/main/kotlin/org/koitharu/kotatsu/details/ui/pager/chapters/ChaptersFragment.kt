@@ -123,8 +123,10 @@ class ChaptersFragment :
 					setBubbleColor(color)
 					setBubbleTextColor(onAccent)
 				}
+				binding.progressBar.setIndicatorColor(color)
 			}
-			// Rebind so the current-chapter pill picks up (or drops) the accent.
+			// Recolor the checked branch chip and rebind so the current-chapter pill picks up the accent.
+			binding.chipsFilter.chipAccentColor = color
 			chaptersAdapter?.notifyDataSetChanged()
 		}
 		viewModel.quickFilter.observe(viewLifecycleOwner, this::onFilterChanged)
@@ -242,6 +244,9 @@ class ChaptersFragment :
 	}
 
 	private fun onLoadingStateChanged(isLoading: Boolean) {
-		requireViewBinding().progressBar.isVisible = isLoading
+		val binding = requireViewBinding()
+		binding.progressBar.isVisible = isLoading
+		// The spinner can show before the cover accent is ready, so re-apply it whenever it appears.
+		accentColor?.let { binding.progressBar.setIndicatorColor(it) }
 	}
 }

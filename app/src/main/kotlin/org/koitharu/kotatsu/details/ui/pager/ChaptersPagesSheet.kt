@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.R as AppCompatR
+import com.google.android.material.R as materialR
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.graphics.ColorUtils
@@ -275,6 +276,10 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		val onAccent = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
 		val accentTint = ColorStateList.valueOf(color)
 		val onAccentTint = ColorStateList.valueOf(onAccent)
+		// The selected page-tab (chapters / pages / bookmarks) wrapper picks up a tonal accent so it
+		// matches the rest of the page while keeping the icon legible.
+		val surface = MaterialColors.getColor(binding.tabs, materialR.attr.colorSurfaceContainerHighest, Color.GRAY)
+		binding.tabs.setSelectedTabIndicatorColor(ColorUtils.blendARGB(surface, color, 0.5f))
 		(binding.splitButtonRead[0] as? MaterialButton)?.apply {
 			backgroundTintList = accentTint
 			setTextColor(onAccent)

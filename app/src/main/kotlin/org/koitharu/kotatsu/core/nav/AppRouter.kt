@@ -386,9 +386,9 @@ class AppRouter private constructor(
         MangaDirectorySelectDialog().showDistinct()
     }
 
-    fun showFavoriteDialog(manga: Manga) = showFavoriteDialog(setOf(manga))
+    fun showFavoriteDialog(manga: Manga, accentColor: Int? = null) = showFavoriteDialog(setOf(manga), accentColor)
 
-    fun showFavoriteDialog(manga: Collection<Manga>) {
+    fun showFavoriteDialog(manga: Collection<Manga>, accentColor: Int? = null) {
         if (manga.isEmpty()) {
             return
         }
@@ -397,6 +397,9 @@ class AppRouter private constructor(
                 KEY_MANGA_LIST,
                 manga.mapTo(ArrayList(manga.size)) { ParcelableManga(it, withDescription = false) },
             )
+            if (accentColor != null) {
+                putInt(KEY_ACCENT_COLOR, accentColor)
+            }
         }.showDistinct()
     }
 
@@ -831,6 +834,7 @@ class AppRouter private constructor(
         const val KEY_FILTER = "filter"
         const val KEY_ID = "id"
         const val KEY_INDEX = "index"
+        const val KEY_ACCENT_COLOR = "accent_color"
         const val KEY_IS_BOTTOMTAB = "is_btab"
         const val KEY_KIND = "kind"
         const val KEY_LIST_SECTION = "list_section"

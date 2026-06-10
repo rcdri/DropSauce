@@ -33,22 +33,6 @@ class StaticItemSizeResolver(
 		view.updateLayoutParams {
 			width = cellWidth
 		}
-		progressView?.adjustSize()
-	}
-
-	private fun ReadingProgressView.adjustSize() {
-		val lp = layoutParams
-		val size = resources.getDimensionPixelSize(
-			if (cellWidth < widthThreshold) {
-				R.dimen.card_indicator_size_small
-			} else {
-				R.dimen.card_indicator_size
-			},
-		)
-		if (lp.width != size || lp.height != size) {
-			lp.width = size
-			lp.height = size
-			layoutParams = lp
-		}
+		progressView?.setSmall(cellWidth < widthThreshold)
 	}
 }

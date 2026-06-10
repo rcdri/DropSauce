@@ -20,7 +20,7 @@ class ChaptersAdapter(
 	init {
 		addDelegate(ListItemType.HEADER, listHeaderAD(null))
 		addDelegate(ListItemType.CHAPTER_LIST, chapterListItemAD(onItemClickListener, accentColorProvider))
-		addDelegate(ListItemType.CHAPTER_GRID, chapterGridItemAD(onItemClickListener))
+		addDelegate(ListItemType.CHAPTER_GRID, chapterGridItemAD(onItemClickListener, accentColorProvider))
 	}
 
 	override suspend fun emit(value: List<ListModel>?) {

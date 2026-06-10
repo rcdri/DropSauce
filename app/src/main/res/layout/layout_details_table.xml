@@ -20,6 +20,22 @@
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@id/barrier_header" />
 
+	<!-- Frosted-glass fill for the detail box: a heavily-blurred copy of the cover, sized to the card.
+	     It lives in the scrolling content (not the parallax backdrop) so it stays locked to the card
+	     while scrolling — otherwise the box visibly splits into two layers. Clipped to the card's
+	     rounded outline in code. -->
+	<ImageView
+		android:id="@+id/image_box_blur"
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		android:alpha="0"
+		android:scaleType="centerCrop"
+		tools:ignore="ContentDescription"
+		app:layout_constraintBottom_toBottomOf="@id/card_details"
+		app:layout_constraintEnd_toEndOf="@id/card_details"
+		app:layout_constraintStart_toStartOf="@id/card_details"
+		app:layout_constraintTop_toTopOf="@id/card_details" />
+
 	<TextView
 		android:id="@+id/textView_source_label"
 		android:layout_width="wrap_content"

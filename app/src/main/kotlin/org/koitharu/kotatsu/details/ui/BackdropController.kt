@@ -36,8 +36,10 @@ class BackdropController(
 	private val lifecycle: LifecycleOwner,
 	private val settings: AppSettings,
 	private val isExtended: Boolean = true,
+	backdropBoxBlur: ImageView? = null,
 ) : DefaultLifecycleObserver {
 	private val backdropRef = WeakReference(backdrop)
+	private val boxBlurRef = WeakReference(backdropBoxBlur)
 	private val gradientRef = WeakReference(backdropGradient)
 	private val topGradientRef = WeakReference(backdropTopGradient)
 	private var currentDisposable: Disposable? = null
@@ -72,10 +74,11 @@ class BackdropController(
 			.target(
 				onSuccess = { image ->
 					val view = backdropRef.get() ?: return@target
-					// Uniform scale + no vertical offset: centerCrop fills the (tall) container without
-					// distorting the cover. The 1.1 vertical scale used previously stretched the image.
-					view.scaleX = 1f
-					view.scaleY = 1f
+					// Uniform overscan (same factor on both axes) zooms the cover in slightly so centerCrop
+					// always fills the width and the blur's edge bleed never leaves black bars on the sides.
+					// Uniform => no distortion (the old 1.1 vertical-only scale stretched the image).
+					view.scaleX = BACKDROP_OVERSCAN
+					view.scaleY = BACKDROP_OVERSCAN
 					view.translationY = 0f
 					val drawable = image.asDrawable(view.context.resources)
 					view.animate().cancel()
@@ -89,6 +92,20 @@ class BackdropController(
 						.setDuration(CROSSFADE_DURATION_MS)
 						.setInterpolator(android.view.animation.DecelerateInterpolator())
 						.start()
+					// The frosted detail box: a copy of the cover with a heavy Gaussian blur, shown at full
+					// opacity. The activity clips it to the box's rounded outline (so there's no seam/line).
+					// No overscan here: the box sits in the interior of the image and the heavy blur hides any
+					// sub-pixel misalignment with the (overscanned) main backdrop.
+					if (isExtended) {
+						boxBlurRef.get()?.let { boxBlur ->
+							boxBlur.scaleX = 1f
+							boxBlur.scaleY = 1f
+							boxBlur.translationY = 0f
+							boxBlur.setImageDrawable(image.asDrawable(boxBlur.context.resources))
+							applyStrongBlur(boxBlur)
+							boxBlur.alpha = 1f
+						}
+					}
 				},
 			).build()
 		currentDisposable = imageLoader.enqueue(request)
@@ -169,6 +186,37 @@ class BackdropController(
 		view.setImageBitmap(scaled)
 	}
 
+	// A deliberately heavy, fixed blur for the frosted detail box (independent of the user's backdrop
+	// blur slider) so the box always reads as strongly frosted glass.
+	@Suppress("DEPRECATION")
+	private fun applyStrongBlur(view: ImageView) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			view.setRenderEffect(
+				RenderEffect.createBlurEffect(STRONG_BLUR_RADIUS, STRONG_BLUR_RADIUS, Shader.TileMode.MIRROR),
+			)
+			return
+		}
+		val bitmap = drawableToBitmap(view.drawable ?: return)
+		val scaled = bitmap.scale(
+			(bitmap.width * BLUR_SCALE_FACTOR).toInt().coerceAtLeast(1),
+			(bitmap.height * BLUR_SCALE_FACTOR).toInt().coerceAtLeast(1),
+		)
+		if (bitmap !== scaled) bitmap.recycle()
+		android.renderscript.RenderScript.create(view.context).also { rs ->
+			val input = android.renderscript.Allocation.createFromBitmap(rs, scaled)
+			val output = android.renderscript.Allocation.createTyped(rs, input.type)
+			android.renderscript.ScriptIntrinsicBlur.create(rs, android.renderscript.Element.U8_4(rs))
+				.apply {
+					setRadius(MAX_BLUR_RADIUS_RS)
+					setInput(input)
+					forEach(output)
+				}
+			output.copyTo(scaled)
+			rs.destroy()
+		}
+		view.setImageBitmap(scaled)
+	}
+
 	private fun extractAccent(drawable: Drawable) {
 		if (onColorExtracted == null) return
 		val bitmap = try {
@@ -229,6 +277,12 @@ class BackdropController(
 		private const val BLUR_SCALE_FACTOR = 0.4f
 		private const val MAX_BLUR_RADIUS_API31 = 25f
 		private const val MAX_BLUR_RADIUS_RS = 25f
+
+		// Slight uniform zoom so centerCrop + blur edge bleed never expose black bars on the sides.
+		private const val BACKDROP_OVERSCAN = 1.12f
+
+		// Fixed heavy blur radius for the frosted detail box (API 31+).
+		private const val STRONG_BLUR_RADIUS = 60f
 
 		fun blurRadius(amount: Int, maxRadius: Float): Float =
 			(amount / 100f) * maxRadius

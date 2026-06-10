@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.details.ui.adapter
 
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
@@ -76,6 +77,9 @@ fun chapterListItemAD(
 			}
 		}
 		binding.imageViewBookmarked.isVisible = item.isBookmarked
+		// The bookmark indicator follows the cover accent (falls back to the theme primary).
+		binding.imageViewBookmarked.imageTintList = accentColorProvider()?.let { ColorStateList.valueOf(it) }
+			?: context.getThemeColorStateList(androidx.appcompat.R.attr.colorPrimary)
 		binding.imageViewDownloaded.isVisible = item.isDownloaded
 	}
 }

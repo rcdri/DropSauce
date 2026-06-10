@@ -10,10 +10,11 @@ import org.koitharu.kotatsu.list.ui.model.ListModel
 
 class MangaCategoriesAdapter(
 	clickListener: OnListItemClickListener<MangaCategoryItem>,
+	accentColor: Int? = null,
 ) : BaseListAdapter<ListModel>() {
 
 	init {
-		addDelegate(ListItemType.NAV_ITEM, mangaCategoryAD(clickListener))
+		addDelegate(ListItemType.NAV_ITEM, mangaCategoryAD(clickListener, accentColor))
 		addDelegate(ListItemType.STATE_LOADING, loadingStateAD())
 		addDelegate(ListItemType.STATE_EMPTY, emptyStateListAD(null))
 	}

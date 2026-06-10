@@ -11,6 +11,7 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.nav.router
 import org.koitharu.kotatsu.core.ui.AlertDialogFragment
 import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
@@ -44,11 +45,24 @@ class FavoriteDialog : AlertDialogFragment<DialogFavoriteBinding>(),
 		savedInstanceState: Bundle?,
 	) {
 		super.onViewBindingCreated(binding, savedInstanceState)
-		val adapter = MangaCategoriesAdapter(this)
+		val accentColor = arguments?.takeIf { it.containsKey(AppRouter.KEY_ACCENT_COLOR) }
+			?.getInt(AppRouter.KEY_ACCENT_COLOR)
+		val adapter = MangaCategoriesAdapter(this, accentColor)
 		binding.recyclerViewCategories.adapter = adapter
 		viewModel.content.observe(viewLifecycleOwner, adapter)
 		viewModel.onError.observeEvent(viewLifecycleOwner, ::onError)
 		bindHeader()
+	}
+
+	override fun onResume() {
+		super.onResume()
+		// Tint the dialog's action buttons to the cover accent so the whole dialog matches.
+		val accentColor = arguments?.takeIf { it.containsKey(AppRouter.KEY_ACCENT_COLOR) }
+			?.getInt(AppRouter.KEY_ACCENT_COLOR) ?: return
+		(dialog as? androidx.appcompat.app.AlertDialog)?.run {
+			getButton(DialogInterface.BUTTON_POSITIVE)?.setTextColor(accentColor)
+			getButton(DialogInterface.BUTTON_NEUTRAL)?.setTextColor(accentColor)
+		}
 	}
 
 	override fun onItemClick(item: MangaCategoryItem, view: View) {
