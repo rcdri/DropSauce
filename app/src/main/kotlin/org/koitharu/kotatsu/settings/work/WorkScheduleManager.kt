@@ -1,12 +1,15 @@
 package org.koitharu.kotatsu.settings.work
 
 import android.content.SharedPreferences
+import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koitharu.kotatsu.backup.local.ui.periodical.PeriodicalBackupWorker
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.processLifecycleScope
 import org.koitharu.kotatsu.suggestions.ui.SuggestionsWorker
+import org.koitharu.kotatsu.sync.data.SyncSettings
+import org.koitharu.kotatsu.sync.work.SyncWorker
 import org.koitharu.kotatsu.tracker.work.TrackWorker
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,9 +17,12 @@ import javax.inject.Singleton
 @Singleton
 class WorkScheduleManager @Inject constructor(
 	private val settings: AppSettings,
+	private val syncSettings: SyncSettings,
+	private val workManager: WorkManager,
 	private val suggestionScheduler: SuggestionsWorker.Scheduler,
 	private val trackerScheduler: TrackWorker.Scheduler,
 	private val backupScheduler: PeriodicalBackupWorker.Scheduler,
+	private val syncScheduler: SyncWorker.Scheduler,
 ) : SharedPreferences.OnSharedPreferenceChangeListener {
 
 	override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -56,6 +62,16 @@ class WorkScheduleManager @Inject constructor(
 				isEnabled = settings.isPeriodicalBackupEnabled && settings.periodicalBackupDirectory != null,
 				force = false,
 			)
+			// Sync interval lives in its own prefs file (not observed here); just re-assert the
+			// schedule on app start, and optionally kick off a one-shot sync if the user opted in.
+			updateWorkerImpl(
+				scheduler = syncScheduler,
+				isEnabled = syncSettings.isSignedIn && syncSettings.intervalMinutes > 0,
+				force = false,
+			)
+			if (syncSettings.isSignedIn && syncSettings.isSyncOnStart) {
+				SyncWorker.enqueueManual(workManager)
+			}
 		}
 	}
 

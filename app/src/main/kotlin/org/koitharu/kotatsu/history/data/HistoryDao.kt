@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.Transaction
+import androidx.room.Upsert
 import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
@@ -123,6 +124,18 @@ abstract class HistoryDao : MangaQueryBuilder.ConditionCallback {
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	abstract suspend fun insert(entity: HistoryEntity): Long
+
+	/** All rows INCLUDING soft-deleted tombstones — used by cloud sync to propagate deletions. */
+	@Query("SELECT * FROM history")
+	abstract suspend fun findAllForSync(): List<HistoryEntity>
+
+	/**
+	 * Writes the entity verbatim, preserving [HistoryEntity.deletedAt]. Unlike [upsert], which
+	 * routes through [update] and resets `deleted_at = 0`, this is used by cloud sync so an
+	 * incoming tombstone stays a tombstone.
+	 */
+	@Upsert
+	abstract suspend fun upsertForSync(entity: HistoryEntity)
 
 	@Query(
 		"UPDATE history SET page = :page, chapter_id = :chapterId, scroll = :scroll, percent = :percent, updated_at = :updatedAt, chapters = :chapters, deleted_at = 0 WHERE manga_id = :mangaId",

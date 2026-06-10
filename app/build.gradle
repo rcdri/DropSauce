@@ -138,7 +138,10 @@ android {
 			'CustomViewStyleable',
 			'ClickableViewAccessibility',
 			'SetTextI18n',
-			'NotifyDataSetChanged'
+			'NotifyDataSetChanged',
+			// Play SDK Index policy note (login-credentials reminder) on play-services-auth.
+			// Irrelevant for GitHub distribution; not published to the Play Store.
+			'PlaySdkIndexNonCompliant'
 	}
 	testOptions {
 		unitTests.includeAndroidResources = true
@@ -229,6 +232,8 @@ dependencies {
 	implementation libs.androidx.room.ktx
 	ksp libs.androidx.room.compiler
 
+	implementation libs.play.services.auth
+
 	implementation libs.okhttp
 	implementation libs.okhttp.brotli
 	implementation libs.okhttp.tls
@@ -254,6 +259,7 @@ dependencies {
 	ksp libs.androidx.hilt.compiler
 
 	implementation libs.coil.core
+	implementation libs.coil.compose
 	implementation libs.coil.network
 	implementation libs.coil.gif
 	implementation libs.coil.svg

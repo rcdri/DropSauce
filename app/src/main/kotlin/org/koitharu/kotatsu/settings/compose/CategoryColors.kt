@@ -30,6 +30,7 @@ object CategoryPalette {
 	val Tracker = CategoryIconColors(Color(0xFFFFDAD6), Color(0xFF410002))
 	val Services = CategoryIconColors(Color(0xFFE0E0FF), Color(0xFF0F1761))
 	val About = CategoryIconColors(Color(0xFFDDE2EB), Color(0xFF1B1B1F))
+	val Sync = CategoryIconColors(Color(0xFF5F6368), Color(0xFFFFFFFF))
 
 	// Dark-mode variants — deeper tinted container, lighter foreground.
 	private val AppearanceDark = CategoryIconColors(Color(0xFF4F378B), Color(0xFFE9DDFF))
@@ -41,6 +42,7 @@ object CategoryPalette {
 	private val TrackerDark = CategoryIconColors(Color(0xFF93000A), Color(0xFFFFDAD6))
 	private val ServicesDark = CategoryIconColors(Color(0xFF333DB1), Color(0xFFE0E0FF))
 	private val AboutDark = CategoryIconColors(Color(0xFF45464F), Color(0xFFDDE2EB))
+	private val SyncDark = CategoryIconColors(Color(0xFF5F6368), Color(0xFFFFFFFF))
 
 	@Composable
 	fun forKey(key: String): CategoryIconColors {
@@ -57,6 +59,7 @@ object CategoryPalette {
 			"tracker" -> if (dark) TrackerDark else Tracker
 			"services" -> if (dark) ServicesDark else Services
 			"about" -> if (dark) AboutDark else About
+			"sync" -> if (dark) SyncDark else Sync
 			else -> if (dark) AboutDark else About
 		}
 	}

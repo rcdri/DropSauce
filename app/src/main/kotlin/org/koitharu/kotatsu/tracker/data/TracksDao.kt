@@ -24,6 +24,10 @@ abstract class TracksDao : MangaQueryBuilder.ConditionCallback {
 	@Query("SELECT manga_id FROM tracks")
 	abstract suspend fun findAllIds(): LongArray
 
+	/** All track rows — used by cloud sync (the "feed"). */
+	@Query("SELECT * FROM tracks")
+	abstract suspend fun findAllForSync(): List<TrackEntity>
+
 	@Query("SELECT * FROM tracks WHERE manga_id = :mangaId")
 	abstract suspend fun find(mangaId: Long): TrackEntity?
 

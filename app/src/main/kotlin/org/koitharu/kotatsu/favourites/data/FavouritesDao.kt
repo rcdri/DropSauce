@@ -131,6 +131,10 @@ abstract class FavouritesDao : MangaQueryBuilder.ConditionCallback {
 	@Query("SELECT * FROM favourites WHERE manga_id = :mangaId AND deleted_at = 0")
 	abstract suspend fun findAllRaw(mangaId: Long): List<FavouriteEntity>
 
+	/** All rows INCLUDING soft-deleted tombstones — used by cloud sync to propagate deletions. */
+	@Query("SELECT * FROM favourites")
+	abstract suspend fun findAllForSync(): List<FavouriteEntity>
+
 	@Query("SELECT DISTINCT category_id FROM favourites WHERE manga_id = :id AND deleted_at = 0")
 	abstract fun observeIds(id: Long): Flow<List<Long>>
 

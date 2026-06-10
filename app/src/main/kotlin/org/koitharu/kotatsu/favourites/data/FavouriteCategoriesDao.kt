@@ -17,6 +17,10 @@ abstract class FavouriteCategoriesDao {
 	@Query("SELECT * FROM favourite_categories WHERE deleted_at = 0 ORDER BY sort_key")
 	abstract suspend fun findAll(): List<FavouriteCategoryEntity>
 
+	/** All rows INCLUDING soft-deleted tombstones — used by cloud sync to propagate deletions. */
+	@Query("SELECT * FROM favourite_categories")
+	abstract suspend fun findAllForSync(): List<FavouriteCategoryEntity>
+
 	@Query("SELECT * FROM favourite_categories WHERE deleted_at = 0 ORDER BY sort_key")
 	abstract fun observeAll(): Flow<List<FavouriteCategoryEntity>>
 
