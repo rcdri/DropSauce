@@ -809,8 +809,10 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 	fun getAllValues(): Map<String, *> = prefs.all
 
+	// NOTE: intentionally does NOT clear() existing prefs. A restore should merge the backed-up
+	// values over the current ones, not wipe everything first — clearing dropped local-only prefs
+	// (e.g. the per-install onboarding state) and sent the app back to the welcome screen.
 	fun upsertAll(m: Map<String, *>) = prefs.edit {
-		clear()
 		putAll(m)
 	}
 

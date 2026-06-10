@@ -41,7 +41,7 @@ fun MangaEntity.toManga(tags: Set<MangaTag>, chapters: List<ChapterEntity>?) = M
 	coverUrl = this.coverUrl,
 	largeCoverUrl = this.largeCoverUrl,
 	authors = this.authors?.split(VALUES_DIVIDER)?.toArraySet().orEmpty(),
-	source = MangaSource(this.source),
+	source = MangaSource(this.source, this.sourceTitle),
 	tags = tags,
 	chapters = chapters?.toMangaChapters(),
 )

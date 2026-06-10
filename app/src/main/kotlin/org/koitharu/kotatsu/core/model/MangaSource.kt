@@ -24,9 +24,24 @@ data object UnknownMangaSource : MangaSource {
 	override val name = "UNKNOWN"
 }
 
-data class MissingMangaSource(
+class MissingMangaSource(
 	override val name: String,
-) : MangaSource
+	/**
+	 * Human-readable extension name cached from the `source_title` DB column. Lets a favourite
+	 * show which extension it came from even when that extension is not installed (e.g. after
+	 * restoring a backup on a fresh device) instead of falling back to "unknown".
+	 */
+	val cachedTitle: String? = null,
+) : MangaSource {
+
+	// Equality intentionally ignores cachedTitle so a source matches regardless of whether the
+	// display name happened to be cached — matching has always been by name only.
+	override fun equals(other: Any?): Boolean = other is MissingMangaSource && other.name == name
+
+	override fun hashCode(): Int = name.hashCode()
+
+	override fun toString(): String = "MissingMangaSource(name=$name, cachedTitle=$cachedTitle)"
+}
 
 fun MangaSource(name: String?): MangaSource {
 	when (name ?: return UnknownMangaSource) {
@@ -41,6 +56,20 @@ fun MangaSource(name: String?): MangaSource {
 		return MihonExtensionManager.getByName(name) ?: MissingMangaSource(name)
 	}
 	return MissingMangaSource(name)
+}
+
+/**
+ * Resolves a source from its stored name, but when the extension is not installed it returns a
+ * [MissingMangaSource] carrying [sourceTitle] (the cached `source_title` column) so the original
+ * extension name is still displayed. Used when mapping DB entities back to [Manga].
+ */
+fun MangaSource(name: String?, sourceTitle: String?): MangaSource {
+	val source = MangaSource(name)
+	return if (source is MissingMangaSource && !sourceTitle.isNullOrBlank()) {
+		MissingMangaSource(source.name, sourceTitle)
+	} else {
+		source
+	}
 }
 
 fun Collection<String>.toMangaSources() = map(::MangaSource)
@@ -144,6 +173,7 @@ private fun MissingMangaSource.resolveDisplayName(context: Context): String {
 }
 
 private fun MissingMangaSource.cachedDisplayNameOrNull(): String? {
+	cachedTitle?.ifBlank { null }?.let { return it }
 	if (!name.startsWith("MIHON_")) return null
 	val parts = name.removePrefix("MIHON_").split(':', limit = 2)
 	return parts.getOrNull(1)?.ifBlank { null }

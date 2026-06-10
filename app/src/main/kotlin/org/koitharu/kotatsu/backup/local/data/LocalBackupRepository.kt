@@ -298,6 +298,10 @@ class LocalBackupRepository @Inject constructor(
 		map.remove(AppSettings.KEY_PROXY_PASSWORD)
 		map.remove(AppSettings.KEY_PROXY_LOGIN)
 		map.remove(AppSettings.KEY_INCOGNITO_MODE)
+		// Onboarding state is tied to a per-install id; carrying it across devices makes a
+		// restored backup look "not onboarded" and re-shows the welcome screen. Never back it up.
+		map.remove(AppSettings.KEY_ONBOARDING_COMPLETED)
+		map.remove(AppSettings.KEY_ONBOARDING_INSTALL_ID)
 		return map.mapNotNullToBackupValues()
 	}
 
@@ -361,6 +365,11 @@ class LocalBackupRepository @Inject constructor(
 	private fun restoreAppSettings(input: InputStream): CompositeResult {
 		return runCatchingCancellable {
 			val map = json.decodeFromString<Map<String, BackupPrimitive>>(input.readBytes().decodeToString())
+				.toMutableMap()
+			// Older backups may still carry the foreign per-install onboarding state; drop it on
+			// restore so the current install's onboarding status (and thus no welcome screen) is kept.
+			map.remove(AppSettings.KEY_ONBOARDING_COMPLETED)
+			map.remove(AppSettings.KEY_ONBOARDING_INSTALL_ID)
 			settings.upsertAll(map.toRawMap())
 		}.let { CompositeResult.EMPTY + it }
 	}
