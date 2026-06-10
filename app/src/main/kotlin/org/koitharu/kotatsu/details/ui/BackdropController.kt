@@ -51,6 +51,10 @@ class BackdropController(
 	 */
 	var onColorExtracted: ((Int) -> Unit)? = null
 
+	/** Invoked on the main thread once the box-blur bitmap has been set, so the activity can (re)compute
+	 * the image matrix that aligns it with the backdrop. */
+	var onBackdropApplied: (() -> Unit)? = null
+
 	init {
 		val bgColor = context.obtainStyledAttributes(intArrayOf(android.R.attr.colorBackground)).run {
 			getColor(0, Color.WHITE).also { recycle() }
@@ -92,10 +96,10 @@ class BackdropController(
 						.setDuration(CROSSFADE_DURATION_MS)
 						.setInterpolator(android.view.animation.DecelerateInterpolator())
 						.start()
-					// The frosted detail box: a copy of the cover with a heavy Gaussian blur, shown at full
-					// opacity. The activity clips it to the box's rounded outline (so there's no seam/line).
-					// No overscan here: the box sits in the interior of the image and the heavy blur hides any
-					// sub-pixel misalignment with the (overscanned) main backdrop.
+					// The frosted detail box shows the SAME backdrop region that sits behind it (so it reads
+					// as the backdrop seen through frosted glass, not a separate crop). The activity sets an
+					// image matrix matching the backdrop's transform, offset to the box's position, then
+					// applies the heavy blur + clip. We just load the bitmap and signal it's ready.
 					if (isExtended) {
 						boxBlurRef.get()?.let { boxBlur ->
 							boxBlur.scaleX = 1f
@@ -105,6 +109,7 @@ class BackdropController(
 							applyStrongBlur(boxBlur)
 							boxBlur.alpha = 1f
 						}
+						onBackdropApplied?.invoke()
 					}
 				},
 			).build()
@@ -246,11 +251,14 @@ class BackdropController(
 	private fun harmonizeAccent(color: Int): Int {
 		val hsl = FloatArray(3)
 		ColorUtils.colorToHSL(color, hsl)
-		hsl[1] = hsl[1].coerceIn(0.4f, 0.95f)
+		// Tone the colour down: cap the saturation well below vivid, and keep the lightness in a calmer
+		// band (a bit dimmer in dark mode, a bit deeper in light mode) so it reads as a tasteful shade
+		// drawn from the cover rather than a bright, glaring accent.
+		hsl[1] = hsl[1].coerceIn(0.24f, 0.52f)
 		hsl[2] = if (isDarkBackground) {
-			hsl[2].coerceIn(0.62f, 0.82f)
+			hsl[2].coerceIn(0.52f, 0.66f)
 		} else {
-			hsl[2].coerceIn(0.3f, 0.46f)
+			hsl[2].coerceIn(0.34f, 0.46f)
 		}
 		return ColorUtils.HSLToColor(hsl)
 	}
@@ -279,7 +287,8 @@ class BackdropController(
 		private const val MAX_BLUR_RADIUS_RS = 25f
 
 		// Slight uniform zoom so centerCrop + blur edge bleed never expose black bars on the sides.
-		private const val BACKDROP_OVERSCAN = 1.12f
+		// Public so the box-blur can replicate the backdrop's exact transform.
+		const val BACKDROP_OVERSCAN = 1.12f
 
 		// Fixed heavy blur radius for the frosted detail box (API 31+).
 		private const val STRONG_BLUR_RADIUS = 60f

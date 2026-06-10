@@ -16,6 +16,7 @@ import android.view.Gravity
 import androidx.annotation.ColorInt
 import android.view.View
 import android.view.ViewOutlineProvider
+import android.widget.ImageView
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.Toast
@@ -195,6 +196,8 @@ class DetailsActivity :
 		}
 		if (isExtendedBackdrop) {
 			setupColoredBackdropBox()
+			// Once the backdrop bitmap is set, recompute the box-blur matrix so it aligns with it.
+			backdropController.onBackdropApplied = { viewBinding.backdropContainer.post(::updateBackdropHeight) }
 		}
 		viewBinding.scrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
 			if (settings.isBackdropEnabled) {
@@ -617,6 +620,8 @@ class DetailsActivity :
 		infoBinding.cardDetails.strokeWidth = dp(BACKDROP_BOX_STROKE_DP)
 		infoBinding.cardDetails.setStrokeColor(getThemeColor(materialR.attr.colorOutlineVariant))
 		val boxBlur = infoBinding.imageBoxBlur
+		// MATRIX scaling lets us show the exact backdrop region behind the box (see updateBackdropBoxMatrix).
+		boxBlur.scaleType = ImageView.ScaleType.MATRIX
 		// A translucent surface scrim over the blur keeps the text legible; the accent is layered in once
 		// the cover loads (see applyAccentColor).
 		boxBlur.setColorFilter(boxScrim(null), PorterDuff.Mode.SRC_OVER)
@@ -656,7 +661,9 @@ class DetailsActivity :
 		card.getLocationInWindow(cardLoc)
 		val containerLoc = IntArray(2)
 		container.getLocationInWindow(containerLoc)
-		val cardBottom = (cardLoc[1] - containerLoc[1]) + card.height
+		val cardLeft = cardLoc[0] - containerLoc[0]
+		val cardTop = cardLoc[1] - containerLoc[1]
+		val cardBottom = cardTop + card.height
 		// The backdrop and content scroll together, so this delta is scroll-invariant. The backdrop ends
 		// (fully faded) at BACKDROP_END_OFFSET_DP below the box bottom; the gradient does the fading in the
 		// stretch *above* this edge, so the container stops exactly here.
@@ -664,6 +671,35 @@ class DetailsActivity :
 		if (target > 0 && kotlin.math.abs(container.height - target) > 1) {
 			container.updateLayoutParams<ViewGroup.MarginLayoutParams> { height = target }
 		}
+		if (isExtendedBackdrop) {
+			updateBackdropBoxMatrix(container.width, target, cardLeft, cardTop)
+		}
+	}
+
+	/**
+	 * Maps the box-blur's bitmap with the SAME transform the main backdrop uses (centerCrop into the
+	 * container + uniform overscan), then offsets it to the box's position. The result is that the box
+	 * shows exactly the backdrop region behind it — frosted glass over the real backdrop, not a copy.
+	 * Both views scroll 1:1, so this is scroll-invariant and needs no per-frame updates.
+	 */
+	private fun updateBackdropBoxMatrix(containerW: Int, containerH: Int, cardLeft: Int, cardTop: Int) {
+		val boxBlur = infoBinding.imageBoxBlur
+		val drawable = boxBlur.drawable ?: return
+		val iw = drawable.intrinsicWidth.toFloat()
+		val ih = drawable.intrinsicHeight.toFloat()
+		if (iw <= 0f || ih <= 0f || containerW <= 0 || containerH <= 0) return
+		val cw = containerW.toFloat()
+		val ch = containerH.toFloat()
+		val scale = maxOf(cw / iw, ch / ih) // centerCrop
+		val matrix = android.graphics.Matrix().apply {
+			setScale(scale, scale)
+			postTranslate((cw - iw * scale) * 0.5f, (ch - ih * scale) * 0.5f)
+			val overscan = BackdropController.BACKDROP_OVERSCAN
+			postScale(overscan, overscan, cw * 0.5f, ch * 0.5f)
+			postTranslate(-cardLeft.toFloat(), -cardTop.toFloat())
+		}
+		boxBlur.imageMatrix = matrix
+		boxBlur.invalidate()
 	}
 
 	private fun dp(value: Float): Int = (resources.displayMetrics.density * value).toInt()
