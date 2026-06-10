@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.main.ui.welcome
 
+import android.content.Intent
 import android.net.Uri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +14,9 @@ import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.explore.data.MangaSourcesRepository
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.local.data.LocalStorageManager
+import org.koitharu.kotatsu.sync.data.GoogleDriveAuth
+import org.koitharu.kotatsu.sync.domain.GoogleDriveSyncRepository
+import org.koitharu.kotatsu.sync.work.SyncWorker
 import javax.inject.Inject
 
 data class RestoreBackupResult(
@@ -26,6 +30,9 @@ class WelcomeViewModel @Inject constructor(
 	private val settings: AppSettings,
 	private val storageManager: LocalStorageManager,
 	private val backupManager: MihonBackupManager,
+	private val googleDriveAuth: GoogleDriveAuth,
+	private val syncRepository: GoogleDriveSyncRepository,
+	private val syncScheduler: SyncWorker.Scheduler,
 ) : BaseViewModel() {
 
 	val selectedTheme = MutableStateFlow(settings.theme)
@@ -33,6 +40,8 @@ class WelcomeViewModel @Inject constructor(
 	val isAmoledEnabled = MutableStateFlow(settings.isAmoledTheme)
 	val storageSummary = MutableStateFlow<String?>(null)
 	val onBackupRestored = MutableEventFlow<RestoreBackupResult>()
+	val onGoogleSignInLaunch = MutableEventFlow<Intent>()
+	val onGoogleSignInCompleted = MutableEventFlow<Boolean>()
 
 	init {
 		launchJob(Dispatchers.Default) {
@@ -85,6 +94,23 @@ class WelcomeViewModel @Inject constructor(
 					error = result.exceptionOrNull(),
 				),
 			)
+		}
+	}
+
+	fun launchGoogleSignIn() {
+		onGoogleSignInLaunch.call(googleDriveAuth.signInIntent)
+	}
+
+	fun handleGoogleSignInResult(data: Intent?) {
+		launchLoadingJob(Dispatchers.Default) {
+			val account = runCatching { googleDriveAuth.accountFromIntent(data) }.getOrNull()
+			if (account != null) {
+				syncRepository.onSignedIn(account.email, account.displayName, account.photoUrl?.toString())
+				syncScheduler.schedule()
+				onGoogleSignInCompleted.call(true)
+			} else {
+				onGoogleSignInCompleted.call(false)
+			}
 		}
 	}
 

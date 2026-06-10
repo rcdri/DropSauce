@@ -27,6 +27,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.backup.local.ui.restore.RestoreDialogFragment
 import org.koitharu.kotatsu.core.nav.router
 import org.koitharu.kotatsu.core.prefs.ColorScheme
 import org.koitharu.kotatsu.core.ui.sheet.BaseAdaptiveSheet
@@ -45,12 +46,26 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 	private var isAmoledSyncInProgress = false
 	private val availableColorSchemes = ColorScheme.getAvailableList()
 
-	private val restoreBackupLauncher = registerForActivityResult(
+	private val restoreTachiyomiLauncher = registerForActivityResult(
 		ActivityResultContracts.OpenDocument(),
 	) { uri ->
 		if (uri != null) {
 			viewModel.restoreBackup(uri)
 		}
+	}
+
+	private val restoreDropSauceLauncher = registerForActivityResult(
+		ActivityResultContracts.OpenDocument(),
+	) { uri ->
+		if (uri != null) {
+			RestoreDialogFragment.show(parentFragmentManager, uri)
+		}
+	}
+
+	private val googleSignInLauncher = registerForActivityResult(
+		ActivityResultContracts.StartActivityForResult(),
+	) { result ->
+		viewModel.handleGoogleSignInResult(result.data)
 	}
 
 	private val installPermissionLauncher = registerForActivityResult(
@@ -92,7 +107,10 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 		binding.buttonPermissionBattery.setOnClickListener(this)
 		binding.buttonOpenGithub.setOnClickListener(this)
 		binding.buttonOpenDiscord.setOnClickListener(this)
-		binding.buttonRestoreBackup.setOnClickListener(this)
+		binding.buttonSignInGoogle.setOnClickListener(this)
+		binding.buttonRestoreDropsauce.setOnClickListener(this)
+		binding.buttonRestoreTachiyomi.setOnClickListener(this)
+		binding.buttonVisitWebsite.setOnClickListener(this)
 
 		binding.groupTheme.addOnButtonCheckedListener { _, checkedId, isChecked ->
 			if (!isChecked) {
@@ -147,8 +165,17 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 			}
 			Toast.makeText(requireContext(), text, Toast.LENGTH_LONG).show()
 		}
-		viewModel.isLoading.observe(viewLifecycleOwner) {
-			binding.buttonRestoreBackup.isEnabled = !it
+		viewModel.onGoogleSignInLaunch.observeEvent(viewLifecycleOwner) { intent ->
+			googleSignInLauncher.launch(intent)
+		}
+		viewModel.onGoogleSignInCompleted.observeEvent(viewLifecycleOwner) { success ->
+			val msgRes = if (success) R.string.sync_completed else R.string.sync_error
+			Toast.makeText(requireContext(), msgRes, Toast.LENGTH_LONG).show()
+		}
+		viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
+			binding.buttonSignInGoogle.isEnabled = !loading
+			binding.buttonRestoreDropsauce.isEnabled = !loading
+			binding.buttonRestoreTachiyomi.isEnabled = !loading
 		}
 
 		updateSlideUi()
@@ -215,7 +242,10 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 			R.id.button_permission_battery -> requestBatteryOptimizationPermission()
 			R.id.button_open_github -> openExternalLink(getString(R.string.url_github), getString(R.string.source_code))
 			R.id.button_open_discord -> openExternalLink(getString(R.string.url_discord_web), getString(R.string.discord))
-			R.id.button_restore_backup -> restoreBackupLauncher.launch(arrayOf("application/*", "*/*"))
+			R.id.button_sign_in_google -> viewModel.launchGoogleSignIn()
+			R.id.button_restore_dropsauce -> restoreDropSauceLauncher.launch(arrayOf("application/*", "*/*"))
+			R.id.button_restore_tachiyomi -> restoreTachiyomiLauncher.launch(arrayOf("application/*", "*/*"))
+			R.id.button_visit_website -> openExternalLink(getString(R.string.url_dropsauce_website), getString(R.string.onboarding_visit_website))
 		}
 	}
 
@@ -235,6 +265,7 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 		val (titleRes, iconRes) = when (currentSlide) {
 			0 -> R.string.welcome to R.drawable.ic_welcome
 			1 -> R.string.onboarding_storage_permissions_title to R.drawable.ic_storage
+			2 -> R.string.onboarding_sync_title to R.drawable.ic_sync
 			else -> R.string.onboarding_finish_title to R.drawable.ic_save_ok
 		}
 		binding.textWelcomeTitle.setText(titleRes)
@@ -251,7 +282,7 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 
 	private fun updateIndicator() {
 		val binding = viewBinding ?: return
-		val dots = arrayOf(binding.dotPage1, binding.dotPage2, binding.dotPage3)
+		val dots = arrayOf(binding.dotPage1, binding.dotPage2, binding.dotPage3, binding.dotPage4)
 		dots.forEachIndexed { index, view ->
 			val isSelected = index == currentSlide
 			view.setBackgroundResource(if (isSelected) R.drawable.bg_onboarding_dot_selected else R.drawable.bg_onboarding_dot)
@@ -387,7 +418,7 @@ class WelcomeSheet : BaseAdaptiveSheet<SheetWelcomeBinding>(), View.OnClickListe
 	}
 
 	private companion object {
-		const val SLIDES_COUNT = 3
+		const val SLIDES_COUNT = 4
 		const val LAST_SLIDE_INDEX = SLIDES_COUNT - 1
 		const val DOT_ANIM_DURATION = 140L
 		const val DOT_SELECTED_SCALE = 1.15f

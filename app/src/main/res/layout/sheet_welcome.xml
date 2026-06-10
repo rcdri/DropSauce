@@ -258,6 +258,53 @@
 							android:layout_height="wrap_content"
 							android:layout_marginHorizontal="@dimen/margin_normal"
 							android:lineSpacingExtra="2dp"
+							android:text="@string/onboarding_sync_description"
+							android:textAppearance="?textAppearanceBodyMedium" />
+
+						<com.google.android.material.button.MaterialButton
+							android:id="@+id/button_sign_in_google"
+							style="?materialButtonTonalStyle"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="@dimen/margin_normal"
+							android:layout_marginTop="@dimen/margin_normal"
+							android:text="@string/sync_sign_in"
+							app:icon="@drawable/ic_google_g" />
+
+						<com.google.android.material.button.MaterialButton
+							android:id="@+id/button_restore_dropsauce"
+							style="?materialButtonTonalStyle"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="@dimen/margin_normal"
+							android:layout_marginTop="@dimen/margin_small"
+							android:text="@string/onboarding_restore_dropsauce"
+							app:icon="@drawable/ic_backup_restore" />
+
+						<com.google.android.material.button.MaterialButton
+							android:id="@+id/button_restore_tachiyomi"
+							style="?materialButtonTonalStyle"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="@dimen/margin_normal"
+							android:layout_marginTop="@dimen/margin_small"
+							android:text="@string/onboarding_restore_tachiyomi"
+							app:icon="@drawable/ic_revert" />
+
+					</LinearLayout>
+
+					<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="@dimen/margin_small"
+						android:orientation="vertical"
+						android:paddingBottom="@dimen/margin_normal">
+
+						<TextView
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="@dimen/margin_normal"
+							android:lineSpacingExtra="2dp"
 							android:text="@string/onboarding_finish_description"
 							android:textAppearance="?textAppearanceBodyMedium" />
 
@@ -282,13 +329,14 @@
 							app:icon="@drawable/ic_discord" />
 
 						<com.google.android.material.button.MaterialButton
-							android:id="@+id/button_restore_backup"
+							android:id="@+id/button_visit_website"
+							style="?materialButtonTonalStyle"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
 							android:layout_marginHorizontal="@dimen/margin_normal"
 							android:layout_marginTop="@dimen/margin_small"
-							android:text="@string/restore_backup"
-							app:icon="@drawable/ic_backup_restore" />
+							android:text="@string/onboarding_visit_website"
+							app:icon="@drawable/ic_web" />
 
 					</LinearLayout>
 				</ViewFlipper>
@@ -328,6 +376,13 @@
 
 			<View
 				android:id="@+id/dot_page_3"
+				android:layout_width="8dp"
+				android:layout_height="8dp"
+				android:layout_marginStart="8dp"
+				android:background="@drawable/bg_onboarding_dot" />
+
+			<View
+				android:id="@+id/dot_page_4"
 				android:layout_width="8dp"
 				android:layout_height="8dp"
 				android:layout_marginStart="8dp"
