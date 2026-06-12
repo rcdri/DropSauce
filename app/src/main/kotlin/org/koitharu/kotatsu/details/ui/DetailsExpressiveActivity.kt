@@ -195,6 +195,7 @@ class DetailsExpressiveActivity :
 					coverUrl = coverUrl,
 					backdropUrl = backdropUrl,
 					isBackdropEnabled = settings.isBackdropEnabled,
+					style = settings.detailsUiMode,
 					topInset = with(density) { topInset.intValue.toDp() },
 					bottomContentPadding = with(density) { peekHeightPx.toDp() } + with(density) { bottomInset.intValue.toDp() },
 					onScroll = ::onContentScroll,

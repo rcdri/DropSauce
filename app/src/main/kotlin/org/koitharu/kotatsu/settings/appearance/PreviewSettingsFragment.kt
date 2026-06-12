@@ -213,7 +213,7 @@ private fun applyPreview(root: View, mode: DetailsUiMode, backdropOn: Boolean, b
 		infoColumn.removeAllViews()
 		when (mode) {
 			DetailsUiMode.EXPRESSIVE -> buildExpressiveContent(infoColumn, bgColor, fgColor)
-			DetailsUiMode.MODERN -> buildModernContent(infoColumn, bgColor, fgColor)
+			DetailsUiMode.COMPACT -> buildCompactContent(infoColumn, bgColor, fgColor)
 		}
 	}
 }
@@ -281,46 +281,64 @@ private fun buildExpressiveContent(parent: LinearLayout, bgColor: Int, fgColor: 
 	parent.addView(card)
 }
 
-private fun buildModernContent(parent: LinearLayout, bgColor: Int, fgColor: Int) {
+// Compact mock: a small cover block on the left with the title/lines stacked beside it, then a
+// row of pills underneath - echoing the side-cover layout.
+private fun buildCompactContent(parent: LinearLayout, bgColor: Int, fgColor: Int) {
 	val ctx = parent.context
-	val card = LinearLayout(ctx).apply {
-		orientation = LinearLayout.VERTICAL
-		background = GradientDrawable().apply {
-			shape = GradientDrawable.RECTANGLE
-			cornerRadius = ctx.dp(10).toFloat()
-			setColor(ColorUtils.setAlphaComponent(bgColor, 60))
-			setStroke(1, ColorUtils.setAlphaComponent(fgColor, 40))
-		}
+	val row = LinearLayout(ctx).apply {
+		orientation = LinearLayout.HORIZONTAL
 		layoutParams = LinearLayout.LayoutParams(
 			ViewGroup.LayoutParams.MATCH_PARENT,
 			ViewGroup.LayoutParams.WRAP_CONTENT,
 		)
-		setPadding(ctx.dp(8), ctx.dp(6), ctx.dp(8), ctx.dp(6))
 	}
-
-	val labelWidth = ctx.dp(44)
-	val valueWidths = listOf(ctx.dp(72), ctx.dp(56), ctx.dp(44), ctx.dp(36))
-	valueWidths.forEachIndexed { i, valWidth ->
-		val row = LinearLayout(ctx).apply {
-			orientation = LinearLayout.HORIZONTAL
-			layoutParams = LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-			).also { if (i > 0) it.topMargin = ctx.dp(4) }
+	row.addView(View(ctx).apply {
+		layoutParams = LinearLayout.LayoutParams(ctx.dp(52), ctx.dp(74))
+		background = GradientDrawable().apply {
+			shape = GradientDrawable.RECTANGLE
+			cornerRadius = ctx.dp(10).toFloat()
+			setColor(ColorUtils.setAlphaComponent(fgColor, 0x33))
 		}
-		row.addView(View(ctx).apply {
-			layoutParams = LinearLayout.LayoutParams(labelWidth, ctx.dp(6))
-			background = roundedBar(fgColor, 0x70)
-		})
-		row.addView(View(ctx).apply {
-			layoutParams = LinearLayout.LayoutParams(valWidth, ctx.dp(6)).also {
-				it.marginStart = ctx.dp(6)
-			}
-			background = roundedBar(fgColor, 0xAA)
-		})
-		card.addView(row)
+	})
+	val column = LinearLayout(ctx).apply {
+		orientation = LinearLayout.VERTICAL
+		layoutParams = LinearLayout.LayoutParams(
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT,
+		).also { it.marginStart = ctx.dp(12) }
 	}
-	parent.addView(card)
+	listOf(ctx.dp(110) to 0xCC, ctx.dp(150) to 0x66, ctx.dp(96) to 0x66).forEachIndexed { i, (w, a) ->
+		column.addView(View(ctx).apply {
+			layoutParams = LinearLayout.LayoutParams(w, ctx.dp(8)).also {
+				if (i > 0) it.topMargin = ctx.dp(8)
+			}
+			background = roundedBar(fgColor, a)
+		})
+	}
+	row.addView(column)
+	parent.addView(row)
+
+	val pillRow = LinearLayout(ctx).apply {
+		orientation = LinearLayout.HORIZONTAL
+		layoutParams = LinearLayout.LayoutParams(
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT,
+		).also { it.topMargin = ctx.dp(12) }
+	}
+	val pillH = ctx.dp(24)
+	listOf(ctx.dp(50), ctx.dp(40), ctx.dp(58)).forEachIndexed { ci, w ->
+		pillRow.addView(View(ctx).apply {
+			layoutParams = LinearLayout.LayoutParams(w, pillH).also {
+				if (ci > 0) it.marginStart = ctx.dp(8)
+			}
+			background = GradientDrawable().apply {
+				shape = GradientDrawable.RECTANGLE
+				cornerRadius = pillH / 2f
+				setColor(ColorUtils.setAlphaComponent(fgColor, 0x1F))
+			}
+		})
+	}
+	parent.addView(pillRow)
 }
 
 private fun roundedBar(color: Int, alpha: Int): GradientDrawable =

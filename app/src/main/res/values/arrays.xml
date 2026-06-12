@@ -108,7 +108,7 @@
 	</string-array>
 	<string-array name="details_ui" translatable="false">
 		<item>@string/details_ui_expressive</item>
-		<item>@string/details_ui_modern</item>
+		<item>@string/details_ui_compact</item>
 	</string-array>
 	<string-array name="download_formats" translatable="false">
 		<item>@string/automatic</item>

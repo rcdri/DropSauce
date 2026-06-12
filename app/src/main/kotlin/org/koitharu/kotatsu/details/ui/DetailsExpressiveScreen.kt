@@ -75,6 +75,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.getTitle
 import org.koitharu.kotatsu.core.model.isLocal
 import org.koitharu.kotatsu.core.model.titleResId
+import org.koitharu.kotatsu.core.prefs.DetailsUiMode
 import org.koitharu.kotatsu.core.parser.favicon.faviconUri
 import org.koitharu.kotatsu.core.util.FileSize
 import org.koitharu.kotatsu.core.util.ext.mangaSourceExtra
@@ -111,6 +112,8 @@ private val SCREEN_PADDING = 20.dp
 private val CARD_CORNER = 26.dp
 private val COVER_WIDTH = 158.dp
 private val COVER_HEIGHT = 236.dp
+private val COMPACT_COVER_WIDTH = 120.dp
+private val COMPACT_COVER_HEIGHT = 178.dp
 
 @Composable
 fun DetailsExpressiveScreen(
@@ -128,6 +131,7 @@ fun DetailsExpressiveScreen(
 	coverUrl: String?,
 	backdropUrl: String?,
 	isBackdropEnabled: Boolean,
+	style: DetailsUiMode,
 	topInset: Dp,
 	bottomContentPadding: Dp,
 	onScroll: (Int) -> Unit,
@@ -137,6 +141,7 @@ fun DetailsExpressiveScreen(
 	val accentColor = accent ?: MaterialTheme.colorScheme.primary
 	val scheme = MaterialTheme.colorScheme
 	val scrollState = rememberScrollState()
+	val centered = style != DetailsUiMode.COMPACT
 
 	LaunchedEffect(scrollState) {
 		snapshotFlow { scrollState.value }.collect(onScroll)
@@ -164,12 +169,13 @@ fun DetailsExpressiveScreen(
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			// Push the hero clear of the translucent top bar / back button.
-			Spacer(Modifier.height(topInset + 84.dp))
+			Spacer(Modifier.height(topInset + if (centered) 84.dp else 72.dp))
 
 			if (manga == null) {
 				LoadingHero()
 			} else {
 				HeroSection(
+					centered = centered,
 					manga = manga,
 					details = details,
 					sourceTitle = sourceTitle,
@@ -274,6 +280,7 @@ private fun ExpressiveBackdrop(
 
 @Composable
 private fun HeroSection(
+	centered: Boolean,
 	manga: Manga,
 	details: MangaDetails?,
 	sourceTitle: String?,
@@ -282,85 +289,133 @@ private fun HeroSection(
 	coverUrl: String?,
 	actions: DetailsExpressiveActions,
 ) {
-	val ctx = LocalContext.current
-	Column(
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding(horizontal = SCREEN_PADDING),
-		horizontalAlignment = Alignment.CenterHorizontally,
-	) {
-		Surface(
-			shape = RoundedCornerShape(24.dp),
-			color = MaterialTheme.colorScheme.surfaceVariant,
-			tonalElevation = 4.dp,
-			shadowElevation = 16.dp,
+	if (centered) {
+		Column(
 			modifier = Modifier
-				.width(COVER_WIDTH)
-				.height(COVER_HEIGHT),
+				.fillMaxWidth()
+				.padding(horizontal = SCREEN_PADDING),
+			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			val coverRequest = remember(coverUrl, manga.source) {
-				ImageRequest.Builder(ctx)
-					.data(coverUrl)
-					.crossfade(true)
-					.mangaSourceExtra(manga.source)
-					.build()
-			}
-			AsyncImage(
-				model = coverRequest,
+			CoverCard(manga, coverUrl, imageLoader, COVER_WIDTH, COVER_HEIGHT, 24.dp, actions)
+			Spacer(Modifier.height(20.dp))
+			HeroTexts(centered = true, manga = manga, accent = accent, actions = actions)
+			Spacer(Modifier.height(16.dp))
+			StatPills(
+				centered = true,
+				manga = manga,
+				details = details,
+				sourceTitle = sourceTitle,
+				accent = accent,
 				imageLoader = imageLoader,
-				contentDescription = null,
-				contentScale = ContentScale.Crop,
-				modifier = Modifier
-					.fillMaxSize()
-					.clickable { actions.onCoverClick(manga) },
+				onSourceClick = { actions.onSourceClick(manga) },
 			)
 		}
+	} else {
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = SCREEN_PADDING),
+		) {
+			CoverCard(manga, coverUrl, imageLoader, COMPACT_COVER_WIDTH, COMPACT_COVER_HEIGHT, 20.dp, actions)
+			Spacer(Modifier.width(16.dp))
+			Column(modifier = Modifier.weight(1f)) {
+				HeroTexts(centered = false, manga = manga, accent = accent, actions = actions)
+				Spacer(Modifier.height(12.dp))
+				StatPills(
+					centered = false,
+					manga = manga,
+					details = details,
+					sourceTitle = sourceTitle,
+					accent = accent,
+					imageLoader = imageLoader,
+					onSourceClick = { actions.onSourceClick(manga) },
+				)
+			}
+		}
+	}
+}
 
-		Spacer(Modifier.height(20.dp))
-		Text(
-			text = manga.title,
-			style = MaterialTheme.typography.headlineMedium,
-			fontWeight = FontWeight.Bold,
-			color = MaterialTheme.colorScheme.onSurface,
-			textAlign = TextAlign.Center,
-			maxLines = 4,
-			overflow = TextOverflow.Ellipsis,
-			modifier = Modifier.clickable { actions.onTitleClick(manga.title) },
-		)
-		val altTitle = manga.altTitles.firstOrNull()?.takeIf { it.isNotBlank() }
-		if (altTitle != null) {
-			Spacer(Modifier.height(6.dp))
-			Text(
-				text = altTitle,
-				style = MaterialTheme.typography.bodyMedium,
-				color = MaterialTheme.colorScheme.onSurfaceVariant,
-				textAlign = TextAlign.Center,
-				maxLines = 2,
-				overflow = TextOverflow.Ellipsis,
-			)
+@Composable
+private fun CoverCard(
+	manga: Manga,
+	coverUrl: String?,
+	imageLoader: ImageLoader,
+	width: Dp,
+	height: Dp,
+	corner: Dp,
+	actions: DetailsExpressiveActions,
+) {
+	val ctx = LocalContext.current
+	Surface(
+		shape = RoundedCornerShape(corner),
+		color = MaterialTheme.colorScheme.surfaceVariant,
+		tonalElevation = 4.dp,
+		shadowElevation = 16.dp,
+		modifier = Modifier
+			.width(width)
+			.height(height),
+	) {
+		val coverRequest = remember(coverUrl, manga.source) {
+			ImageRequest.Builder(ctx)
+				.data(coverUrl)
+				.crossfade(true)
+				.mangaSourceExtra(manga.source)
+				.build()
 		}
-		val authors = manga.authors.filter { it.isNotBlank() }
-		if (authors.isNotEmpty()) {
-			Spacer(Modifier.height(8.dp))
-			Text(
-				text = authors.joinToString(", "),
-				style = MaterialTheme.typography.labelLarge,
-				color = accent,
-				fontWeight = FontWeight.Medium,
-				textAlign = TextAlign.Center,
-				maxLines = 1,
-				overflow = TextOverflow.Ellipsis,
-				modifier = Modifier.clickable { actions.onAuthorClick(authors.first()) },
-			)
-		}
-		Spacer(Modifier.height(16.dp))
-		StatPills(
-			manga = manga,
-			details = details,
-			sourceTitle = sourceTitle,
-			accent = accent,
+		AsyncImage(
+			model = coverRequest,
 			imageLoader = imageLoader,
-			onSourceClick = { actions.onSourceClick(manga) },
+			contentDescription = null,
+			contentScale = ContentScale.Crop,
+			modifier = Modifier
+				.fillMaxSize()
+				.clickable { actions.onCoverClick(manga) },
+		)
+	}
+}
+
+@Composable
+private fun HeroTexts(
+	centered: Boolean,
+	manga: Manga,
+	accent: Color,
+	actions: DetailsExpressiveActions,
+) {
+	val align = if (centered) TextAlign.Center else TextAlign.Start
+	Text(
+		text = manga.title,
+		style = if (centered) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall,
+		fontWeight = FontWeight.Bold,
+		color = MaterialTheme.colorScheme.onSurface,
+		textAlign = align,
+		maxLines = 4,
+		overflow = TextOverflow.Ellipsis,
+		modifier = Modifier.clickable { actions.onTitleClick(manga.title) },
+	)
+	val altTitle = manga.altTitles.firstOrNull()?.takeIf { it.isNotBlank() }
+	if (altTitle != null) {
+		Spacer(Modifier.height(6.dp))
+		Text(
+			text = altTitle,
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			textAlign = align,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis,
+		)
+	}
+	val authors = manga.authors.filter { it.isNotBlank() }
+	if (authors.isNotEmpty()) {
+		Spacer(Modifier.height(8.dp))
+		Text(
+			text = authors.joinToString(", "),
+			style = MaterialTheme.typography.labelLarge,
+			color = accent,
+			fontWeight = FontWeight.Medium,
+			textAlign = align,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis,
+			modifier = Modifier.clickable { actions.onAuthorClick(authors.first()) },
 		)
 	}
 }
@@ -368,6 +423,7 @@ private fun HeroSection(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StatPills(
+	centered: Boolean,
 	manga: Manga,
 	details: MangaDetails?,
 	sourceTitle: String?,
@@ -378,7 +434,11 @@ private fun StatPills(
 	val ctx = LocalContext.current
 	FlowRow(
 		modifier = Modifier.fillMaxWidth(),
-		horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+		horizontalArrangement = if (centered) {
+			Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+		} else {
+			Arrangement.spacedBy(8.dp)
+		},
 		verticalArrangement = Arrangement.spacedBy(8.dp),
 	) {
 		if (manga.hasRating) {

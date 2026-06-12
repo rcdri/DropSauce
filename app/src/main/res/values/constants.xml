@@ -51,7 +51,7 @@
 	</string-array>
 	<string-array name="details_ui_values" translatable="false">
 		<item>EXPRESSIVE</item>
-		<item>MODERN</item>
+		<item>COMPACT</item>
 	</string-array>
 	<string-array name="values_tracker_frequency" translatable="false">
 		<item>-1</item>
