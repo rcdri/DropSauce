@@ -164,7 +164,7 @@ fun DetailsExpressiveScreen(
 				Spacer(Modifier.height(16.dp))
 				ProgressCard(historyInfo = historyInfo, isLoading = isLoading, accent = accentColor)
 
-				DescriptionCard(description = details?.description)
+				DescriptionCard(description = details.description)
 
 				TagsSection(tags = manga.tags, onTagClick = actions.onTagClick)
 
