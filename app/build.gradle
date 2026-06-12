@@ -69,6 +69,18 @@ android {
 				signingConfig signingConfigs.release
 			}
 		}
+		// Standalone, sideload-friendly build used by the "Preview Build" GitHub Action.
+		// It inherits everything from release (not debuggable, R8 + resource shrinking, and none
+		// of the debug-only sources/dependencies such as LeakCanary/StrictMode; BuildConfig.DEBUG
+		// is false), but uses its own applicationId suffix so it installs alongside the store build,
+		// and is signed with the auto-generated debug keystore so CI can produce an installable APK
+		// without any release signing secrets.
+		preview {
+			initWith release
+			applicationIdSuffix = '.preview'
+			versionNameSuffix = '-preview'
+			signingConfig signingConfigs.getByName('debug')
+		}
 	}
 	buildFeatures {
 		viewBinding = true
@@ -94,6 +106,11 @@ android {
 	sourceSets {
 		androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
 		main.kotlin.srcDirs += 'src/main/kotlin/'
+		// The preview build type reuses the release variant's sources (production KotatsuApp,
+		// BaseService, CurlLoggingInterceptor, Debug ext and bool resources) so it carries none of
+		// the debug-only tooling. Its own src/preview overrides just the app name.
+		preview.kotlin.srcDirs += 'src/release/kotlin'
+		preview.res.srcDirs += 'src/release/res'
 	}
 	compileOptions {
 		coreLibraryDesugaringEnabled = true

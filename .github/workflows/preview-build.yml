@@ -1,0 +1,120 @@
+name: Preview Build
+
+# Builds a standalone "preview" APK for every branch on push, and on manual dispatch.
+# The preview variant is a release-style build (not debuggable, R8 + resource shrinking,
+# no debug-only tooling like LeakCanary/StrictMode) with its own applicationId suffix so it
+# installs alongside the store build, signed with the debug keystore so it's sideload-ready.
+# The APK and its checksums are uploaded as a workflow artifact (downloadable from the run's
+# "Artifacts" section) and the hashes are printed to the run summary. Nothing is committed.
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only keep the latest preview build per branch/ref running.
+concurrency:
+  group: preview-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Build preview APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Pre-warm JitPack dependencies
+        run: |
+          PARSERS_VERSION=$(grep 'parsers = ' gradle/libs.versions.toml | sed 's/.*= "\(.*\)"/\1/')
+          echo "Pre-warming JitPack for kotatsu-parsers:${PARSERS_VERSION}"
+          POM_URL="https://jitpack.io/com/github/YakaTeam/kotatsu-parsers/${PARSERS_VERSION}/kotatsu-parsers-${PARSERS_VERSION}.pom"
+          for i in $(seq 1 10); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$POM_URL")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "JitPack artifact is ready (HTTP 200)"
+              exit 0
+            fi
+            echo "Attempt $i: JitPack returned HTTP ${HTTP_STATUS}, waiting 30s..."
+            sleep 30
+          done
+          echo "::error::JitPack artifact for kotatsu-parsers:${PARSERS_VERSION} not available after 10 attempts"
+          exit 1
+
+      - name: Build preview APK
+        run: ./gradlew :app:assemblePreview --no-daemon --stacktrace
+
+      - name: Collect APK and compute checksums
+        id: apk
+        run: |
+          set -euo pipefail
+          APK=$(find app/build/outputs/apk/preview -name '*.apk' | head -n1)
+          if [ -z "$APK" ]; then
+            echo "::error::No preview APK found under app/build/outputs/apk/preview"
+            exit 1
+          fi
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          SAFE_REF=$(echo "${GITHUB_REF_NAME}" | tr '/ ' '__')
+          DEST="DropSauce-preview-${SAFE_REF}-${SHORT_SHA}.apk"
+          cp "$APK" "$DEST"
+
+          SHA256=$(sha256sum "$DEST" | awk '{print $1}')
+          SHA1=$(sha1sum "$DEST" | awk '{print $1}')
+          MD5=$(md5sum "$DEST" | awk '{print $1}')
+          SIZE=$(du -h "$DEST" | cut -f1)
+
+          # Standalone checksums files shipped alongside the APK.
+          {
+            echo "file:   ${DEST}"
+            echo "branch: ${GITHUB_REF_NAME}"
+            echo "commit: ${GITHUB_SHA}"
+            echo "size:   ${SIZE}"
+            echo "sha256: ${SHA256}"
+            echo "sha1:   ${SHA1}"
+            echo "md5:    ${MD5}"
+          } > "${DEST}.sha256.txt"
+          # sha256sum-verifiable file (sha256 + filename): verify with `sha256sum -c`.
+          sha256sum "$DEST" > "${DEST}.sha256sum"
+
+          echo "apk_name=${DEST}" >> "$GITHUB_OUTPUT"
+
+          # Surface everything in the run summary.
+          {
+            echo "### 📦 Preview APK"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| File | \`${DEST}\` |"
+            echo "| Branch | \`${GITHUB_REF_NAME}\` |"
+            echo "| Commit | \`${SHORT_SHA}\` |"
+            echo "| Size | ${SIZE} |"
+            echo "| SHA-256 | \`${SHA256}\` |"
+            echo "| SHA-1 | \`${SHA1}\` |"
+            echo "| MD5 | \`${MD5}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload preview APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.apk_name }}
+          path: |
+            ${{ steps.apk.outputs.apk_name }}
+            ${{ steps.apk.outputs.apk_name }}.sha256.txt
+            ${{ steps.apk.outputs.apk_name }}.sha256sum
+          if-no-files-found: error
+          retention-days: 30
