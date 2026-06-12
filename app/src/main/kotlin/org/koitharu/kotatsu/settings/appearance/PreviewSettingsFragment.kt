@@ -69,14 +69,14 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 	val uiModeEntries = remember { ctx.resources.getStringArray(R.array.details_ui).toList() }
 	val uiModeValues = remember { DetailsUiMode.entries.names().toList() }
 
-	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.MODERN.name)
+	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.EXPRESSIVE.name)
 	var backdrop by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP, true)
 	var blur by rememberIntPref(AppSettings.KEY_DETAILS_BACKDROP_BLUR_AMOUNT, 60)
 	var extendBackdrop by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP_EXTEND, true)
 	var dynamicColor by rememberBooleanPref(AppSettings.KEY_DETAILS_DYNAMIC_COLOR, false)
 
 	val mode = remember(uiMode) {
-		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.MODERN
+		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.EXPRESSIVE
 	}
 
 	SettingsScaffold(title = stringResource(R.string.details_appearance), onBack = onBack) {
@@ -212,43 +212,73 @@ private fun applyPreview(root: View, mode: DetailsUiMode, backdropOn: Boolean, b
 		(infoColumn.parent as? ViewGroup)?.let { TransitionManager.beginDelayedTransition(it) }
 		infoColumn.removeAllViews()
 		when (mode) {
-			DetailsUiMode.CLASSIC -> buildClassicContent(infoColumn, fgColor)
+			DetailsUiMode.EXPRESSIVE -> buildExpressiveContent(infoColumn, bgColor, fgColor)
 			DetailsUiMode.MODERN -> buildModernContent(infoColumn, bgColor, fgColor)
 		}
 	}
 }
 
-private fun buildClassicContent(parent: LinearLayout, fgColor: Int) {
+// Expressive mock: a row of large rounded "stat pills" followed by a big rounded hero card with a
+// pronounced filled action pill - echoing the real screen's playful, large-radius Material 3 look.
+private fun buildExpressiveContent(parent: LinearLayout, bgColor: Int, fgColor: Int) {
 	val ctx = parent.context
-	val gap = ctx.dp(6)
-	val chipH = ctx.dp(22)
-	val rows = listOf(
-		listOf(ctx.dp(80), ctx.dp(54), ctx.dp(60)),
-		listOf(ctx.dp(50), ctx.dp(66)),
-	)
-	rows.forEachIndexed { ri, widths ->
-		val row = LinearLayout(ctx).apply {
-			orientation = LinearLayout.HORIZONTAL
-			layoutParams = LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-			).also { if (ri > 0) it.topMargin = gap }
-		}
-		widths.forEachIndexed { ci, w ->
-			row.addView(View(ctx).apply {
-				layoutParams = LinearLayout.LayoutParams(w, chipH).also {
-					if (ci > 0) it.marginStart = gap
-				}
-				background = GradientDrawable().apply {
-					shape = GradientDrawable.RECTANGLE
-					cornerRadius = chipH / 2f
-					setColor(ColorUtils.setAlphaComponent(fgColor, 0x22))
-					setStroke(ctx.dp(1), ColorUtils.setAlphaComponent(fgColor, 0x55))
-				}
-			})
-		}
-		parent.addView(row)
+	val gap = ctx.dp(8)
+
+	val pillRow = LinearLayout(ctx).apply {
+		orientation = LinearLayout.HORIZONTAL
+		layoutParams = LinearLayout.LayoutParams(
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT,
+		)
 	}
+	val pillH = ctx.dp(26)
+	listOf(ctx.dp(58), ctx.dp(46), ctx.dp(64)).forEachIndexed { ci, w ->
+		pillRow.addView(View(ctx).apply {
+			layoutParams = LinearLayout.LayoutParams(w, pillH).also {
+				if (ci > 0) it.marginStart = gap
+			}
+			background = GradientDrawable().apply {
+				shape = GradientDrawable.RECTANGLE
+				cornerRadius = pillH / 2f
+				setColor(ColorUtils.setAlphaComponent(fgColor, 0x1F))
+			}
+		})
+	}
+	parent.addView(pillRow)
+
+	val card = LinearLayout(ctx).apply {
+		orientation = LinearLayout.VERTICAL
+		background = GradientDrawable().apply {
+			shape = GradientDrawable.RECTANGLE
+			cornerRadius = ctx.dp(22).toFloat()
+			setColor(ColorUtils.setAlphaComponent(fgColor, 0x14))
+		}
+		layoutParams = LinearLayout.LayoutParams(
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT,
+		).also { it.topMargin = gap + ctx.dp(2) }
+		setPadding(ctx.dp(12), ctx.dp(12), ctx.dp(12), ctx.dp(12))
+	}
+	listOf(ctx.dp(120), ctx.dp(150), ctx.dp(96)).forEachIndexed { i, w ->
+		card.addView(View(ctx).apply {
+			layoutParams = LinearLayout.LayoutParams(w, ctx.dp(7)).also {
+				if (i > 0) it.topMargin = ctx.dp(7)
+			}
+			background = roundedBar(fgColor, if (i == 0) 0xCC else 0x66)
+		})
+	}
+	// Big filled action pill at the bottom of the hero card.
+	card.addView(View(ctx).apply {
+		layoutParams = LinearLayout.LayoutParams(ctx.dp(110), ctx.dp(30)).also {
+			it.topMargin = ctx.dp(12)
+		}
+		background = GradientDrawable().apply {
+			shape = GradientDrawable.RECTANGLE
+			cornerRadius = ctx.dp(15).toFloat()
+			setColor(ColorUtils.setAlphaComponent(fgColor, 0x99))
+		}
+	})
+	parent.addView(card)
 }
 
 private fun buildModernContent(parent: LinearLayout, bgColor: Int, fgColor: Int) {

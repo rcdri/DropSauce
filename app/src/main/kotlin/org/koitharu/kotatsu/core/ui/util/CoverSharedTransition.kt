@@ -40,7 +40,7 @@ import com.google.android.material.R as materialR
  * before this transition existed.
  *
  * Works for both [org.koitharu.kotatsu.details.ui.DetailsActivity] and
- * [org.koitharu.kotatsu.details.ui.DetailsClassicActivity], and is bidirectional - pressing back
+ * [org.koitharu.kotatsu.details.ui.DetailsExpressiveActivity], and is bidirectional - pressing back
  * animates the cover back to the list item it came from.
  */
 object CoverSharedTransition {

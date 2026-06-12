@@ -55,7 +55,7 @@ import org.koitharu.kotatsu.core.util.ext.toFileOrNull
 import org.koitharu.kotatsu.core.util.ext.toUriOrNull
 import org.koitharu.kotatsu.core.util.ext.withArgs
 import org.koitharu.kotatsu.details.ui.DetailsActivity
-import org.koitharu.kotatsu.details.ui.DetailsClassicActivity
+import org.koitharu.kotatsu.details.ui.DetailsExpressiveActivity
 import org.koitharu.kotatsu.details.ui.pager.ChaptersPagesSheet
 import org.koitharu.kotatsu.details.ui.related.RelatedMangaActivity
 import org.koitharu.kotatsu.details.ui.scrobbling.ScrobblingInfoSheet
@@ -698,7 +698,7 @@ class AppRouter private constructor(
     }
 
 	private fun detailsActivityClassInstance() = when (settings.detailsUiMode) {
-		DetailsUiMode.CLASSIC -> DetailsClassicActivity::class.java
+		DetailsUiMode.EXPRESSIVE -> DetailsExpressiveActivity::class.java
 		DetailsUiMode.MODERN -> DetailsActivity::class.java
 	}
 
@@ -714,7 +714,7 @@ class AppRouter private constructor(
 			EntryPointAccessors.fromApplication<AppRouterEntryPoint>(context.applicationContext).settings
 
 		private fun detailsActivityClass(context: Context) = when (resolveSettings(context).detailsUiMode) {
-			DetailsUiMode.CLASSIC -> DetailsClassicActivity::class.java
+			DetailsUiMode.EXPRESSIVE -> DetailsExpressiveActivity::class.java
 			DetailsUiMode.MODERN -> DetailsActivity::class.java
 		}
 

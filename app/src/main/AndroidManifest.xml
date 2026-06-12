@@ -99,7 +99,7 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name="org.koitharu.kotatsu.details.ui.DetailsClassicActivity"
+			android:name="org.koitharu.kotatsu.details.ui.DetailsExpressiveActivity"
 			android:exported="false" />
 		<activity
 			android:name="org.koitharu.kotatsu.reader.ui.ReaderActivity"
