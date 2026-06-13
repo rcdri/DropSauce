@@ -37,8 +37,6 @@ import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -111,7 +109,7 @@ class KotoNetworkHelper(
 
 		// Ensure every extension request carries a User-Agent when the source didn't set one,
 		// using the same configurable default as Mihon. Added first so it runs outermost,
-		// before Cloudflare detection and API-header enrichment see the request.
+		// before Cloudflare detection sees the request.
 		addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
 
 		baseClient.interceptors.forEach { interceptor ->
@@ -122,8 +120,10 @@ class KotoNetworkHelper(
 
 		// Add a Mihon-specific fallback detector.
 		addInterceptor { chain ->
-			val originalRequest = chain.request()
-			val request = enrichApiRequestHeadersIfNeeded(originalRequest)
+			// Pass the request through unmodified — Mihon does not inject synthetic headers
+			// (X-Requested-With, Sec-Fetch-*, etc.) onto extension requests, and doing so makes
+			// API-based sources (e.g. Kagane) look bot-like and trip Cloudflare's WAF.
+			val request = chain.request()
 			val response = chain.proceed(request)
 			val challengeUrl = request.toChallengeUrl()
 			when (CloudFlareHelper.checkResponseForProtection(response)) {
@@ -242,59 +242,6 @@ class KotoNetworkHelper(
 			.toString()
 	}
 
-	private fun enrichApiRequestHeadersIfNeeded(request: Request): Request {
-		if (!request.url.encodedPath.startsWith("/api/")) return request
-		val cookies = mutableCookieJar.loadForRequest(request.url)
-		val hasCfClearance = cookies.any { it.name == "cf_clearance" }
-		if (!hasCfClearance) return request
-		val origin = "${request.url.scheme}://${request.url.host}"
-		var modified = false
-		val builder = request.newBuilder()
-		if (request.header("Referer").isNullOrBlank()) {
-			builder.header("Referer", "$origin/")
-			modified = true
-		}
-		if (request.header("Origin").isNullOrBlank()) {
-			builder.header("Origin", origin)
-			modified = true
-		}
-		if (request.header("Accept").isNullOrBlank()) {
-			builder.header("Accept", "application/json, text/plain, */*")
-			modified = true
-		}
-		if (request.header("Accept-Language").isNullOrBlank()) {
-			builder.header("Accept-Language", "en-US,en;q=0.9")
-			modified = true
-		}
-		if (request.header("Sec-Fetch-Site").isNullOrBlank()) {
-			builder.header("Sec-Fetch-Site", "same-origin")
-			modified = true
-		}
-		if (request.header("Sec-Fetch-Mode").isNullOrBlank()) {
-			builder.header("Sec-Fetch-Mode", "cors")
-			modified = true
-		}
-		if (request.header("Sec-Fetch-Dest").isNullOrBlank()) {
-			builder.header("Sec-Fetch-Dest", "empty")
-			modified = true
-		}
-		if (request.header("X-Requested-With").isNullOrBlank()) {
-			builder.header("X-Requested-With", "XMLHttpRequest")
-			modified = true
-		}
-		if (request.header("X-XSRF-TOKEN").isNullOrBlank()) {
-			val xsrf = cookies.firstOrNull { it.name == "XSRF-TOKEN" }?.value
-			val decodedXsrf = xsrf?.let {
-				runCatching { URLDecoder.decode(it, StandardCharsets.UTF_8.name()) }.getOrDefault(it)
-			}
-			if (!decodedXsrf.isNullOrBlank()) {
-				builder.header("X-XSRF-TOKEN", decodedXsrf)
-				modified = true
-			}
-		}
-		return if (modified) builder.build() else request
-	}
-
 	private fun shouldSkipInteractiveAction(host: String, clearance: String?): Boolean {
 		if (clearance.isNullOrBlank()) return false
 		val now = System.currentTimeMillis()
@@ -351,7 +298,14 @@ class KotoInjektBridge @Inject constructor(
 			mutableCookieJar = cookieJar,
 			webViewExecutor = webViewExecutor,
 			androidCookieJar = androidCookieJar,
-			userAgentProvider = { settings.mihonUserAgent },
+			// Use the same UA the Cloudflare-solving WebView uses (device default) unless the
+			// user set an explicit override. Cloudflare binds cf_clearance to the UA that earned
+			// it, so a mismatch between the WebView UA and request UA gets the request blocked.
+			userAgentProvider = {
+				settings.mihonUserAgentOverride
+					?: webViewExecutor.defaultUserAgent
+					?: AppSettings.DEFAULT_MIHON_USER_AGENT
+			},
 		)
 		val json = Json {
 			ignoreUnknownKeys = true

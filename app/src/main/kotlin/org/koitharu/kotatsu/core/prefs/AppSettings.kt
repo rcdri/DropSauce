@@ -622,16 +622,15 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getEnumValue(KEY_DOH, DoHProvider.NONE)
 
 	/**
-	 * Default User-Agent header sent by Mihon/Tachiyomi extensions when a source does not set
-	 * its own. Mirrors Mihon's configurable "Default user agent string" preference. A stale UA
-	 * (the kotatsu-parsers default is years old) gets flagged by anti-bot/Cloudflare on some
-	 * sources, so this defaults to a current Chrome build and can be overridden by the user.
+	 * User-supplied override for the User-Agent header sent by Mihon/Tachiyomi extensions.
+	 * `null` when the user hasn't set one, in which case the extension layer falls back to the
+	 * device WebView's User-Agent (so it matches the UA that solves Cloudflare challenges) and
+	 * finally to [DEFAULT_MIHON_USER_AGENT]. Mirrors Mihon's "Default user agent string" option.
 	 */
-	val mihonUserAgent: String
+	val mihonUserAgentOverride: String?
 		get() = prefs.getString(KEY_MIHON_USER_AGENT, null)
 			?.trim()
 			?.takeIf { it.isNotEmpty() }
-			?: DEFAULT_MIHON_USER_AGENT
 
 	var isSSLBypassEnabled: Boolean
 		get() = prefs.getBoolean(KEY_SSL_BYPASS, false)
