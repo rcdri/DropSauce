@@ -454,16 +454,11 @@ class ReaderActivity :
     }
 
     private fun onPageTranslated(translation: PageTranslation) {
-        val message = if (translation.blocks.isEmpty()) {
-            getString(R.string.no_text_recognized)
-        } else {
-            translation.blocks.joinToString(separator = "\n\n") { it.translated }
-        }
-        buildAlertDialog(this, isCentered = false) {
-            setTitle(R.string.translate_page)
-            setMessage(message)
-            setPositiveButton(android.R.string.ok, null)
-        }.show()
+        // Open the page (with translations drawn onto it) in the full-screen, zoomable image viewer.
+        router.openImage(
+            url = translation.imageUri.toString(),
+            source = null,
+        )
     }
 
     override fun scrollBy(delta: Int, smooth: Boolean): Boolean {

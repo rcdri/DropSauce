@@ -299,7 +299,12 @@ class ReaderViewModel @Inject constructor(
                 return@launchLoadingJob
             }
             val uri = pageLoader.loadPage(page, force = false)
-            onPageTranslated.call(pageTranslator.translatePage(uri))
+            val result = pageTranslator.translatePage(uri)
+            if (result == null) {
+                onShowToast.call(R.string.no_text_recognized)
+            } else {
+                onPageTranslated.call(result)
+            }
         }
     }
 
