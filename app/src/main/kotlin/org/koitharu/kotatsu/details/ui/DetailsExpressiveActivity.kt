@@ -256,25 +256,10 @@ class DetailsExpressiveActivity :
 		bottomInset.intValue = bars.bottom
 		viewBinding.appbar.updatePadding(top = bars.top)
 		viewBinding.navbarDim.updateLayoutParams { height = bars.bottom }
-		// Drop the refresh indicator below the (transparent) top bar so it lands where it does on the
-		// rest of the app, instead of up under the status bar.
-		val actionBarSize = resolveActionBarSize()
-		val start = bars.top + actionBarSize
-		viewBinding.swipeRefreshLayout.setProgressViewOffset(
-			false,
-			start,
-			start + (resources.displayMetrics.density * 64f).toInt(),
-		)
+		// Match the rest of the app: rest the refresh indicator just under the status bar (the same
+		// offset the old details screen used), not pushed down below the whole top bar.
+		viewBinding.swipeRefreshLayout.setProgressViewOffset(false, bars.top, bars.top + 180)
 		return insets
-	}
-
-	private fun resolveActionBarSize(): Int {
-		val tv = android.util.TypedValue()
-		return if (theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-			android.util.TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
-		} else {
-			(resources.displayMetrics.density * 56f).toInt()
-		}
 	}
 
 	private fun showTitleDialog(title: String) {

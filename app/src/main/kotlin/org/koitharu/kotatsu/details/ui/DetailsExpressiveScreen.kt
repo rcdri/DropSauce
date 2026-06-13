@@ -200,6 +200,8 @@ fun DetailsExpressiveScreen(
 			if (manga == null) {
 				LoadingHero()
 			} else {
+				val favLabel = favouriteLabel ?: stringResource(R.string.add_to_favourites)
+				val isFavourite = favouriteCount > 0
 				HeroSection(
 					centered = centered,
 					manga = manga,
@@ -211,16 +213,23 @@ fun DetailsExpressiveScreen(
 					dynamicColorEnabled = dynamicColorEnabled,
 					isDark = isDark,
 					onAccentExtracted = onAccentExtracted,
+					favouriteLabel = favLabel,
+					isFavourite = isFavourite,
+					onFavouriteClick = { actions.onFavoriteClick(manga) },
 					actions = actions,
 				)
 
-				Spacer(Modifier.height(20.dp))
-				FavouriteButton(
-					label = favouriteLabel ?: stringResource(R.string.add_to_favourites),
-					isFavourite = favouriteCount > 0,
-					accent = accentColor,
-					onClick = { actions.onFavoriteClick(manga) },
-				)
+				// In the centered style the favourite button is a full-width action below the hero;
+				// in compact it lives in the info column beside the cover (added inside HeroSection).
+				if (centered) {
+					Spacer(Modifier.height(20.dp))
+					FavouriteButton(
+						label = favLabel,
+						isFavourite = isFavourite,
+						accent = accentColor,
+						onClick = { actions.onFavoriteClick(manga) },
+					)
+				}
 
 				Spacer(Modifier.height(8.dp))
 				ProgressCard(historyInfo = historyInfo, isLoading = isLoading, accent = accentColor)
@@ -320,8 +329,16 @@ private fun HeroSection(
 	dynamicColorEnabled: Boolean,
 	isDark: Boolean,
 	onAccentExtracted: (Int) -> Unit,
+	favouriteLabel: String,
+	isFavourite: Boolean,
+	onFavouriteClick: () -> Unit,
 	actions: DetailsExpressiveActions,
 ) {
+	val nsfwLabel = when (manga.contentRating) {
+		ContentRating.SUGGESTIVE -> "16+"
+		ContentRating.ADULT -> "18+"
+		else -> null
+	}
 	if (centered) {
 		Column(
 			modifier = Modifier
@@ -329,12 +346,13 @@ private fun HeroSection(
 				.padding(horizontal = SCREEN_PADDING),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			CoverCard(manga, coverUrl, imageLoader, COVER_WIDTH, COVER_HEIGHT, 24.dp, dynamicColorEnabled, isDark, onAccentExtracted, actions)
+			CoverCard(manga, coverUrl, imageLoader, COVER_WIDTH, COVER_HEIGHT, 24.dp, dynamicColorEnabled, isDark, onAccentExtracted, null, actions)
 			Spacer(Modifier.height(20.dp))
 			HeroTexts(centered = true, manga = manga, accent = accent, actions = actions)
 			Spacer(Modifier.height(16.dp))
 			StatPills(
 				centered = true,
+				showContentRating = true,
 				manga = manga,
 				details = details,
 				sourceTitle = sourceTitle,
@@ -349,19 +367,29 @@ private fun HeroSection(
 				.fillMaxWidth()
 				.padding(horizontal = SCREEN_PADDING),
 		) {
-			CoverCard(manga, coverUrl, imageLoader, COMPACT_COVER_WIDTH, COMPACT_COVER_HEIGHT, 20.dp, dynamicColorEnabled, isDark, onAccentExtracted, actions)
+			// Compact: the content-rating badge sits on the cover instead of as a pill.
+			CoverCard(manga, coverUrl, imageLoader, COMPACT_COVER_WIDTH, COMPACT_COVER_HEIGHT, 20.dp, dynamicColorEnabled, isDark, onAccentExtracted, nsfwLabel, actions)
 			Spacer(Modifier.width(16.dp))
 			Column(modifier = Modifier.weight(1f)) {
 				HeroTexts(centered = false, manga = manga, accent = accent, actions = actions)
 				Spacer(Modifier.height(12.dp))
 				StatPills(
 					centered = false,
+					showContentRating = false,
 					manga = manga,
 					details = details,
 					sourceTitle = sourceTitle,
 					accent = accent,
 					imageLoader = imageLoader,
 					onSourceClick = { actions.onSourceClick(manga) },
+				)
+				Spacer(Modifier.height(14.dp))
+				FavouriteButton(
+					label = favouriteLabel,
+					isFavourite = isFavourite,
+					accent = accent,
+					onClick = onFavouriteClick,
+					horizontalPadding = 0.dp,
 				)
 			}
 		}
@@ -379,6 +407,7 @@ private fun CoverCard(
 	dynamicColorEnabled: Boolean,
 	isDark: Boolean,
 	onAccentExtracted: (Int) -> Unit,
+	nsfwLabel: String?,
 	actions: DetailsExpressiveActions,
 ) {
 	val ctx = LocalContext.current
@@ -402,25 +431,44 @@ private fun CoverCard(
 				.mangaSourceExtra(manga.source)
 				.build()
 		}
-		AsyncImage(
-			model = coverRequest,
-			imageLoader = imageLoader,
-			contentDescription = null,
-			contentScale = ContentScale.Crop,
-			onSuccess = if (dynamicColorEnabled) {
-				{ state ->
-					val result = state.result
-					scope.launch(Dispatchers.Default) {
-						coverAccent(result, isDark)?.let(onAccentExtracted)
+		Box(modifier = Modifier.fillMaxSize()) {
+			AsyncImage(
+				model = coverRequest,
+				imageLoader = imageLoader,
+				contentDescription = null,
+				contentScale = ContentScale.Crop,
+				onSuccess = if (dynamicColorEnabled) {
+					{ state ->
+						val result = state.result
+						scope.launch(Dispatchers.Default) {
+							coverAccent(result, isDark)?.let(onAccentExtracted)
+						}
 					}
+				} else {
+					null
+				},
+				modifier = Modifier
+					.fillMaxSize()
+					.clickable { actions.onCoverClick(manga) },
+			)
+			if (nsfwLabel != null) {
+				Surface(
+					shape = RoundedCornerShape(8.dp),
+					color = Color.Black.copy(alpha = 0.6f),
+					modifier = Modifier
+						.align(Alignment.BottomEnd)
+						.padding(6.dp),
+				) {
+					Text(
+						text = nsfwLabel,
+						style = MaterialTheme.typography.labelSmall,
+						fontWeight = FontWeight.Bold,
+						color = Color.White,
+						modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+					)
 				}
-			} else {
-				null
-			},
-			modifier = Modifier
-				.fillMaxSize()
-				.clickable { actions.onCoverClick(manga) },
-		)
+			}
+		}
 	}
 }
 
@@ -474,6 +522,7 @@ private fun HeroTexts(
 @Composable
 private fun StatPills(
 	centered: Boolean,
+	showContentRating: Boolean,
 	manga: Manga,
 	details: MangaDetails?,
 	sourceTitle: String?,
@@ -504,10 +553,12 @@ private fun StatPills(
 		manga.state?.let { state ->
 			Pill(text = stringResource(state.titleResId), accent = accent)
 		}
-		when (manga.contentRating) {
-			ContentRating.SUGGESTIVE -> Pill(text = "16+", accent = accent)
-			ContentRating.ADULT -> Pill(text = "18+", accent = accent, highlighted = true)
-			else -> Unit
+		if (showContentRating) {
+			when (manga.contentRating) {
+				ContentRating.SUGGESTIVE -> Pill(text = "16+", accent = accent)
+				ContentRating.ADULT -> Pill(text = "18+", accent = accent, highlighted = true)
+				else -> Unit
+			}
 		}
 		val locale = details?.getLocale()
 		if (locale != null) {
@@ -584,15 +635,16 @@ private fun FavouriteButton(
 	isFavourite: Boolean,
 	accent: Color,
 	onClick: () -> Unit,
+	horizontalPadding: Dp = SCREEN_PADDING,
 ) {
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(22.dp),
+		shape = RoundedCornerShape(20.dp),
 		color = if (isFavourite) accent else accent.copy(alpha = 0.16f),
 		modifier = Modifier
 			.fillMaxWidth()
-			.padding(horizontal = SCREEN_PADDING)
-			.height(58.dp),
+			.padding(horizontal = horizontalPadding)
+			.height(52.dp),
 	) {
 		val contentColor = if (isFavourite) {
 			if (accent.luminanceIsLight()) Color.Black else Color.White
@@ -608,12 +660,12 @@ private fun FavouriteButton(
 				painter = painterResource(if (isFavourite) R.drawable.ic_heart else R.drawable.ic_heart_outline),
 				contentDescription = null,
 				tint = contentColor,
-				modifier = Modifier.size(22.dp),
+				modifier = Modifier.size(20.dp),
 			)
-			Spacer(Modifier.width(10.dp))
+			Spacer(Modifier.width(8.dp))
 			Text(
 				text = label,
-				style = MaterialTheme.typography.titleMedium,
+				style = MaterialTheme.typography.titleSmall,
 				fontWeight = FontWeight.SemiBold,
 				color = contentColor,
 				maxLines = 1,
@@ -1014,8 +1066,18 @@ private fun Color.luminanceIsLight(): Boolean =
  * tones it into a band that stays legible on the current theme. Returns an ARGB int or null.
  */
 private fun coverAccent(result: ImageResult, isDark: Boolean): Int? {
-	val bitmap = result.toBitmapOrNull() ?: return null
-	val palette = Palette.from(bitmap).maximumColorCount(24).generate()
+	val decoded = result.toBitmapOrNull() ?: return null
+	// Palette can't read HARDWARE bitmaps (coil may serve one from cache regardless of allowHardware),
+	// so copy to a software config first - otherwise Palette.from(...) throws and the accent is lost.
+	val bitmap = if (
+		android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+		decoded.config == android.graphics.Bitmap.Config.HARDWARE
+	) {
+		decoded.copy(android.graphics.Bitmap.Config.ARGB_8888, false) ?: return null
+	} else {
+		decoded
+	}
+	val palette = runCatching { Palette.from(bitmap).maximumColorCount(24).generate() }.getOrNull() ?: return null
 	val raw = palette.vibrantSwatch?.rgb
 		?: palette.lightVibrantSwatch?.rgb
 		?: palette.darkVibrantSwatch?.rgb
