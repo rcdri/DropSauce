@@ -69,6 +69,7 @@ import org.koitharu.kotatsu.reader.ui.config.ReaderConfigSheet
 import org.koitharu.kotatsu.reader.ui.pager.ReaderPage
 import org.koitharu.kotatsu.reader.ui.pager.ReaderUiState
 import org.koitharu.kotatsu.reader.ui.tapgrid.TapGridDispatcher
+import org.koitharu.kotatsu.reader.ui.translate.PageTranslation
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import androidx.appcompat.R as appcompatR
@@ -197,9 +198,11 @@ class ReaderActivity :
         addMenuProvider(
             ReaderMenuProvider(
                 onOpenMenu = ::openMenu,
+                onTranslate = viewModel::translateCurrentPage,
                 isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
             ),
         )
+        viewModel.onPageTranslated.observeEvent(this, ::onPageTranslated)
 
         observeWindowLayout()
 
@@ -448,6 +451,19 @@ class ReaderActivity :
         viewModel.saveCurrentState(readerManager.currentReader?.getCurrentState())
         val currentMode = readerManager.currentMode ?: return
         router.showReaderConfigSheet(currentMode)
+    }
+
+    private fun onPageTranslated(translation: PageTranslation) {
+        val message = if (translation.blocks.isEmpty()) {
+            getString(R.string.no_text_recognized)
+        } else {
+            translation.blocks.joinToString(separator = "\n\n") { it.translated }
+        }
+        buildAlertDialog(this, isCentered = false) {
+            setTitle(R.string.translate_page)
+            setMessage(message)
+            setPositiveButton(android.R.string.ok, null)
+        }.show()
     }
 
     override fun scrollBy(delta: Int, smooth: Boolean): Boolean {

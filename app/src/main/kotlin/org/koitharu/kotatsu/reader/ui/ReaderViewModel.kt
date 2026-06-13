@@ -66,6 +66,8 @@ import org.koitharu.kotatsu.reader.domain.ChaptersLoader
 import org.koitharu.kotatsu.reader.domain.DetectReaderModeUseCase
 import org.koitharu.kotatsu.reader.domain.PageLoader
 import org.koitharu.kotatsu.reader.ui.config.ReaderSettings
+import org.koitharu.kotatsu.reader.ui.translate.PageTranslation
+import org.koitharu.kotatsu.reader.ui.translate.PageTranslator
 import org.koitharu.kotatsu.reader.ui.pager.ReaderUiState
 import org.koitharu.kotatsu.scrobbling.discord.ui.DiscordRpc
 import org.koitharu.kotatsu.stats.domain.StatsCollector
@@ -83,6 +85,7 @@ class ReaderViewModel @Inject constructor(
     private val bookmarksRepository: BookmarksRepository,
     settings: AppSettings,
     private val pageLoader: PageLoader,
+    private val pageTranslator: PageTranslator,
     private val chaptersLoader: ChaptersLoader,
     private val appShortcutManager: AppShortcutManager,
     private val detailsLoadUseCase: DetailsLoadUseCase,
@@ -108,6 +111,7 @@ class ReaderViewModel @Inject constructor(
 
     private var loadingJob: Job? = null
     private var pageSaveJob: Job? = null
+    private var translateJob: Job? = null
     private var bookmarkJob: Job? = null
     private var stateChangeJob: Job? = null
 
@@ -117,6 +121,7 @@ class ReaderViewModel @Inject constructor(
 
     val readerMode = MutableStateFlow<ReaderMode?>(null)
     val onPageSaved = MutableEventFlow<Collection<Uri>>()
+    val onPageTranslated = MutableEventFlow<PageTranslation>()
     val onLoadingError = MutableEventFlow<Throwable>()
     val onShowToast = MutableEventFlow<Int>()
     val onAskNsfwIncognito = MutableEventFlow<Unit>()
@@ -282,6 +287,19 @@ class ReaderViewModel @Inject constructor(
             )
             val dest = pageSaveHelper.save(setOf(task))
             onPageSaved.call(dest)
+        }
+    }
+
+    fun translateCurrentPage() {
+        val prevJob = translateJob
+        translateJob = launchLoadingJob(Dispatchers.Default) {
+            prevJob?.cancelAndJoin()
+            val page = getCurrentPage() ?: run {
+                onShowToast.call(R.string.no_text_recognized)
+                return@launchLoadingJob
+            }
+            val uri = pageLoader.loadPage(page, force = false)
+            onPageTranslated.call(pageTranslator.translatePage(uri))
         }
     }
 

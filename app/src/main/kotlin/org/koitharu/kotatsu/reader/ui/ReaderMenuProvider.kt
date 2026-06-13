@@ -8,6 +8,7 @@ import org.koitharu.kotatsu.R
 
 class ReaderMenuProvider(
 	private val onOpenMenu: () -> Unit,
+	private val onTranslate: () -> Unit,
 	private val isLandscape: Boolean,
 ) : MenuProvider {
 
@@ -20,6 +21,11 @@ class ReaderMenuProvider(
 		return when (menuItem.itemId) {
 			R.id.action_reader_menu -> {
 				onOpenMenu()
+				true
+			}
+
+			R.id.action_translate -> {
+				onTranslate()
 				true
 			}
 

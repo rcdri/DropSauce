@@ -10,6 +10,12 @@
 		app:showAsAction="ifRoom" />
 
 	<item
+		android:id="@+id/action_translate"
+		android:icon="@drawable/ic_language"
+		android:title="@string/translate_page"
+		app:showAsAction="ifRoom" />
+
+	<item
 		android:id="@+id/action_info"
 		android:icon="@drawable/ic_info_outline"
 		android:title="@string/details"

@@ -189,6 +189,10 @@ dependencies {
 	implementation libs.kotlinx.coroutines.android
 	implementation libs.kotlinx.coroutines.guava
 
+	// On-device manga page translation (OCR + offline translation)
+	implementation libs.mlkit.text.japanese
+	implementation libs.mlkit.translate
+
 	implementation libs.androidx.appcompat
 	implementation libs.androidx.core
 	implementation libs.androidx.activity
