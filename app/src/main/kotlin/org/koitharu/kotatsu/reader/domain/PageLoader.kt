@@ -104,7 +104,13 @@ class PageLoader @Inject constructor(
 	private var repository: MangaRepository? = null
 	private val prefetchQueue = LinkedList<MangaPage>()
 	private val counter = AtomicInteger(0)
-	private var prefetchQueueLimit = PREFETCH_LIMIT_DEFAULT // TODO adaptive
+	private var prefetchQueueLimit = if (
+		context.ramAvailable >= FileSize.MEGABYTES.convert(PREFETCH_HIGH_RAM_MB, FileSize.BYTES)
+	) {
+		PREFETCH_LIMIT_HIGH
+	} else {
+		PREFETCH_LIMIT_DEFAULT
+	}
 	private val edgeDetector = EdgeDetector(context)
 
 	fun isPrefetchApplicable(): Boolean {
@@ -344,7 +350,9 @@ class PageLoader @Inject constructor(
 
 		private const val PROGRESS_UNDEFINED = -1f
 		private const val PREFETCH_LIMIT_DEFAULT = 6
+		private const val PREFETCH_LIMIT_HIGH = 10
 		private const val PREFETCH_MIN_RAM_MB = 80L
+		private const val PREFETCH_HIGH_RAM_MB = 256L
 
 		fun createPageRequest(
 			pageUrl: String,

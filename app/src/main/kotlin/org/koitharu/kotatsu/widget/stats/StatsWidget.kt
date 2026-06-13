@@ -20,6 +20,9 @@ import org.koitharu.kotatsu.widget.common.WidgetCoverLoader
 import org.koitharu.kotatsu.widget.common.WidgetIntents
 import org.koitharu.kotatsu.widget.common.runAsync
 import org.koitharu.kotatsu.widget.common.widgetEntryPoint
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class StatsWidget : AppWidgetProvider() {
@@ -138,6 +141,13 @@ class StatsWidget : AppWidgetProvider() {
 			R.id.widget_stats_weekday_saturday,
 			R.id.widget_stats_weekday_sunday,
 		)
+		// Use locale-aware single-letter day names instead of the hardcoded Latin letters in the
+		// layout, so non-Latin locales render correctly. dayIds is ordered Monday..Sunday.
+		val locale = Locale.getDefault()
+		val weekdays = DayOfWeek.values()
+		for (i in dayIds.indices) {
+			setTextViewText(dayIds[i], weekdays[i].getDisplayName(TextStyle.NARROW, locale))
+		}
 		val normalColor = ContextCompat.getColor(context, R.color.kotatsu_onSurface)
 		val activeColor = ContextCompat.getColor(context, R.color.kotatsu_onPrimaryContainer)
 		for (id in dayIds) {

@@ -22,6 +22,7 @@ import javax.inject.Singleton
 class MihonExtensionManager @Inject constructor(
 	@ApplicationContext private val context: Context,
 	private val loader: MihonExtensionLoader,
+	private val trust: MihonExtensionTrust,
 ) {
 
 	companion object {
@@ -71,6 +72,22 @@ class MihonExtensionManager @Inject constructor(
 	val failedExtensions: StateFlow<List<MihonLoadResult.Error>> = facade.failedExtensions
 	val isLoading: StateFlow<Boolean> = facade.isLoading
 	val isReady: StateFlow<Boolean> = facade.isReady
+
+	/** Package names of installed extensions blocked because their signature isn't trusted. */
+	val untrustedExtensions: StateFlow<List<String>> = facade.untrustedExtensions
+
+	/** Whether extension signature verification is enforced. Disabled by default. */
+	var isVerificationEnabled: Boolean
+		get() = trust.isVerificationEnabled
+		set(value) {
+			trust.isVerificationEnabled = value
+		}
+
+	/** Trust the signing certificate the given package is currently signed with. */
+	fun trustExtension(pkgName: String) = trust.trust(pkgName)
+
+	/** Revoke trust for a package; it will be blocked on the next load when verification is on. */
+	fun revokeExtensionTrust(pkgName: String) = trust.revoke(pkgName)
 
 	init {
 		activeInstance = this

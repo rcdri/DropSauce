@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.reader.ui.pager
 
 import android.content.ComponentCallbacks2
 import android.content.ComponentCallbacks2.TRIM_MEMORY_COMPLETE
+import android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW
 import android.content.Context
 import android.content.res.Configuration
 import android.view.View
@@ -116,6 +117,10 @@ abstract class BasePageHolder<B : ViewBinding>(
 	override fun onResume() {
 		super.onResume()
 		ssiv.applyDownSampling(isForeground = true)
+		// Restore the image if it was recycled under memory pressure while this page was off-screen.
+		if (ssiv.getState() == null && viewModel.state.value is PageState.Shown) {
+			reloadImage()
+		}
 		if (viewModel.state.value is PageState.Error && !viewModel.isLoading()) {
 			boundData?.let { viewModel.retry(it.toMangaPage(), isFromUser = false) }
 		}
@@ -142,7 +147,11 @@ abstract class BasePageHolder<B : ViewBinding>(
 	}
 
 	override fun onTrimMemory(level: Int) {
-		// TODO
+		// Free the decoded image of off-screen pages under memory pressure. The visible page is
+		// left intact; recycled images are restored in onResume when the page is shown again.
+		if (level >= TRIM_MEMORY_RUNNING_LOW && !isResumed()) {
+			ssiv.recycle()
+		}
 	}
 
 	override fun onConfigurationChanged(newConfig: Configuration) = Unit

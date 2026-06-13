@@ -148,6 +148,9 @@ class ExternalExtensionManagerRuntime<ResultT, SuccessT, ErrorT, SourceT, Wrappe
 	private val _isReady = MutableStateFlow(false)
 	val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
+	private val _untrustedExtensions = MutableStateFlow<List<String>>(emptyList())
+	val untrustedExtensions: StateFlow<List<String>> = _untrustedExtensions.asStateFlow()
+
 	private val sourceCache = mutableMapOf<Long, SourceT>()
 	private val wrappedSourceCache = mutableMapOf<Long, WrappedSourceT>()
 	@Volatile
@@ -181,6 +184,7 @@ class ExternalExtensionManagerRuntime<ResultT, SuccessT, ErrorT, SourceT, Wrappe
 			wrappedSourceCache.putAll(newWrappedSourceCache)
 			_installedExtensions.value = processed.successful
 			_failedExtensions.value = processed.failed
+			_untrustedExtensions.value = processed.untrustedPackages
 			_isReady.value = true
 		} finally {
 			_isLoading.value = false
@@ -227,6 +231,7 @@ class ExternalExtensionManagerFacade<ResultT, SuccessT, ErrorT, SourceT, Catalog
 	val failedExtensions: StateFlow<List<ErrorT>> = runtime.failedExtensions
 	val isLoading: StateFlow<Boolean> = runtime.isLoading
 	val isReady: StateFlow<Boolean> = runtime.isReady
+	val untrustedExtensions: StateFlow<List<String>> = runtime.untrustedExtensions
 
 	fun initialize() {
 		runtime.initialize(::loadExtensions)

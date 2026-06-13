@@ -80,10 +80,9 @@ class ProxyProvider @Inject constructor(
 					append(':')
 					append(settings.proxyPort)
 				}
-				if (settings.proxyType == Proxy.Type.SOCKS) {
-					System.setProperty("java.net.socks.username", settings.proxyLogin)
-					System.setProperty("java.net.socks.password", settings.proxyPassword)
-				}
+				// SOCKS credentials are supplied on demand through the default Authenticator
+				// (ProxyAuthenticator below) rather than process-global System properties, which
+				// are readable by any code in the process.
 				val proxyConfig = ProxyConfig.Builder()
 					.addProxyRule(url)
 					.build()

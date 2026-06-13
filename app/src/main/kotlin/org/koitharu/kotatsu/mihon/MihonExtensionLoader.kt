@@ -28,6 +28,7 @@ import javax.inject.Singleton
 class MihonExtensionLoader @Inject constructor(
 	@ApplicationContext private val applicationContext: Context,
 	private val injektBridge: Lazy<KotoInjektBridge>,
+	private val trust: MihonExtensionTrust,
 ) {
 
 	companion object {
@@ -163,6 +164,18 @@ class MihonExtensionLoader @Inject constructor(
 				pkgName = pkgInfo.packageName,
 				message = "Incompatible lib version: $libVersion",
 			)
+		}
+		if (trust.isVerificationEnabled) {
+			val hashes = MihonExtensionTrust.signatureHashes(context.packageManager, pkgInfo.packageName)
+			if (!trust.isTrusted(pkgInfo.packageName, hashes)) {
+				Log.w(TAG, "Skipping untrusted extension ${pkgInfo.packageName}")
+				return MihonLoadResult.Untrusted(
+					pkgName = pkgInfo.packageName,
+					appName = appInfo.loadLabel(context.packageManager).toString(),
+					versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo),
+					versionName = versionName,
+				)
+			}
 		}
 		val sourceClassNames = metaData.getString(METADATA_SOURCE_CLASS)
 			?: metaData.getString(METADATA_SOURCE_FACTORY)
