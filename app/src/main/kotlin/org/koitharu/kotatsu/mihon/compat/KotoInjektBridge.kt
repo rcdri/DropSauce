@@ -113,7 +113,12 @@ class KotoNetworkHelper(
 		addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
 
 		baseClient.interceptors.forEach { interceptor ->
-			if (interceptor.javaClass.simpleName != "GZipInterceptor") {
+			// Skip GZip (handled by OkHttp) and Kotatsu's CloudFlareInterceptor: the latter throws
+			// CloudFlareBlockedException on any 403/503 block page, which aborts extensions (e.g.
+			// Kagane) that deliberately request a Cloudflare-fronted page and ignore the result.
+			// Cloudflare handling for extensions is done by the dedicated interceptor below instead.
+			val name = interceptor.javaClass.simpleName
+			if (name != "GZipInterceptor" && name != "CloudFlareInterceptor") {
 				addInterceptor(interceptor)
 			}
 		}
@@ -127,12 +132,17 @@ class KotoNetworkHelper(
 			val response = chain.proceed(request)
 			val challengeUrl = request.toChallengeUrl()
 			when (CloudFlareHelper.checkResponseForProtection(response)) {
-				CloudFlareHelper.PROTECTION_BLOCKED -> response.closeThrowing(
-					CloudFlareBlockedException(
-						url = challengeUrl,
-						source = request.tag(MangaSource::class.java),
-					),
-				)
+				// Mihon only WebView-solves the CAPTCHA case ("not on geo block") and otherwise
+				// passes the response through. Several extensions (e.g. Kagane) deliberately fetch
+				// a Cloudflare-fronted page and ignore a block response; throwing here would abort
+				// their flow even though the request would succeed in Mihon. So pass it through.
+				CloudFlareHelper.PROTECTION_BLOCKED -> {
+					android.util.Log.d(
+						"MihonNetwork",
+						"Cloudflare block page passed through for ${request.url} (matching Mihon)",
+					)
+					response
+				}
 
 				CloudFlareHelper.PROTECTION_CAPTCHA -> {
 					val host = request.url.host.lowercase()
