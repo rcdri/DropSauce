@@ -29,7 +29,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.exceptions.resolve.ExceptionResolver
 import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.ui.util.ActionModeDelegate
-import org.koitharu.kotatsu.core.ui.util.applyTonalNavigationButtonStyle
+import org.koitharu.kotatsu.core.ui.util.applyTonalTopBarStyle
 import org.koitharu.kotatsu.core.util.ext.adjustPopupMenuIcons
 import org.koitharu.kotatsu.core.util.ext.isWebViewUnavailable
 import org.koitharu.kotatsu.core.util.ext.setOptionalIconsVisibleCompat
@@ -98,7 +98,7 @@ abstract class BaseActivity<B : ViewBinding> :
 		val toolbar = (binding.root.findViewById<View>(R.id.toolbar) as? Toolbar)
 		toolbar?.let {
 			setSupportActionBar(it)
-			it.applyTonalNavigationButtonStyle()
+			it.applyTonalTopBarStyle()
 		}
 	}
 
@@ -109,12 +109,12 @@ abstract class BaseActivity<B : ViewBinding> :
 				setHomeAsUpIndicator(appcompatR.drawable.abc_ic_clear_material)
 			}
 		}
-		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalNavigationButtonStyle()
+		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalTopBarStyle()
 	}
 
 	override fun onPostResume() {
 		super.onPostResume()
-		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalNavigationButtonStyle()
+		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalTopBarStyle()
 	}
 
 	override fun onSupportNavigateUp(): Boolean {

@@ -57,6 +57,8 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 				// Wrap the close "X" in a tonal circle to match the back buttons in the rest of the app.
 				findViewById<ImageView?>(androidx.appcompat.R.id.action_mode_close_button)
 					?.applyTonalIconButtonStyle()
+				// Group the selection actions into the same tonal pill used by the regular top bars.
+				applyTonalActionMenuStyle()
 			}
 		}
 	}

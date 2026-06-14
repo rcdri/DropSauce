@@ -16,4 +16,9 @@
 	<item name="nav_updated" type="id" />
 	<item name="nav_suggestions" type="id" />
 	<item name="nav_bookmarks" type="id" />
+	<!-- View tags used by the tonal top-bar action pill styler -->
+	<item name="tag_tonal_action_menu" type="id" />
+	<item name="tag_tonal_action_pill" type="id" />
+	<item name="tag_tonal_action_item" type="id" />
+	<item name="tag_tonal_action_icon" type="id" />
 </resources>
