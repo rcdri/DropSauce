@@ -74,8 +74,8 @@
                         <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_read_menu"
                     style="?materialSplitButtonIconFilledStyle"
-                    android:layout_width="@dimen/top_bar_navigation_button_size"
-                    android:layout_height="@dimen/top_bar_navigation_button_size"
+                    android:layout_width="@dimen/read_split_button_size"
+                    android:layout_height="@dimen/read_split_button_size"
                     android:contentDescription="@string/show_menu"
                     android:insetLeft="0dp"
                     android:insetRight="0dp"

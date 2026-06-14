@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- Landscape toolbars use the shorter actionBarSize (48dp), so the circular top-bar buttons are
+	     sized down a little to fit without being clipped while still matching each other. -->
+	<dimen name="top_bar_navigation_button_size">44dp</dimen>
+	<dimen name="top_bar_title_inset_with_navigation">76dp</dimen>
+</resources>
