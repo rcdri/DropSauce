@@ -90,6 +90,7 @@
     <string name="reader_settings">Reader settings</string>
     <string name="switch_pages">Switch pages</string>
     <string name="_continue">Continue</string>
+    <string name="continue_reading">Continue reading</string>
     <string name="error">Error</string>
     <string name="clear_thumbs_cache">Clear thumbnails cache</string>
     <string name="clear_search_history">Clear search history</string>

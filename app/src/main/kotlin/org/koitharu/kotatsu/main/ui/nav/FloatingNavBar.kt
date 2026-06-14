@@ -29,9 +29,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -90,38 +97,106 @@ fun FloatingNavBar(
 	onItemSelected: (Int) -> Unit,
 	onItemReselected: (Int) -> Unit,
 	modifier: Modifier = Modifier,
+	showContinue: Boolean = false,
+	onContinueClick: () -> Unit = {},
 ) {
 	if (items.isEmpty()) return
 	val cs = MaterialTheme.colorScheme
 	val barColor = Color(colors.container)
 
-	Surface(
-		modifier = modifier
-			.shadow(8.dp, RoundedCornerShape(50))
-			.wrapContentWidth(),
-		shape = RoundedCornerShape(50),
-		color = barColor,
-		contentColor = cs.onSurface,
+	Row(
+		modifier = modifier.wrapContentWidth(),
+		horizontalArrangement = Arrangement.spacedBy(8.dp),
+		verticalAlignment = Alignment.CenterVertically,
 	) {
-		Row(
+		Surface(
 			modifier = Modifier
-				.heightIn(min = 64.dp)
-				.padding(horizontal = 8.dp, vertical = 8.dp)
-				// Smoothly relayout siblings when one pill grows/shrinks horizontally.
-				.animateContentSize(animationSpec = FloatSpec_Size),
-			horizontalArrangement = Arrangement.spacedBy(4.dp),
-			verticalAlignment = Alignment.CenterVertically,
+				.shadow(8.dp, RoundedCornerShape(50))
+				.wrapContentWidth(),
+			shape = RoundedCornerShape(50),
+			color = barColor,
+			contentColor = cs.onSurface,
 		) {
-			items.forEach { item ->
-				FloatingNavItem(
-					item = item,
-					selected = item.id == selectedId,
-					showLabel = showLabels,
-					colors = colors,
-					onClick = {
-						if (item.id == selectedId) onItemReselected(item.id)
-						else onItemSelected(item.id)
-					},
+			Row(
+				modifier = Modifier
+					.heightIn(min = 64.dp)
+					.padding(horizontal = 8.dp, vertical = 8.dp)
+					// Smoothly relayout siblings when one pill grows/shrinks horizontally.
+					.animateContentSize(animationSpec = FloatSpec_Size),
+				horizontalArrangement = Arrangement.spacedBy(4.dp),
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				items.forEach { item ->
+					FloatingNavItem(
+						item = item,
+						selected = item.id == selectedId,
+						showLabel = showLabels,
+						colors = colors,
+						onClick = {
+							if (item.id == selectedId) onItemReselected(item.id)
+							else onItemSelected(item.id)
+						},
+					)
+				}
+			}
+		}
+		// A standalone, pill-coloured circular "continue reading" button living next to the
+		// floating bar (like the search FAB in Tomato). It animates in/out smoothly and slides
+		// along as the bar resizes, so it always feels part of the same floating toolbar.
+		AnimatedVisibility(
+			visible = showContinue,
+			enter = fadeIn(animationSpec = FloatSpec_Float) +
+				expandHorizontally(animationSpec = FloatSpec_Size, expandFrom = Alignment.Start),
+			exit = fadeOut(animationSpec = FloatSpec_Float) +
+				shrinkHorizontally(animationSpec = FloatSpec_Size, shrinkTowards = Alignment.Start),
+		) {
+			FloatingContinueButton(
+				colors = colors,
+				onClick = onContinueClick,
+			)
+		}
+	}
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FloatingContinueButton(
+	colors: FloatingNavBarColors,
+	onClick: () -> Unit,
+) {
+	val container by animateColorAsState(
+		targetValue = Color(colors.selectedContainer),
+		animationSpec = FloatSpec_Color,
+		label = "continueContainer",
+	)
+	val content by animateColorAsState(
+		targetValue = Color(colors.selectedContent),
+		animationSpec = FloatSpec_Color,
+		label = "continueContent",
+	)
+	val label = stringResource(R.string.continue_reading)
+	val tooltipState = rememberTooltipState()
+	TooltipBox(
+		positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+		tooltip = { PlainTooltip { Text(label) } },
+		state = tooltipState,
+	) {
+		Surface(
+			onClick = onClick,
+			shape = CircleShape,
+			color = container,
+			contentColor = content,
+			shadowElevation = 8.dp,
+			modifier = Modifier
+				.size(56.dp)
+				.semantics { contentDescription = label },
+		) {
+			Box(contentAlignment = Alignment.Center) {
+				Icon(
+					painter = painterResource(R.drawable.ic_read),
+					contentDescription = null,
+					tint = content,
+					modifier = Modifier.size(24.dp),
 				)
 			}
 		}
