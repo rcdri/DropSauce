@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.Gravity
 import android.view.ViewGroup
@@ -42,9 +43,13 @@ fun Toolbar.applyTonalNavigationButtonStyle() {
 
 /**
  * Groups the toolbar's action (menu) items into a single tonal pill that mirrors the circular
- * navigation button: the pill height matches the navigation button size, shares its colour, and
- * every item sits in its own circular tap target of the same size. The result is a neatly aligned
- * cluster of icons on the end side of the top bar.
+ * navigation button: the pill height matches the navigation button size, shares its colour, sits
+ * the same distance from the end edge as the navigation button does from the start edge, and every
+ * item gets its own centered circular tap target of exactly the navigation-button size.
+ *
+ * The item sizing is intentionally left to [ActionMenuView] (so every cell stays a uniform width
+ * and the items are evenly spaced); we only swap in a fixed-size, centered circular ripple so the
+ * highlight never stretches to the cell bounds.
  */
 fun Toolbar.applyTonalActionMenuStyle() {
 	post {
@@ -58,7 +63,7 @@ fun Toolbar.applyTonalActionMenuStyle() {
 		overflowIcon?.tintCompat(tint)
 
 		// While an action view is expanded (e.g. a SearchView or a Slider takes over the bar),
-		// leave the items at their natural size instead of squeezing them into circular targets.
+		// drop the pill so the action view keeps its natural layout.
 		val hasExpandedActionView = (0 until menu.size()).any { menu.getItem(it).isActionViewExpanded }
 		if (hasExpandedActionView) {
 			menuView.background = null
@@ -67,9 +72,10 @@ fun Toolbar.applyTonalActionMenuStyle() {
 
 		val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
 		val endMargin = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_start)
-		val iconSize = (24f * resources.displayMetrics.density).toInt()
-		val padding = ((size - iconSize) / 2).coerceAtLeast(0)
 
+		// Pin the pill the same distance from the end edge as the navigation button is from the
+		// start edge: cancel the toolbar's own end inset and apply the margin ourselves.
+		contentInsetEndWithActions = 0
 		menuView.background = context.createTonalMenuPillBackground(size)
 		menuView.updateLayoutParams<Toolbar.LayoutParams> {
 			height = size
@@ -77,21 +83,10 @@ fun Toolbar.applyTonalActionMenuStyle() {
 			marginEnd = endMargin
 		}
 		menuView.children.forEach { child ->
-			// Only the regular action buttons and the overflow button become circular tap targets;
+			// Only the regular action buttons and the overflow button get the circular tap target;
 			// custom action views keep their own layout.
 			if (child is ActionMenuItemView || child.javaClass.simpleName == "OverflowMenuButton") {
-				child.minimumWidth = 0
-				child.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-					width = size
-					height = size
-					marginStart = 0
-					marginEnd = 0
-				}
-				child.setPadding(padding, padding, padding, padding)
-				child.background = context.createTonalMenuItemBackground()
-				if (child is ImageView) {
-					child.scaleType = ImageView.ScaleType.FIT_CENTER
-				}
+				child.background = context.createCenteredCircleRipple(size)
 			}
 		}
 	}
@@ -142,18 +137,26 @@ private fun Context.createTonalNavigationBackground(): Drawable {
 }
 
 /**
- * Transparent base with a circular ripple sized to the navigation button. The pill behind the
- * items provides the surface colour, so each item only needs to contribute its own circular
- * highlight when pressed.
+ * Transparent base with a fixed-size circular ripple centered in the host view. The pill behind the
+ * items provides the surface colour; each item only contributes its own circular highlight when
+ * pressed. [LayerDrawable.setLayerGravity]/[LayerDrawable.setLayerSize] keep the circle centered and
+ * exactly [sizePx] wide regardless of how wide [ActionMenuView] makes the cell.
  */
-private fun Context.createTonalMenuItemBackground(): Drawable {
-	val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
-	val mask = createCircleDrawable(0xFFFFFFFF.toInt(), size)
+private fun Context.createCenteredCircleRipple(sizePx: Int): Drawable {
+	val mask = centeredCircleDrawable(0xFFFFFFFF.toInt(), sizePx)
 	return RippleDrawable(
 		ColorStateList.valueOf(getThemeColor(android.R.attr.colorControlHighlight)),
 		null,
 		mask,
 	)
+}
+
+private fun centeredCircleDrawable(color: Int, sizePx: Int): Drawable {
+	val circle = createCircleDrawable(color, sizePx)
+	return LayerDrawable(arrayOf(circle)).apply {
+		setLayerGravity(0, Gravity.CENTER)
+		setLayerSize(0, sizePx, sizePx)
+	}
 }
 
 private fun Context.createTonalMenuPillBackground(sizePx: Int) = GradientDrawable().apply {
