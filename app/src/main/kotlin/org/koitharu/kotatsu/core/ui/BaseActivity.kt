@@ -29,6 +29,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.exceptions.resolve.ExceptionResolver
 import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.ui.util.ActionModeDelegate
+import org.koitharu.kotatsu.core.ui.util.applyTonalActionMenuStyle
 import org.koitharu.kotatsu.core.ui.util.applyTonalNavigationButtonStyle
 import org.koitharu.kotatsu.core.util.ext.adjustPopupMenuIcons
 import org.koitharu.kotatsu.core.util.ext.isWebViewUnavailable
@@ -99,6 +100,7 @@ abstract class BaseActivity<B : ViewBinding> :
 		toolbar?.let {
 			setSupportActionBar(it)
 			it.applyTonalNavigationButtonStyle()
+			it.applyTonalActionMenuStyle()
 		}
 	}
 
@@ -114,7 +116,10 @@ abstract class BaseActivity<B : ViewBinding> :
 
 	override fun onPostResume() {
 		super.onPostResume()
-		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalNavigationButtonStyle()
+		(findViewById<View>(R.id.toolbar) as? Toolbar)?.let {
+			it.applyTonalNavigationButtonStyle()
+			it.applyTonalActionMenuStyle()
+		}
 	}
 
 	override fun onSupportNavigateUp(): Boolean {
@@ -155,7 +160,9 @@ abstract class BaseActivity<B : ViewBinding> :
 				}
 			},
 		)
-		return super.onPreparePanel(featureId, view, menu)
+		val result = super.onPreparePanel(featureId, view, menu)
+		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalActionMenuStyle()
+		return result
 	}
 
 	private fun MenuItem.requiresActionButtonCompat(): Boolean {
