@@ -43,6 +43,8 @@ class FloatingBottomNavigationView @JvmOverloads constructor(
 	private val selectedIdState = MutableStateFlow(0)
 	private val labeledState = MutableStateFlow(true)
 	private val navColorsState = MutableStateFlow(readLegacyNavColors())
+	private val continueVisibleState = MutableStateFlow(false)
+	private var continueClickListener: (() -> Unit)? = null
 	private val sourceItems = mutableListOf<NavItem>()
 	private val hiddenIds = mutableSetOf<Int>()
 	private val badgeCounts = mutableMapOf<Int, Int>()
@@ -60,6 +62,7 @@ class FloatingBottomNavigationView @JvmOverloads constructor(
 				val selectedId by selectedIdState.collectAsState()
 				val labeled by labeledState.collectAsState()
 				val navColors by navColorsState.collectAsState()
+				val showContinue by continueVisibleState.collectAsState()
 				Box(
 					modifier = Modifier
 						.fillMaxWidth()
@@ -77,6 +80,8 @@ class FloatingBottomNavigationView @JvmOverloads constructor(
 							reselectedListener?.invoke(menuItem)
 						},
 						modifier = Modifier.wrapContentWidth(),
+						showContinue = showContinue,
+						onContinueClick = { continueClickListener?.invoke() },
 					)
 				}
 			}
@@ -133,6 +138,18 @@ class FloatingBottomNavigationView @JvmOverloads constructor(
 
 	fun setComposeLabeled(value: Boolean) {
 		labeledState.value = value
+	}
+
+	/**
+	 * Toggle the standalone circular "continue reading" button rendered next to the floating bar.
+	 * Has no effect in legacy navigation mode, where the Compose layer is hidden entirely.
+	 */
+	fun setContinueVisible(value: Boolean) {
+		continueVisibleState.value = value
+	}
+
+	fun setOnContinueClickListener(listener: (() -> Unit)?) {
+		continueClickListener = listener
 	}
 
 	fun setUseLegacyNavigation(value: Boolean) {

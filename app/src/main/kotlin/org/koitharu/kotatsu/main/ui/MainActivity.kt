@@ -139,6 +139,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 
 		viewBinding.fab?.setOnClickListener(this)
 		viewBinding.navRail?.headerView?.findViewById<View>(R.id.railFab)?.setOnClickListener(this)
+		viewBinding.bottomNav?.setOnContinueClickListener { viewModel.openLastReader() }
 		viewBinding.buttonOverflow.setOnClickListener(this::showMainOverflowMenu)
 		viewBinding.buttonSettings.setOnClickListener {
 			router.openSettings()
@@ -184,6 +185,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		viewModel.onError.observeEvent(this, SnackbarErrorObserver(viewBinding.container, null))
 		viewModel.isLoading.observe(this, this::onLoadingStateChanged)
 		viewModel.isResumeEnabled.observe(this, this::onResumeEnabledChanged)
+		settings.observe(AppSettings.KEY_NAV_LEGACY).observe(this) { adjustFabVisibility() }
 		viewModel.feedCounter.observe(this, ::onFeedCounterChanged)
 		viewModel.appUpdate.observe(this) { update ->
 			viewBinding.badgeSettingsUpdate.visibility = if (update != null) View.VISIBLE else View.GONE
@@ -425,16 +427,24 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		} else {
 			navigationDelegate.primaryFragment
 		}
+		// When the modern floating bar is shown, the "continue reading" action lives on it as a
+		// standalone circular button (handled below), so it must never appear as a FAB. In legacy
+		// navigation mode — or on the tablet nav rail, which has no floating bar — it keeps the old
+		// behaviour of a FAB shown only inside the history tab.
+		val useFloatingContinue = viewBinding.bottomNav != null && !settings.isLegacyNavigationBar
 		val fabOwner = fragment as? MainFabOwner
 		if (fabOwner != null && !actionModeDelegate.isActionModeStarted && !isSearchOpened) {
 			showMainFab("owner:${fragment::class.java.name}") { fab ->
 				configureOwnerFab(fab, fabOwner)
 			}
-		} else if (isResumeEnabled && !actionModeDelegate.isActionModeStarted && !isSearchOpened && fragment is HistoryListFragment) {
+		} else if (!useFloatingContinue && isResumeEnabled && !actionModeDelegate.isActionModeStarted &&
+			!isSearchOpened && fragment is HistoryListFragment
+		) {
 			showMainFab("continue", ::configureContinueFab)
 		} else {
 			hideMainFab()
 		}
+		viewBinding.bottomNav?.setContinueVisible(useFloatingContinue && isResumeEnabled)
 	}
 
 	private fun showMainFab(
