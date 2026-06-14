@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<item name="toolbar" type="id" />
+	<item name="top_bar_actions_pill" type="id" />
 	<item name="container" type="id" />
 	<item name="action_tracker" type="id" />
 	<item name="fast_scroller" type="id" />
