@@ -343,7 +343,7 @@ private fun AppearanceScreen(
 						subtitle = stringResource(R.string.haptic_feedback_summary),
 						checked = hapticFeedback,
 						onCheckedChange = { hapticFeedback = it },
-						icon = R.drawable.ic_tap,
+						icon = R.drawable.ic_haptic,
 
 						shape = pos.shape,
 					)

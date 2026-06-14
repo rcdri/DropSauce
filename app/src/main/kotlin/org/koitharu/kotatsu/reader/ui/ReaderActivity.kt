@@ -28,6 +28,7 @@ import androidx.transition.TransitionSet
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.R as materialR
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +53,7 @@ import org.koitharu.kotatsu.core.ui.dialog.setCheckbox
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
 import org.koitharu.kotatsu.core.ui.widgets.ZoomControl
 import org.koitharu.kotatsu.core.util.IdlingDetector
+import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.getThemeDimensionPixelOffset
 import org.koitharu.kotatsu.core.util.ext.hasGlobalPoint
 import org.koitharu.kotatsu.core.util.ext.isAnimationsEnabled
@@ -123,6 +125,7 @@ class ReaderActivity :
         setContentView(ActivityReaderBinding.inflate(layoutInflater))
         readerManager = ReaderManager(supportFragmentManager, viewBinding.container, settings)
         setDisplayHomeAsUp(isEnabled = true, showUpAsClose = false)
+        applyTranslucentTopBar()
         touchHelper = TapGridDispatcher(viewBinding.root, this)
         scrollTimer = scrollTimerFactory.create(resources, this, this)
         pageSaveHelper = pageSaveHelperFactory.create(this)
@@ -378,6 +381,14 @@ class ReaderActivity :
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+    }
+
+    // Give the reader's top bar a translucent fill so a sliver of the page reads through it,
+    // keeping the reading surface feeling immersive while the bar is shown. The navigation /
+    // action buttons keep their own opaque tonal pills, so titles and icons stay legible.
+    private fun applyTranslucentTopBar() {
+        viewBinding.appbarTop.setBackgroundColor(getThemeColor(materialR.attr.colorSurface, 0.85f))
+        viewBinding.toolbar.background = null
     }
 
     private fun setUiIsVisible(isUiVisible: Boolean) {
