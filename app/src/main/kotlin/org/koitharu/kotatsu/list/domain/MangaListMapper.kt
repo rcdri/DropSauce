@@ -8,6 +8,9 @@ import androidx.collection.MutableScatterSet
 import androidx.collection.ScatterSet
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.parser.MangaDataRepository
 import org.koitharu.kotatsu.core.prefs.AppSettings
@@ -62,9 +65,17 @@ class MangaListMapper @Inject constructor(
 	) {
 		val options = getOptions(flags)
 		val overrides = dataRepository.getOverrides()
-		manga.mapTo(destination) {
-			toListModelImpl(it, mode, options, overrides[it.id])
+		// Mapping a single item issues several independent Room reads (reading progress,
+		// favourite flag, downloaded flag, new-chapters counter). Done sequentially this is an
+		// N+1 pattern — N items × up to 4 queries serialized — which dominates the load time of
+		// large libraries (e.g. opening Favourites/History with hundreds of entries). Mapping the
+		// items concurrently lets those reads overlap on the database executor instead.
+		val models = coroutineScope {
+			manga.map { item ->
+				async { toListModelImpl(item, mode, options, overrides[item.id]) }
+			}.awaitAll()
 		}
+		destination.addAll(models)
 	}
 
 	suspend fun toListModel(
@@ -117,7 +128,9 @@ class MangaListMapper @Inject constructor(
 		progress = getProgress(manga.id, options),
 		isFavorite = isFavorite(manga.id, options),
 		isSaved = isSaved(manga.id, options),
-		tags = mapTags(manga.tags),
+		// Join authors/tags once here (off the main thread) instead of on every bind while scrolling
+		authorsText = manga.authors.joinToString(", "),
+		tagsText = manga.tags.joinToString(", ") { it.title },
 	)
 
 	private suspend fun toGridModel(

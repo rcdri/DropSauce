@@ -1,7 +1,6 @@
 package org.koitharu.kotatsu.list.ui.model
 
 import org.koitharu.kotatsu.core.ui.model.MangaOverride
-import org.koitharu.kotatsu.core.ui.widgets.ChipsView
 import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.list.ui.ListModelDiffCallback.Companion.PAYLOAD_ANYTHING_CHANGED
 import org.koitharu.kotatsu.list.ui.ListModelDiffCallback.Companion.PAYLOAD_PROGRESS_CHANGED
@@ -15,7 +14,10 @@ data class MangaDetailedListModel(
 	val progress: ReadingProgress?,
 	val isFavorite: Boolean,
 	val isSaved: Boolean,
-	val tags: List<ChipsView.ChipModel>,
+	// Precomputed display strings (built in MangaListMapper off the main thread) so the adapter
+	// doesn't re-join authors/tags into strings on every onBindViewHolder call while scrolling.
+	val authorsText: String,
+	val tagsText: String,
 ) : MangaListModel() {
 
 	override fun getChangePayload(previousState: ListModel): Any? = when {

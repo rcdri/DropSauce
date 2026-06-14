@@ -21,7 +21,7 @@ fun mangaListDetailedItemAD(
 
 	bind { payloads ->
 		binding.textViewTitle.text = item.title
-		binding.textViewAuthor.textAndVisible = item.manga.authors.joinToString(", ")
+		binding.textViewAuthor.textAndVisible = item.authorsText
 		binding.progressView.setProgress(
 			value = item.progress,
 			animate = ListModelDiffCallback.PAYLOAD_PROGRESS_CHANGED in payloads,
@@ -33,7 +33,7 @@ fun mangaListDetailedItemAD(
 			isVisible = iconsCount > 0
 		}
 		binding.imageViewCover.setImageAsync(item.coverUrl, item.manga)
-		binding.textViewTags.text = item.tags.joinToString(separator = ", ") { it.title ?: "" }
+		binding.textViewTags.text = item.tagsText
 		binding.badge.number = item.counter
 		binding.badge.isVisible = item.counter > 0
 	}
