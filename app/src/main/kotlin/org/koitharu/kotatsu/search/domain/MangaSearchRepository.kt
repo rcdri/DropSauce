@@ -16,6 +16,7 @@ import org.koitharu.kotatsu.core.db.entity.toMangaTag
 import org.koitharu.kotatsu.core.db.entity.toMangaTagsList
 import org.koitharu.kotatsu.core.model.getTitle
 import org.koitharu.kotatsu.core.prefs.AppSettings
+import org.koitharu.kotatsu.core.util.ext.sortedByCached
 import org.koitharu.kotatsu.explore.data.MangaSourcesRepository
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaSource
@@ -42,7 +43,8 @@ class MangaSearchRepository @Inject constructor(
 		if (settings.isNsfwContentDisabled) it.filterNot { x -> x.manga.isNsfw } else it
 	}.map {
 		it.toManga()
-	}.sortedBy { x ->
+	}.sortedByCached { x ->
+		// Compute the Levenshtein distance once per item instead of on every comparison
 		x.title.levenshteinDistance(query)
 	}
 

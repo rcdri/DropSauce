@@ -20,6 +20,7 @@ import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode
 import org.koitharu.kotatsu.core.ui.util.ReversibleHandle
 import org.koitharu.kotatsu.core.util.ext.mapItems
+import org.koitharu.kotatsu.core.util.ext.sortedByCached
 import org.koitharu.kotatsu.history.domain.model.MangaWithHistory
 import org.koitharu.kotatsu.list.domain.ListFilterOption
 import org.koitharu.kotatsu.list.domain.ListSortOrder
@@ -57,7 +58,8 @@ class HistoryRepository @Inject constructor(
 		val q = "%$query%"
 		val entities = when (kind) {
 			SearchKind.SIMPLE,
-			SearchKind.TITLE -> dao.searchByTitle(q, limit).sortedBy { it.manga.title.levenshteinDistance(query) }
+			// Cache the Levenshtein distance per item; sortedBy would recompute it on every comparison
+			SearchKind.TITLE -> dao.searchByTitle(q, limit).sortedByCached { it.manga.title.levenshteinDistance(query) }
 
 			SearchKind.AUTHOR -> dao.searchByAuthor(q, limit)
 			SearchKind.TAG -> dao.searchByTag(q, limit)

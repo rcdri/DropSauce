@@ -53,6 +53,20 @@ inline fun <reified E : Enum<E>> Collection<E>.toEnumSet(): EnumSet<E> = if (isE
 
 fun <E : Enum<E>> Collection<E>.sortedByOrdinal() = sortedBy { it.ordinal }
 
+/**
+ * Like [sortedBy], but evaluates [selector] exactly once per element.
+ *
+ * [sortedBy] is backed by [compareBy], which re-invokes the selector on every pairwise
+ * comparison — O(n·log n) calls in total. When the sort key is expensive to derive (e.g. a
+ * Levenshtein distance computed against a search query), that redundant work dominates the sort.
+ * Caching each key up front brings the selector invocations down to O(n) at the cost of a single
+ * temporary list of pairs, which is negligible for the small result sets this is used with.
+ */
+inline fun <T, R : Comparable<R>> Iterable<T>.sortedByCached(selector: (T) -> R): List<T> =
+	map { it to selector(it) }
+		.sortedBy { it.second }
+		.map { it.first }
+
 fun <T> Iterable<T>.sortedWithSafe(comparator: Comparator<in T>): List<T> = try {
 	sortedWith(comparator)
 } catch (e: IllegalArgumentException) {

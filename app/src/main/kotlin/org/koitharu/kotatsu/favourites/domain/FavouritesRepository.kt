@@ -18,6 +18,7 @@ import org.koitharu.kotatsu.core.model.FavouriteCategory
 import org.koitharu.kotatsu.core.model.toMangaSources
 import org.koitharu.kotatsu.core.ui.util.ReversibleHandle
 import org.koitharu.kotatsu.core.util.ext.mapItems
+import org.koitharu.kotatsu.core.util.ext.sortedByCached
 import org.koitharu.kotatsu.favourites.data.FavouriteCategoryEntity
 import org.koitharu.kotatsu.favourites.data.FavouriteEntity
 import org.koitharu.kotatsu.favourites.data.toFavouriteCategory
@@ -52,7 +53,8 @@ class FavouritesRepository @Inject constructor(
 		val q = "%$query%"
 		val entities = when (kind) {
 			SearchKind.SIMPLE,
-			SearchKind.TITLE -> dao.searchByTitle(q, limit).sortedBy { it.manga.title.levenshteinDistance(query) }
+			// Cache the Levenshtein distance per item; sortedBy would recompute it on every comparison
+			SearchKind.TITLE -> dao.searchByTitle(q, limit).sortedByCached { it.manga.title.levenshteinDistance(query) }
 
 			SearchKind.AUTHOR -> dao.searchByAuthor(q, limit)
 			SearchKind.TAG -> dao.searchByTag(q, limit)
