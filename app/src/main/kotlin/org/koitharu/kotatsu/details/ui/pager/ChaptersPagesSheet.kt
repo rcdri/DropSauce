@@ -36,6 +36,7 @@ import org.koitharu.kotatsu.core.ui.sheet.AdaptiveSheetCallback
 import org.koitharu.kotatsu.core.ui.sheet.BaseAdaptiveSheet
 import org.koitharu.kotatsu.core.ui.util.ActionModeListener
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
+import org.koitharu.kotatsu.core.ui.util.applyTonalActionMenuStyle
 import org.koitharu.kotatsu.core.ui.util.RecyclerViewOwner
 import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.util.ext.doOnPageChanged
@@ -115,6 +116,7 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		val menuProvider = ChapterPagesMenuProvider(viewModel, this, binding.pager, settings)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, menuProvider)
 		binding.toolbar.addMenuProvider(menuProvider)
+		binding.toolbar.applyTonalActionMenuStyle()
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, searchBackCallback)
 		setupSearch(binding)
 		updateSearchVisibility()
@@ -150,6 +152,7 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		}
 		val isActionModeStarted = actionModeDelegate?.isActionModeStarted == true
 		binding.toolbar.menuView?.isVisible = newState == STATE_EXPANDED && !isActionModeStarted
+		binding.toolbar.applyTonalActionMenuStyle()
 		if (settings.detailsUiMode == DetailsUiMode.CLASSIC) {
 			binding.splitButtonRead.isVisible = false
 		} else {

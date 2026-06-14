@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.graphics.drawable.DrawableCompat
@@ -48,11 +49,26 @@ fun Toolbar.applyTonalNavigationButtonStyle() {
 fun Toolbar.applyTonalActionMenuStyle() {
 	post {
 		val menuView = children.filterIsInstance<ActionMenuView>().firstOrNull() ?: return@post
+		val menu = menu
+		val tint = context.getThemeColor(materialR.attr.colorOnSurfaceVariant)
+		// Always tint the action and overflow icons to match the navigation button.
+		for (i in 0 until menu.size()) {
+			menu.getItem(i).icon?.tintCompat(tint)
+		}
+		overflowIcon?.tintCompat(tint)
+
+		// While an action view is expanded (e.g. a SearchView or a Slider takes over the bar),
+		// leave the items at their natural size instead of squeezing them into circular targets.
+		val hasExpandedActionView = (0 until menu.size()).any { menu.getItem(it).isActionViewExpanded }
+		if (hasExpandedActionView) {
+			menuView.background = null
+			return@post
+		}
+
 		val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
 		val endMargin = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_start)
 		val iconSize = (24f * resources.displayMetrics.density).toInt()
 		val padding = ((size - iconSize) / 2).coerceAtLeast(0)
-		val tint = context.getThemeColor(materialR.attr.colorOnSurfaceVariant)
 
 		menuView.background = context.createTonalMenuPillBackground(size)
 		menuView.updateLayoutParams<Toolbar.LayoutParams> {
@@ -61,25 +77,23 @@ fun Toolbar.applyTonalActionMenuStyle() {
 			marginEnd = endMargin
 		}
 		menuView.children.forEach { child ->
-			child.minimumWidth = 0
-			child.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-				width = size
-				height = size
-				marginStart = 0
-				marginEnd = 0
-			}
-			child.setPadding(padding, padding, padding, padding)
-			child.background = context.createTonalMenuItemBackground()
-			if (child is ImageView) {
-				child.scaleType = ImageView.ScaleType.FIT_CENTER
+			// Only the regular action buttons and the overflow button become circular tap targets;
+			// custom action views keep their own layout.
+			if (child is ActionMenuItemView || child.javaClass.simpleName == "OverflowMenuButton") {
+				child.minimumWidth = 0
+				child.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+					width = size
+					height = size
+					marginStart = 0
+					marginEnd = 0
+				}
+				child.setPadding(padding, padding, padding, padding)
+				child.background = context.createTonalMenuItemBackground()
+				if (child is ImageView) {
+					child.scaleType = ImageView.ScaleType.FIT_CENTER
+				}
 			}
 		}
-		// Tint the action and overflow icons to match the navigation button.
-		val menu = menu
-		for (i in 0 until menu.size()) {
-			menu.getItem(i).icon?.tintCompat(tint)
-		}
-		overflowIcon?.tintCompat(tint)
 	}
 }
 

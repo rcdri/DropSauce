@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.getTitle
+import org.koitharu.kotatsu.core.ui.util.applyTonalNavigationButtonStyle
 import org.koitharu.kotatsu.core.util.ext.enqueueWith
 import org.koitharu.kotatsu.core.util.ext.mangaExtra
 import org.koitharu.kotatsu.parsers.model.Manga
@@ -63,6 +64,7 @@ class FavoritesWidgetConfigActivity : AppCompatActivity() {
 		setSupportActionBar(toolbar)
 		supportActionBar?.setDisplayHomeAsUpEnabled(true)
 		toolbar.setNavigationOnClickListener { finish() }
+		toolbar.applyTonalNavigationButtonStyle()
 		toolbar.setTitle(R.string.widget_favorites_config_title)
 
 		val empty = findViewById<TextView>(R.id.text_empty)
