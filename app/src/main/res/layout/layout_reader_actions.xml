@@ -17,7 +17,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_prev"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -43,7 +43,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_next"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -57,7 +57,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_save"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -71,7 +71,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_timer"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -85,7 +85,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_screen_rotation"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -99,7 +99,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_bookmark"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -113,7 +113,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_pages_thumbs"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
@@ -127,7 +127,7 @@
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/button_options"
-			style="?materialIconButtonStyle"
+			style="@style/Widget.Kotatsu.ReaderFloatingToolbar.IconButton"
 			android:layout_width="48dp"
 			android:layout_height="48dp"
 			android:layout_gravity="center"
