@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.core.ui.util
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.Gravity
@@ -13,82 +14,88 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import androidx.core.view.doOnPreDraw
-import androidx.core.view.updateLayoutParams
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import com.google.android.material.R as materialR
+import kotlin.math.roundToInt
 
 /**
- * Applies the app's unified top-bar treatment to a [Toolbar]: a circular tonal navigation
- * (back/close) button on the start side and a tonal "pill" grouping the action icons on the end
- * side. Both share the same height, fill colour and icon tint so the bar reads as a single,
- * consistent design language regardless of which screen it belongs to.
+ * The app's unified top-bar treatment, applied to every [Toolbar] (and the contextual action-mode
+ * bar). It enforces a single design language for the bar's clickable icons:
+ *
+ *  - A circular tonal **navigation button** (back / close) pinned to the start edge.
+ *  - A tonal **pill** on the end edge that groups the action icons. Each action sits in its own
+ *    square cell whose width equals the navigation button's diameter; the cells abut one another
+ *    so their circular ripples are tangent, and the shared rounded-rectangle fill turns the row
+ *    into a pill. With a single action the cell + pill collapse into a circle identical to the
+ *    navigation button.
+ *
+ * Every icon — back, close, each action, the overflow "more" button — is rendered identically:
+ * forced to [TonalBarMetrics.iconSize], centered on both axes inside its [TonalBarMetrics.cellSize]
+ * cell with a centered circular ripple, and tinted with `colorOnSurfaceVariant`. The pill's end
+ * inset mirrors the navigation button's start margin, so the bar is symmetric edge-to-edge.
+ *
+ * Menus inflate (and re-bind) asynchronously, so the styling re-applies on every layout pass. It is
+ * idempotent — it only writes a property when the current value differs — so it converges without
+ * triggering relayout loops.
  */
 fun Toolbar.applyTonalTopBarStyle() {
 	applyTonalNavigationButtonStyle()
 	applyTonalActionMenuStyle()
 }
 
+/** Resolved, screen-density-correct measurements shared by every part of the treatment. */
+private class TonalBarMetrics(context: Context) {
+	val cellSize = context.dimen(R.dimen.top_bar_navigation_button_size)
+	val iconSize = context.dimen(R.dimen.top_bar_action_icon_size)
+	val edgeMargin = context.dimen(R.dimen.top_bar_navigation_button_margin_start)
+
+	/** Symmetric padding that centers an [iconSize] icon inside a [cellSize] cell. */
+	val iconInset = ((cellSize - iconSize) / 2).coerceAtLeast(0)
+	val iconTint: ColorStateList = ColorStateList.valueOf(
+		context.getThemeColor(materialR.attr.colorOnSurfaceVariant),
+	)
+}
+
 fun Toolbar.applyTonalNavigationButtonStyle() {
-	// Set the title inset synchronously — it doesn't need the navigation button view to exist
+	// Set the title inset synchronously — it doesn't depend on the navigation button view existing
 	// yet — so the title never visibly slides when the toolbar is first laid out. This is what
 	// caused the back-arrow + title to stutter on an in-place activity recreate (e.g. after a
 	// colour-scheme change), where there is no enter transition to mask a post-layout reflow.
 	contentInsetStartWithNavigation = resources.getDimensionPixelSize(R.dimen.top_bar_title_inset_with_navigation)
-	// The navigation button is created lazily once a navigation icon is set, so style it just
-	// before the next draw rather than via post() (which runs after the first frame and makes
-	// the styling visibly pop in).
+	// The navigation button is created lazily once a navigation icon is set, so style it just before
+	// the next draw rather than via post() (which runs after the first frame and pops in visibly).
 	doOnPreDraw {
 		val navigationButton = findNavigationButton() ?: return@doOnPreDraw
-		val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
-		val startMargin = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_start)
-
-		navigationButton.updateLayoutParams<Toolbar.LayoutParams> {
-			width = size
-			height = size
-			gravity = Gravity.START or Gravity.CENTER_VERTICAL
-			marginStart = startMargin
-		}
-		navigationButton.background = context.createTonalNavigationBackground()
-		navigationButton.imageTintList = ColorStateList.valueOf(
-			context.getThemeColor(materialR.attr.colorOnSurfaceVariant),
+		val metrics = TonalBarMetrics(context)
+		navigationButton.updateLayoutSize(
+			width = metrics.cellSize,
+			height = metrics.cellSize,
+			marginStart = metrics.edgeMargin,
+			gravity = Gravity.START or Gravity.CENTER_VERTICAL,
 		)
+		navigationButton.applyTonalCircleButton(metrics)
 	}
 }
 
 /**
- * Styles an arbitrary icon button (e.g. the contextual action-mode close "X") to match the
- * circular tonal navigation buttons used by the app's top bars.
+ * Styles a standalone icon button (e.g. the contextual action-mode close "X") to match the circular
+ * tonal navigation button: a solid circular fill, a centered [TonalBarMetrics.iconSize] icon, and a
+ * centered circular ripple.
  */
 fun ImageView.applyTonalIconButtonStyle() {
-	val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
-	val startMargin = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_start)
-	val iconSize = resources.getDimensionPixelSize(R.dimen.top_bar_action_icon_size)
-	val padding = ((size - iconSize) / 2).coerceAtLeast(0)
-	minimumWidth = 0
-	minimumHeight = 0
-	updateLayoutParams<ViewGroup.MarginLayoutParams> {
-		width = size
-		height = size
-		marginStart = startMargin
-	}
-	setPadding(padding, padding, padding, padding)
-	scaleType = ImageView.ScaleType.FIT_CENTER
-	background = context.createTonalNavigationBackground()
-	imageTintList = ColorStateList.valueOf(context.getThemeColor(materialR.attr.colorOnSurfaceVariant))
+	val metrics = TonalBarMetrics(context)
+	updateLayoutSize(metrics.cellSize, metrics.cellSize, marginStart = metrics.edgeMargin)
+	applyTonalCircleButton(metrics)
 }
 
 /**
- * Groups the action (menu) icons of a top bar into a single tonal pill that mirrors the circular
- * navigation button: identical height and fill colour, an end inset that matches the navigation
- * button's start margin, and one equally-sized circular ripple per icon with no gaps between them.
- *
- * Works for both a [Toolbar] and the contextual action-mode bar (`ActionBarContextView`), since
- * both host their items inside an [ActionMenuView]. The menu is populated asynchronously (and may
- * change at runtime), so styling is re-applied on every layout pass; it is idempotent and only
- * touches not-yet-styled views, so it converges without triggering relayout loops.
+ * Groups the action (menu) icons of a top bar into a single tonal pill (see [applyTonalTopBarStyle]).
+ * Works for both a [Toolbar] and the contextual action-mode bar (`ActionBarContextView`), since both
+ * host their items inside an [ActionMenuView].
  */
 fun ViewGroup.applyTonalActionMenuStyle() {
 	if (getTag(R.id.tag_tonal_action_menu) == null) {
@@ -101,152 +108,221 @@ fun ViewGroup.applyTonalActionMenuStyle() {
 }
 
 private fun ActionMenuView.applyTonalPillStyle() {
-	val size = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_size)
-	val endMargin = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_end)
-	val iconSize = resources.getDimensionPixelSize(R.dimen.top_bar_action_icon_size)
-	val iconPadding = ((size - iconSize) / 2).coerceAtLeast(0)
-	val iconTint = ColorStateList.valueOf(context.getThemeColor(materialR.attr.colorOnSurfaceVariant))
+	val metrics = TonalBarMetrics(context)
 
-	// One-time container setup: the pill fill, no internal padding, and center children vertically
-	// so they always sit centered no matter how tall the container ends up being measured.
+	// One-time container setup: the rounded-rectangle pill fill, no internal padding, and clip its
+	// children to the pill outline. Vertical-center gravity keeps the cells centered no matter how
+	// tall the container is ultimately measured.
 	if (getTag(R.id.tag_tonal_action_pill) == null) {
 		setTag(R.id.tag_tonal_action_pill, true)
 		setPadding(0, 0, 0, 0)
-		background = context.createTonalPillBackground(size)
+		background = context.createPillBackground(metrics.cellSize)
 		clipToOutline = true
 		gravity = Gravity.CENTER_VERTICAL
 	}
-	// Pin the container to exactly the navigation-button height, center it in the bar, and mirror
-	// the navigation button's start margin on the end side. The default container fills the whole
-	// bar height (MATCH_PARENT), which is what made the pill too tall and the icons top-aligned.
-	val lp = layoutParams ?: return
-	var lpChanged = false
-	if (lp.height != size) {
-		lp.height = size
-		lpChanged = true
-	}
-	val targetGravity = Gravity.END or Gravity.CENTER_VERTICAL
-	if (lp is Toolbar.LayoutParams && lp.gravity != targetGravity) {
-		lp.gravity = targetGravity
-		lpChanged = true
-	}
-	if (lp is ViewGroup.MarginLayoutParams && lp.marginEnd != endMargin) {
-		lp.marginEnd = endMargin
-		lpChanged = true
-	}
-	if (lpChanged) {
-		layoutParams = lp
-	}
-	for (child in children) {
-		if (!child.isTonalActionItem()) {
-			continue
-		}
-		child.applyTonalActionItemLayout(size, iconPadding, iconTint)
-		// ActionMenuItemView icons are re-forced whenever the underlying drawable changes (menu
-		// re-binds can swap it back to its intrinsic size), but skipped otherwise to avoid relayout.
-		if (child is TextView) {
-			child.forceTonalCompoundIcon(iconSize, iconTint)
-		}
-	}
-}
 
-/** Structural sizing for one item: a fixed square cell with a bounded circular ripple. */
-private fun View.applyTonalActionItemLayout(cell: Int, iconPadding: Int, tint: ColorStateList) {
-	if (getTag(R.id.tag_tonal_action_item) != null) {
-		return
-	}
-	setTag(R.id.tag_tonal_action_item, true)
-	minimumWidth = 0
-	minimumHeight = 0
-	updateLayoutParams<ViewGroup.MarginLayoutParams> {
-		width = cell
-		height = cell
-		marginStart = 0
-		marginEnd = 0
-	}
-	background = context.createTonalActionItemBackground()
-	when (this) {
-		is ImageView -> {
-			// Overflow button & image action views: scale the drawable into a uniform icon box.
-			scaleType = ImageView.ScaleType.FIT_CENTER
-			setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-			imageTintList = tint
-		}
-		is TextView -> {
-			// Icon-only ActionMenuItemView: the icon is a centered compound drawable, sized below.
-			gravity = Gravity.CENTER
-			compoundDrawablePadding = 0
-			setPadding(0, 0, 0, 0)
+	// Pin the container to exactly the navigation-button height, center it vertically, push it to the
+	// end edge and mirror the navigation button's start margin on the end side. The default container
+	// fills the whole bar height (MATCH_PARENT) — that is what made the pill too tall before.
+	updateLayoutSize(
+		width = layoutParams?.width ?: ViewGroup.LayoutParams.WRAP_CONTENT,
+		height = metrics.cellSize,
+		marginEnd = metrics.edgeMargin,
+		gravity = Gravity.END or Gravity.CENTER_VERTICAL,
+	)
+
+	for (child in children) {
+		if (child.isPillActionItem()) {
+			child.applyTonalActionCell(metrics)
 		}
 	}
 }
 
 /** Only icon-only items belong in the pill; text actions keep their default (wider) layout. */
-private fun View.isTonalActionItem(): Boolean = when (this) {
+private fun View.isPillActionItem(): Boolean = when (this) {
 	is ImageView -> true // overflow button & image action views
 	is TextView -> text.isNullOrEmpty() // icon-only ActionMenuItemView (a TextView subclass)
 	else -> false
 }
 
 /**
- * Forces an [ActionMenuItemView]'s icon to a uniform size and tint so every icon matches the back
- * button regardless of its drawable's intrinsic size. Re-applied only when the drawable instance
- * changes (tracked via a tag) so steady-state layout passes don't loop.
+ * Lays out one action as a square cell with a centered, uniformly-sized icon and a centered circular
+ * ripple. The pill itself supplies the surface fill, so the cell's background is the ripple only.
  */
-private fun TextView.forceTonalCompoundIcon(iconSize: Int, tint: ColorStateList) {
-	val current = compoundDrawables.firstOrNull { it != null }
-	if (current == null || getTag(R.id.tag_tonal_action_icon) === current) {
-		return
+private fun View.applyTonalActionCell(metrics: TonalBarMetrics) {
+	if (getTag(R.id.tag_tonal_action_item) == null) {
+		setTag(R.id.tag_tonal_action_item, true)
+		minimumWidth = 0
+		minimumHeight = 0
+		background = context.createCenteredRipple()
 	}
-	val sized = current.mutate().apply {
-		setBounds(0, 0, iconSize, iconSize)
-		setTintList(tint)
+	updateLayoutSize(metrics.cellSize, metrics.cellSize, marginStart = 0, marginEnd = 0)
+	when (this) {
+		// Overflow button & image action views: scale the drawable into the centered icon box.
+		is ImageView -> {
+			if (scaleType != ImageView.ScaleType.FIT_CENTER) {
+				scaleType = ImageView.ScaleType.FIT_CENTER
+			}
+			updatePaddingTo(metrics.iconInset)
+			if (imageTintList != metrics.iconTint) {
+				imageTintList = metrics.iconTint
+			}
+		}
+		// Icon-only ActionMenuItemView: the icon is a *left compound drawable*, which a TextView always
+		// draws at paddingLeft (gravity centers the text, not the drawable). So symmetric padding —
+		// not gravity — is what actually centers the icon in the cell.
+		is TextView -> {
+			updatePaddingTo(metrics.iconInset)
+			if (gravity != Gravity.CENTER) {
+				gravity = Gravity.CENTER
+			}
+			if (compoundDrawablePadding != 0) {
+				compoundDrawablePadding = 0
+			}
+			forceCompoundIcon(metrics)
+		}
 	}
-	// setCompoundDrawables (not …WithIntrinsicBounds) keeps the explicit icon bounds.
-	setCompoundDrawables(sized, null, null, null)
-	setTag(R.id.tag_tonal_action_icon, sized)
 }
+
+/**
+ * Forces an [ActionMenuItemView]'s icon to [TonalBarMetrics.iconSize] and the shared tint so every
+ * icon matches the navigation button regardless of its drawable's intrinsic size. Re-applied only
+ * when the drawable instance changes (tracked via a tag) so steady-state layout passes don't loop.
+ */
+private fun TextView.forceCompoundIcon(metrics: TonalBarMetrics) {
+	var icon = compoundDrawables.firstOrNull { it != null } ?: return
+	// Re-size only when the drawable instance changes: setCompoundDrawables requests layout, so
+	// guarding here keeps steady-state passes from looping. setCompoundDrawables (not the
+	// …WithIntrinsicBounds variant) preserves the explicit icon bounds we set.
+	if (getTag(R.id.tag_tonal_action_icon) !== icon) {
+		icon = icon.mutate().apply { setBounds(0, 0, metrics.iconSize, metrics.iconSize) }
+		setCompoundDrawables(icon, null, null, null)
+		setTag(R.id.tag_tonal_action_icon, icon)
+	}
+	// Always re-assert the tint so every icon matches the back button. Some bars re-tint the same
+	// drawable instance after we style it — notably the contextual action mode, whose overlay sets
+	// colorControlNormal = colorPrimary — so guarding on instance identity alone would let that
+	// colour win. setTintList only invalidates (no relayout), so re-applying each pass is loop-safe.
+	icon.setTintList(metrics.iconTint)
+}
+
+/**
+ * Shared treatment for a standalone circular icon button (navigation / close): a solid circular tonal
+ * fill, a centered [TonalBarMetrics.iconSize] icon and a centered circular ripple. Idempotent so it
+ * can run on every layout/style pass without churn.
+ */
+private fun ImageView.applyTonalCircleButton(metrics: TonalBarMetrics) {
+	minimumWidth = 0
+	minimumHeight = 0
+	if (scaleType != ImageView.ScaleType.FIT_CENTER) {
+		scaleType = ImageView.ScaleType.FIT_CENTER
+	}
+	updatePaddingTo(metrics.iconInset)
+	if (getTag(R.id.tag_tonal_action_item) == null) {
+		setTag(R.id.tag_tonal_action_item, true)
+		background = context.createCircleButtonBackground()
+	}
+	if (imageTintList != metrics.iconTint) {
+		imageTintList = metrics.iconTint
+	}
+}
+
+// region small idempotent view helpers
+
+private fun View.updatePaddingTo(value: Int) {
+	if (paddingLeft != value || paddingTop != value || paddingRight != value || paddingBottom != value) {
+		setPadding(value, value, value, value)
+	}
+}
+
+/** Sets size / margins / gravity on the existing layout params only when something actually changes. */
+private fun View.updateLayoutSize(
+	width: Int,
+	height: Int,
+	marginStart: Int = Int.MIN_VALUE,
+	marginEnd: Int = Int.MIN_VALUE,
+	gravity: Int = Int.MIN_VALUE,
+) {
+	val lp = layoutParams ?: return
+	var changed = false
+	if (lp.width != width) {
+		lp.width = width
+		changed = true
+	}
+	if (lp.height != height) {
+		lp.height = height
+		changed = true
+	}
+	if (lp is ViewGroup.MarginLayoutParams) {
+		if (marginStart != Int.MIN_VALUE && lp.marginStart != marginStart) {
+			lp.marginStart = marginStart
+			changed = true
+		}
+		if (marginEnd != Int.MIN_VALUE && lp.marginEnd != marginEnd) {
+			lp.marginEnd = marginEnd
+			changed = true
+		}
+	}
+	if (gravity != Int.MIN_VALUE && lp is Toolbar.LayoutParams && lp.gravity != gravity) {
+		lp.gravity = gravity
+		changed = true
+	}
+	if (changed) {
+		layoutParams = lp
+	}
+}
+
+// endregion
+
+private fun Context.dimen(resId: Int) = resources.getDimensionPixelSize(resId)
 
 private fun ViewGroup.findActionMenuView(): ActionMenuView? =
 	children.filterIsInstance<ActionMenuView>().firstOrNull()
 
 private fun Toolbar.findNavigationButton(): ImageButton? {
 	navigationIcon ?: return null
-	return children
-		.filterIsInstance<ImageButton>()
-		.firstOrNull()
+	return children.filterIsInstance<ImageButton>().firstOrNull()
 }
 
-private fun Context.createTonalNavigationBackground(): RippleDrawable {
-	val shape = createCircleDrawable(getThemeColor(materialR.attr.colorSurfaceContainer))
-	val mask = createCircleDrawable(Color.WHITE)
-	return RippleDrawable(
-		ColorStateList.valueOf(getThemeColor(android.R.attr.colorControlHighlight)),
-		shape,
-		mask,
-	)
-}
+// region drawables
 
 /**
- * Transparent-bodied circular ripple for an item inside the pill: the pill itself supplies the
- * fill, so only the (bounded, centered) press highlight is drawn here.
+ * Opacity of the back-button circle and the action pill. Kept slightly translucent so a little of the
+ * content behind the bar (e.g. a cover image) shows through, while staying legible.
  */
-private fun Context.createTonalActionItemBackground(): RippleDrawable {
-	val mask = createCircleDrawable(Color.WHITE)
-	return RippleDrawable(
-		ColorStateList.valueOf(getThemeColor(android.R.attr.colorControlHighlight)),
-		null,
-		mask,
-	)
-}
+private const val TONAL_SURFACE_ALPHA = 0.85f
 
-private fun Context.createTonalPillBackground(heightPx: Int) = GradientDrawable().apply {
+private fun Context.tonalSurfaceColor(): Int = ColorUtils.setAlphaComponent(
+	getThemeColor(materialR.attr.colorSurfaceContainer),
+	(255 * TONAL_SURFACE_ALPHA).roundToInt(),
+)
+
+/** Translucent circular tonal surface with a circular ripple — the navigation / close button fill. */
+private fun Context.createCircleButtonBackground(): RippleDrawable = RippleDrawable(
+	ColorStateList.valueOf(getThemeColor(android.R.attr.colorControlHighlight)),
+	circle(tonalSurfaceColor()),
+	circle(Color.WHITE),
+)
+
+/**
+ * Transparent-bodied circular ripple for a cell inside the pill: the pill supplies the fill, so only
+ * the bounded, centered press highlight is drawn here.
+ */
+private fun Context.createCenteredRipple(): RippleDrawable = RippleDrawable(
+	ColorStateList.valueOf(getThemeColor(android.R.attr.colorControlHighlight)),
+	null,
+	circle(Color.WHITE),
+)
+
+private fun Context.createPillBackground(heightPx: Int): Drawable = GradientDrawable().apply {
 	shape = GradientDrawable.RECTANGLE
 	cornerRadius = heightPx / 2f
-	setColor(getThemeColor(materialR.attr.colorSurfaceContainer))
+	setColor(tonalSurfaceColor())
 }
 
-private fun createCircleDrawable(color: Int) = GradientDrawable().apply {
+private fun circle(color: Int): GradientDrawable = GradientDrawable().apply {
 	shape = GradientDrawable.OVAL
 	setColor(color)
 }
+
+// endregion

@@ -182,7 +182,8 @@ class ExploreViewModel @Inject constructor(
 		result += ListHeader(
 			textRes = R.string.remote_sources,
 			buttonTextRes = R.string.manage,
-			buttonStyle = ListHeader.ButtonStyle.OUTLINED,
+			// Plain clickable text rather than an outlined pill button.
+			buttonStyle = ListHeader.ButtonStyle.TEXT,
 		)
 		when {
 			sources.isNotEmpty() -> sources.mapTo(result) { MangaSourceItem(it, isGrid) }

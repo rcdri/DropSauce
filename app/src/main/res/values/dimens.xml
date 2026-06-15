@@ -32,11 +32,14 @@
 	<dimen name="selection_stroke_width">2dp</dimen>
 	<dimen name="list_selector_corner">12dp</dimen>
 	<dimen name="toolbar_button_margin">10dp</dimen>
-	<dimen name="top_bar_navigation_button_size">40dp</dimen>
+	<!-- Diameter of the back-button circle and of each action cell in the end pill. The icon inside
+	     stays top_bar_action_icon_size; only the tonal container scales. -->
+	<dimen name="top_bar_navigation_button_size">46dp</dimen>
+	<!-- Inset of the back button from the start edge; the action pill mirrors it on the end edge. -->
 	<dimen name="top_bar_navigation_button_margin_start">16dp</dimen>
-	<dimen name="top_bar_navigation_button_margin_end">16dp</dimen>
 	<dimen name="top_bar_action_icon_size">24dp</dimen>
-	<dimen name="top_bar_title_inset_with_navigation">72dp</dimen>
+	<!-- Start margin (16) + button (46) + 16 gap, so the title keeps the same rhythm as the edges. -->
+	<dimen name="top_bar_title_inset_with_navigation">78dp</dimen>
 	<dimen name="widget_cover_height">116dp</dimen>
 	<dimen name="widget_cover_width">84dp</dimen>
 	<dimen name="scrobbling_list_spacing">12dp</dimen>
