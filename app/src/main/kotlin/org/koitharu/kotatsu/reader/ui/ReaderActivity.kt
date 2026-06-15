@@ -383,18 +383,12 @@ class ReaderActivity :
         }
     }
 
-    // Give the reader's bars a translucent fill so a sliver of the page reads through them,
-    // keeping the reading surface feeling immersive while they're shown. The navigation /
-    // action buttons keep their own opaque tonal pills, so titles and icons stay legible.
+    // Keep the top bar translucent while the bottom floating toolbar stays opaque.
     private fun applyTranslucentReaderBars() {
-        viewBinding.appbarTop.setBackgroundColor(getThemeColor(materialR.attr.colorSurface, READER_BAR_ALPHA))
+        viewBinding.appbarTop.setBackgroundColor(getThemeColor(materialR.attr.colorSurface, TOP_READER_BAR_ALPHA))
         viewBinding.toolbar.background = null
-        // The bottom control bar is a floating pill — keep its shape/colour and just lower the
-        // background opacity to the same level as the top bar.
-        viewBinding.toolbarDocked?.let { dock ->
-            dock.background = dock.background?.mutate()?.apply {
-                alpha = (0xFF * READER_BAR_ALPHA).toInt()
-            }
+        viewBinding.toolbarDocked?.background = viewBinding.toolbarDocked?.background?.mutate()?.apply {
+            alpha = 0xFF
         }
     }
 
@@ -617,8 +611,6 @@ class ReaderActivity :
 
         private const val TOAST_DURATION = 2000L
 
-        // Shared opacity for the reader's top app bar and bottom control bar. Kept fairly low so more
-        // of the page reads through; the buttons keep their own opaque tonal pills to stay legible.
-        private const val READER_BAR_ALPHA = 0.7f
+        private const val TOP_READER_BAR_ALPHA = 0.7f
     }
 }
