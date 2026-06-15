@@ -80,7 +80,6 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 
 	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.COMPACT.name)
 	var backdrop by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP, true)
-	var dynamicColor by rememberBooleanPref(AppSettings.KEY_DETAILS_DYNAMIC_COLOR, false)
 
 	val mode = remember(uiMode) {
 		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.COMPACT
@@ -116,16 +115,6 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 						checked = backdrop,
 						onCheckedChange = { backdrop = it },
 						icon = R.drawable.ic_images,
-						shape = pos.shape,
-					)
-				}
-				item { pos ->
-					SwitchSettingsItem(
-						title = stringResource(R.string.details_dynamic_color),
-						subtitle = stringResource(R.string.details_dynamic_color_summary),
-						checked = dynamicColor,
-						onCheckedChange = { dynamicColor = it },
-						icon = R.drawable.ic_appearance,
 						shape = pos.shape,
 					)
 				}

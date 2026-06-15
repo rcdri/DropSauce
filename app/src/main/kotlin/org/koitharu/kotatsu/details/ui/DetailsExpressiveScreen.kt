@@ -62,9 +62,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.ColorUtils
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -77,29 +74,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.palette.graphics.Palette
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-import coil3.request.ImageResult
-import coil3.request.allowHardware
 import coil3.request.crossfade
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.getTitle
 import org.koitharu.kotatsu.core.model.isLocal
 import org.koitharu.kotatsu.core.model.titleResId
 import org.koitharu.kotatsu.core.prefs.DetailsUiMode
 import org.koitharu.kotatsu.core.parser.favicon.faviconUri
-import org.koitharu.kotatsu.core.util.ext.toBitmapOrNull
 import org.koitharu.kotatsu.core.util.FileSize
 import org.koitharu.kotatsu.core.util.ext.mangaSourceExtra
 import org.koitharu.kotatsu.details.data.MangaDetails
 import org.koitharu.kotatsu.details.ui.model.HistoryInfo
 import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.list.ui.model.MangaListModel
-import org.koitharu.kotatsu.main.ui.nav.composeColorSchemeFromSeed
 import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaTag
@@ -144,32 +134,21 @@ fun DetailsExpressiveScreen(
 	related: List<MangaListModel>,
 	localSize: Long,
 	sourceTitle: String?,
-	accent: Color?,
 	imageLoader: ImageLoader,
 	coverUrl: String?,
 	backdropUrl: String?,
 	isBackdropEnabled: Boolean,
-	dynamicColorEnabled: Boolean,
 	style: DetailsUiMode,
 	topInset: Dp,
 	bottomContentPadding: Dp,
 	onScroll: (Int) -> Unit,
-	onAccentExtracted: (Int) -> Unit,
 	actions: DetailsExpressiveActions,
 ) {
 	val manga = details?.toManga()
 	val baseScheme = MaterialTheme.colorScheme
 	val typography = MaterialTheme.typography
-	val isDark = baseScheme.surface.luminance() < 0.5f
-	// "Colors from cover": when an accent was extracted from the cover, derive a FULL Material 3 tonal
-	// colour scheme from it (every role — accents, containers, and the surfaces/background — via the
-	// Material colour-utilities tonal palettes) so the whole page is recoloured by the cover instead of
-	// the app theme. When null, the app theme is used as-is.
-	val themedScheme = remember(accent, baseScheme, isDark) {
-		if (accent != null) composeColorSchemeFromSeed(accent.toArgb(), isDark) else baseScheme
-	}
 
-	MaterialTheme(colorScheme = themedScheme, typography = typography) {
+	MaterialTheme(colorScheme = baseScheme, typography = typography) {
 		val scheme = MaterialTheme.colorScheme
 		val accentColor = scheme.primary
 		val scrollState = rememberScrollState()
@@ -216,9 +195,6 @@ fun DetailsExpressiveScreen(
 					accent = accentColor,
 					imageLoader = imageLoader,
 					coverUrl = coverUrl,
-					dynamicColorEnabled = dynamicColorEnabled,
-					isDark = isDark,
-					onAccentExtracted = onAccentExtracted,
 					favouriteLabel = favLabel,
 					isFavourite = isFavourite,
 					onFavouriteClick = { actions.onFavoriteClick(manga) },
@@ -332,9 +308,6 @@ private fun HeroSection(
 	accent: Color,
 	imageLoader: ImageLoader,
 	coverUrl: String?,
-	dynamicColorEnabled: Boolean,
-	isDark: Boolean,
-	onAccentExtracted: (Int) -> Unit,
 	favouriteLabel: String,
 	isFavourite: Boolean,
 	onFavouriteClick: () -> Unit,
@@ -352,7 +325,7 @@ private fun HeroSection(
 				.padding(horizontal = SCREEN_PADDING),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			CoverCard(manga, coverUrl, imageLoader, COVER_WIDTH, COVER_HEIGHT, 24.dp, dynamicColorEnabled, isDark, onAccentExtracted, null, actions)
+			CoverCard(manga, coverUrl, imageLoader, COVER_WIDTH, COVER_HEIGHT, 24.dp, null, actions)
 			Spacer(Modifier.height(20.dp))
 			HeroTexts(centered = true, manga = manga, accent = accent, actions = actions)
 			Spacer(Modifier.height(16.dp))
@@ -374,7 +347,7 @@ private fun HeroSection(
 				.padding(horizontal = SCREEN_PADDING),
 		) {
 			// Compact: the content-rating badge sits on the cover instead of as a pill.
-			CoverCard(manga, coverUrl, imageLoader, COMPACT_COVER_WIDTH, COMPACT_COVER_HEIGHT, 20.dp, dynamicColorEnabled, isDark, onAccentExtracted, nsfwLabel, actions)
+			CoverCard(manga, coverUrl, imageLoader, COMPACT_COVER_WIDTH, COMPACT_COVER_HEIGHT, 20.dp, nsfwLabel, actions)
 			Spacer(Modifier.width(16.dp))
 			Column(modifier = Modifier.weight(1f)) {
 				HeroTexts(centered = false, manga = manga, accent = accent, actions = actions)
@@ -410,29 +383,10 @@ private fun CoverCard(
 	width: Dp,
 	height: Dp,
 	corner: Dp,
-	dynamicColorEnabled: Boolean,
-	isDark: Boolean,
-	onAccentExtracted: (Int) -> Unit,
 	nsfwLabel: String?,
 	actions: DetailsExpressiveActions,
 ) {
 	val ctx = LocalContext.current
-	// "Colors from cover": extract an accent from the cover by decoding a software copy through the
-	// image loader and running Palette on it. Done here (not via AsyncImage's onSuccess, which wasn't
-	// reliably delivering a Palette-readable bitmap) so it always runs and always gets a non-hardware
-	// bitmap; the result feeds onAccentExtracted, which re-themes the whole page from the cover.
-	LaunchedEffect(coverUrl, manga.source, dynamicColorEnabled, isDark) {
-		if (!dynamicColorEnabled || coverUrl.isNullOrEmpty()) return@LaunchedEffect
-		val accent = withContext(Dispatchers.Default) {
-			val request = ImageRequest.Builder(ctx)
-				.data(coverUrl)
-				.allowHardware(false)
-				.mangaSourceExtra(manga.source)
-				.build()
-			coverAccent(imageLoader.execute(request), isDark)
-		}
-		accent?.let(onAccentExtracted)
-	}
 	Surface(
 		shape = RoundedCornerShape(corner),
 		color = MaterialTheme.colorScheme.surfaceVariant,
@@ -1130,36 +1084,6 @@ private fun LoadingHero() {
 
 private fun Color.luminanceIsLight(): Boolean =
 	(0.299f * red + 0.587f * green + 0.114f * blue) > 0.5f
-
-/**
- * Extracts a representative accent from the loaded cover bitmap (the same one shown on screen) and
- * tones it into a band that stays legible on the current theme. Returns an ARGB int or null.
- */
-private fun coverAccent(result: ImageResult, isDark: Boolean): Int? {
-	val decoded = result.toBitmapOrNull() ?: return null
-	// Palette can't read HARDWARE bitmaps (coil may serve one from cache regardless of allowHardware),
-	// so copy to a software config first - otherwise Palette.from(...) throws and the accent is lost.
-	val bitmap = if (
-		android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
-		decoded.config == android.graphics.Bitmap.Config.HARDWARE
-	) {
-		decoded.copy(android.graphics.Bitmap.Config.ARGB_8888, false) ?: return null
-	} else {
-		decoded
-	}
-	val palette = runCatching { Palette.from(bitmap).maximumColorCount(24).generate() }.getOrNull() ?: return null
-	val raw = palette.vibrantSwatch?.rgb
-		?: palette.lightVibrantSwatch?.rgb
-		?: palette.darkVibrantSwatch?.rgb
-		?: palette.mutedSwatch?.rgb
-		?: palette.dominantSwatch?.rgb
-		?: return null
-	val hsl = FloatArray(3)
-	ColorUtils.colorToHSL(raw, hsl)
-	hsl[1] = hsl[1].coerceIn(0.35f, 0.85f)
-	hsl[2] = if (isDark) hsl[2].coerceIn(0.55f, 0.74f) else hsl[2].coerceIn(0.36f, 0.52f)
-	return ColorUtils.HSLToColor(hsl)
-}
 
 private fun withTime(base: String, info: HistoryInfo, res: android.content.res.Resources): String {
 	val time = info.estimatedTime?.formatShort(res) ?: return base

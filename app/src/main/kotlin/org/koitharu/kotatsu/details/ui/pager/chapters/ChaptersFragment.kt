@@ -1,11 +1,9 @@
 package org.koitharu.kotatsu.details.ui.pager.chapters
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
@@ -63,9 +61,6 @@ class ChaptersFragment :
 	private var isInitialReverseValue = true
 	private var pendingReverseScroll: Pair<Int, Int>? = null
 
-	// Cover accent shared from the activity; recolors the fast scroller and the current-chapter pill.
-	private var accentColor: Int? = null
-
 	override val recyclerView: RecyclerView?
 		get() = viewBinding?.recyclerViewChapters
 
@@ -76,7 +71,7 @@ class ChaptersFragment :
 
 	override fun onViewBindingCreated(binding: FragmentChaptersBinding, savedInstanceState: Bundle?) {
 		super.onViewBindingCreated(binding, savedInstanceState)
-		chaptersAdapter = ChaptersAdapter(this) { accentColor }
+		chaptersAdapter = ChaptersAdapter(this)
 		selectionController = ListSelectionController(
 			appCompatDelegate = checkNotNull(findAppCompatDelegate()),
 			decoration = ChaptersSelectionDecoration(binding.root.context),
@@ -114,21 +109,6 @@ class ChaptersFragment :
 			.map { it.withVolumeHeaders(requireContext()) }
 			.flowOn(Dispatchers.Default)
 			.observe(viewLifecycleOwner, this::onChaptersChanged)
-		viewModel.accentColor.observe(viewLifecycleOwner) { color ->
-			accentColor = color
-			if (color != null) {
-				val onAccent = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
-				with(binding.recyclerViewChapters.fastScroller) {
-					setHandleColor(color)
-					setBubbleColor(color)
-					setBubbleTextColor(onAccent)
-				}
-				binding.progressBar.setIndicatorColor(color)
-			}
-			// Recolor the checked branch chip and rebind so the current-chapter pill picks up the accent.
-			binding.chipsFilter.chipAccentColor = color
-			chaptersAdapter?.notifyDataSetChanged()
-		}
 		viewModel.quickFilter.observe(viewLifecycleOwner, this::onFilterChanged)
 		viewModel.emptyReason.observe(viewLifecycleOwner) {
 			binding.textViewHolder.setTextAndVisible(it?.msgResId ?: 0)
@@ -246,7 +226,5 @@ class ChaptersFragment :
 	private fun onLoadingStateChanged(isLoading: Boolean) {
 		val binding = requireViewBinding()
 		binding.progressBar.isVisible = isLoading
-		// The spinner can show before the cover accent is ready, so re-apply it whenever it appears.
-		accentColor?.let { binding.progressBar.setIndicatorColor(it) }
 	}
 }

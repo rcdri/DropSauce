@@ -164,9 +164,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isBackdropEnabled: Boolean
 		get() = prefs.getBoolean(KEY_DETAILS_BACKDROP, true)
 
-	val isDetailsDynamicColorEnabled: Boolean
-		get() = prefs.getBoolean(KEY_DETAILS_DYNAMIC_COLOR, false)
-
 	val isBackdropExtended: Boolean
 		get() = prefs.getBoolean(KEY_DETAILS_BACKDROP_EXTEND, true)
 
@@ -1015,7 +1012,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_DETAILS_LAST_TAB = "details_last_tab"
 		const val KEY_DETAILS_BACKDROP = "details_backdrop"
 		const val KEY_DETAILS_BACKDROP_BLUR_AMOUNT = "details_backdrop_blur_amount"
-		const val KEY_DETAILS_DYNAMIC_COLOR = "details_dynamic_color"
 		const val KEY_DETAILS_BACKDROP_EXTEND = "details_backdrop_extend"
 		const val KEY_READING_TIME = "reading_time"
 		const val KEY_PAGES_SAVE_DIR = "pages_dir"

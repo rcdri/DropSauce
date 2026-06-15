@@ -8,7 +8,6 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
@@ -144,7 +143,7 @@ class DetailsExpressiveActivity :
 			onTitleClick = { title -> showTitleDialog(title) },
 			onSourceClick = { manga -> router.openList(manga.source, null, null) },
 			onLocalClick = { manga -> router.showLocalInfoDialog(manga) },
-			onFavoriteClick = { manga -> router.showFavoriteDialog(manga, viewModel.accentColor.value) },
+			onFavoriteClick = { manga -> router.showFavoriteDialog(manga, null) },
 			onAuthorClick = { author ->
 				router.showAuthorDialog(author, viewModel.getMangaOrNull()?.source ?: return@DetailsExpressiveActions)
 			},
@@ -173,7 +172,6 @@ class DetailsExpressiveActivity :
 				val related by viewModel.relatedManga.collectAsState()
 				val localSize by viewModel.localSize.collectAsState()
 				val srcTitle by viewModel.cachedSourceTitle.collectAsState()
-				val accentInt by viewModel.accentColor.collectAsState()
 				val coverUrl by viewModel.coverUrl.collectAsState()
 				val backdropUrl by viewModel.backdropUrl.collectAsState()
 				val favLabel = favs.takeIf { it.isNotEmpty() }?.joinToString { it.title }
@@ -188,17 +186,14 @@ class DetailsExpressiveActivity :
 					related = related,
 					localSize = localSize,
 					sourceTitle = srcTitle,
-					accent = accentInt?.let { Color(it) },
 					imageLoader = coil,
 					coverUrl = coverUrl,
 					backdropUrl = backdropUrl,
 					isBackdropEnabled = settings.isBackdropEnabled,
-					dynamicColorEnabled = settings.isDetailsDynamicColorEnabled,
 					style = settings.detailsUiMode,
 					topInset = with(density) { topInset.intValue.toDp() },
 					bottomContentPadding = with(density) { peekHeightPx.toDp() } + with(density) { bottomInset.intValue.toDp() },
 					onScroll = ::onContentScroll,
-					onAccentExtracted = { viewModel.accentColor.value = it },
 					actions = actions,
 				)
 			}
@@ -227,12 +222,6 @@ class DetailsExpressiveActivity :
 		val swipeRefresh = viewBinding.swipeRefreshLayout
 		swipeRefresh.setOnRefreshListener { viewModel.reload() }
 		viewModel.isLoading.observe(this) { swipeRefresh.isRefreshing = it }
-		// Tint the unified loading indicator with the cover accent when "colors from cover" is on.
-		viewModel.accentColor.observe(this) { color ->
-			if (color != null) {
-				swipeRefresh.setIndicatorColor(color)
-			}
-		}
 		updateSwipeRefreshEnabled()
 	}
 

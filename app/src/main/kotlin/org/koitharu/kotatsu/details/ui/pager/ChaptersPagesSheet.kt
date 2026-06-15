@@ -1,23 +1,16 @@
 package org.koitharu.kotatsu.details.ui.pager
 
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
-import com.google.android.material.R as materialR
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
@@ -108,9 +101,6 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		addSheetCallback(this, viewLifecycleOwner)
 
 		viewModel.newChaptersCount.observe(viewLifecycleOwner, ::onNewChaptersChanged)
-		viewModel.accentColor.observe(viewLifecycleOwner) { color ->
-			if (color != null) applyAccentColor(color)
-		}
 		if (dialog != null) {
 			viewModel.onError.observeEvent(viewLifecycleOwner, SnackbarErrorObserver(binding.pager, this))
 			viewModel.onActionDone.observeEvent(viewLifecycleOwner, ReversibleActionObserver(binding.pager))
@@ -243,27 +233,6 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		searchView.setQuery("", false)
 		if (!searchView.isIconified) {
 			searchView.isIconified = true
-		}
-	}
-
-	// Recolor the Read/Continue split button to the cover accent so the sheet matches the page.
-	private fun applyAccentColor(@androidx.annotation.ColorInt color: Int) {
-		val binding = viewBinding ?: return
-		val onAccent = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
-		val accentTint = ColorStateList.valueOf(color)
-		val onAccentTint = ColorStateList.valueOf(onAccent)
-		// The selected page-tab (chapters / pages / bookmarks) wrapper picks up a tonal accent so it
-		// matches the rest of the page while keeping the icon legible.
-		val surface = MaterialColors.getColor(binding.tabs, materialR.attr.colorSurfaceContainerHighest, Color.GRAY)
-		binding.tabs.setSelectedTabIndicatorColor(ColorUtils.blendARGB(surface, color, 0.5f))
-		(binding.splitButtonRead[0] as? MaterialButton)?.apply {
-			backgroundTintList = accentTint
-			setTextColor(onAccent)
-			iconTint = onAccentTint
-		}
-		(binding.splitButtonRead[1] as? MaterialButton)?.apply {
-			backgroundTintList = accentTint
-			iconTint = onAccentTint
 		}
 	}
 

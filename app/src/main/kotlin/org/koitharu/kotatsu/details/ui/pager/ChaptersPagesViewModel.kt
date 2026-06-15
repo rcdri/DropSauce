@@ -62,10 +62,6 @@ abstract class ChaptersPagesViewModel(
 	val mangaDetails = MutableStateFlow<MangaDetails?>(null)
 	val readingState = MutableStateFlow<ReaderState?>(null)
 
-	// Accent color extracted from the cover by DetailsExpressiveActivity, shared with the chapters sheet so its
-	// UI (split button, scrollbar, current chapter pill) matches the rest of the page. Null = use theme.
-	val accentColor = MutableStateFlow<Int?>(null)
-
 	val onActionDone = MutableEventFlow<ReversibleAction>()
 	val onDownloadStarted = MutableEventFlow<Unit>()
 	val onMangaRemoved = MutableEventFlow<Manga>()
