@@ -617,7 +617,8 @@ class ReaderActivity :
 
         private const val TOAST_DURATION = 2000L
 
-        // Shared opacity for the reader's top app bar and bottom control bar.
-        private const val READER_BAR_ALPHA = 0.85f
+        // Shared opacity for the reader's top app bar and bottom control bar. Kept fairly low so more
+        // of the page reads through; the buttons keep their own opaque tonal pills to stay legible.
+        private const val READER_BAR_ALPHA = 0.7f
     }
 }

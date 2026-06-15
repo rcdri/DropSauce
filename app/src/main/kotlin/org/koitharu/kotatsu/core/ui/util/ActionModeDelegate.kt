@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.getThemeDimensionPixelOffset
 
@@ -127,8 +128,12 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 			setBackgroundColor(color)
 		}
 		var needsLayout = false
-		if (paddingTop != statusBarHeight) {
-			setPadding(paddingLeft, statusBarHeight, paddingRight, paddingBottom)
+		// Inset the bar's content to match the regular top bars: the close "X" gets its start inset from
+		// its own margin (which ActionBarContextView honours), but the action pill's end margin is
+		// ignored by this view's layout — its end inset has to come from the bar's end padding instead.
+		val edgeInset = resources.getDimensionPixelSize(R.dimen.top_bar_navigation_button_margin_start)
+		if (paddingTop != statusBarHeight || paddingStart != 0 || paddingEnd != edgeInset) {
+			setPaddingRelative(0, statusBarHeight, edgeInset, paddingBottom)
 			needsLayout = true
 		}
 		if (contentHeight != totalHeight) {
