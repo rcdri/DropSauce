@@ -57,6 +57,10 @@ abstract class MangaDao {
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	abstract suspend fun insertTagRelation(tag: MangaTagsEntity): Long
 
+	// Performance Optimization: Batch insert tag relations to avoid N+1 query issue
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	abstract suspend fun insertTagRelations(tags: List<MangaTagsEntity>)
+
 	@Query("DELETE FROM manga_tags WHERE manga_id = :mangaId")
 	abstract suspend fun clearTagRelation(mangaId: Long)
 
@@ -82,11 +86,12 @@ abstract class MangaDao {
 		upsert(manga)
 		if (tags != null) {
 			clearTagRelation(manga.id)
-			tags.map {
-				MangaTagsEntity(manga.id, it.id)
-			}.forEach {
-				insertTagRelation(it)
-			}
+			// Performance Optimization: Use batch insert instead of iterating and inserting one by one
+			insertTagRelations(
+				tags.map {
+					MangaTagsEntity(manga.id, it.id)
+				}
+			)
 		}
 	}
 }
