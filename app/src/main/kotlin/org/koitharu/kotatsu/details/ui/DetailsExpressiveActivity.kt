@@ -4,6 +4,7 @@ import android.app.assist.AssistContent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.widget.ActionMenuView
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -13,6 +14,8 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.children
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -237,17 +240,21 @@ class DetailsExpressiveActivity :
 		viewBinding.swipeRefreshLayout.isEnabled = contentAtTop && sheetCollapsed
 	}
 
-	// Drives the top app bar from the Compose scroll position: the bar fades from transparent
-	// (over the backdrop) to the theme surface, and the manga title appears once it scrolls past.
+	// The back button stays pinned/floating at top-left at all times. The action (overflow) pill is
+	// treated as part of the page: it slides up with the content and fades out as you scroll down, then
+	// returns as you scroll back to the top. No surface scrim fades in and the toolbar title stays hidden,
+	// so the bar never turns into a solid bar on scroll.
 	private fun onContentScroll(scrollY: Int) {
-		val density = resources.displayMetrics.density
-		val scrim = (scrollY / (density * SCRIM_THRESHOLD_DP)).coerceIn(0f, 1f)
-		viewBinding.appbar.setBackgroundColor(
-			ColorUtils.setAlphaComponent(getThemeColor(android.R.attr.colorBackground), (scrim * 255f).toInt()),
-		)
-		supportActionBar?.setDisplayShowTitleEnabled(scrollY > density * TITLE_THRESHOLD_DP)
 		contentAtTop = scrollY <= 0
 		updateSwipeRefreshEnabled()
+		val actionMenu = viewBinding.toolbar.children.firstOrNull { it is ActionMenuView }
+		if (actionMenu != null) {
+			actionMenu.translationY = -scrollY.toFloat()
+			val fadeDistance = actionMenu.height.takeIf { it > 0 } ?: 1
+			actionMenu.alpha = (1f - scrollY.toFloat() / fadeDistance).coerceIn(0f, 1f)
+			// Drop it from layout/touch handling once fully faded so it can't catch taps off-screen.
+			actionMenu.isVisible = actionMenu.alpha > 0.01f
+		}
 	}
 
 	override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
@@ -283,12 +290,5 @@ class DetailsExpressiveActivity :
 			val item = value.find { it.isCurrent } ?: value.first()
 			MangaPrefetchService.prefetchPages(context, item.chapter)
 		}
-	}
-
-	private companion object {
-		// Scroll distance (dp) over which the top bar fades in to the theme surface.
-		private const val SCRIM_THRESHOLD_DP = 260f
-		// Scroll distance (dp) after which the toolbar title becomes visible.
-		private const val TITLE_THRESHOLD_DP = 300f
 	}
 }

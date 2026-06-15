@@ -55,11 +55,7 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 			window.decorView.findViewById<ActionBarContextView?>(androidx.appcompat.R.id.action_mode_bar)?.apply {
 				applyEdgeToEdgeActionMode(color = actionModeColor, statusBarHeight = statusBarHeight)
 				keepActionModeEdgeToEdge(mode, color = actionModeColor, statusBarHeight = statusBarHeight)
-				// Wrap the close "X" in a tonal circle to match the back buttons in the rest of the app.
-				findViewById<ImageView?>(androidx.appcompat.R.id.action_mode_close_button)
-					?.applyTonalIconButtonStyle()
-				// Group the selection actions into the same tonal pill used by the regular top bars.
-				applyTonalActionMenuStyle()
+				applyTonalActionModeStyle(installLayoutHooks = true)
 			}
 		}
 	}
@@ -185,11 +181,13 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 		val listener = ViewTreeObserver.OnPreDrawListener {
 			when {
 				activeActionMode === mode -> {
+					applyTonalActionModeStyle(installLayoutHooks = false)
 					// Skip drawing this frame if we had to re-fix the layout, so the bar is never
 					// painted in its transient (shrunk / shifted) state.
 					!applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
 				}
 				exitingActionMode === mode && visibility == View.VISIBLE -> {
+					applyTonalActionModeStyle(installLayoutHooks = false)
 					!applyEdgeToEdgeActionMode(color = color, statusBarHeight = statusBarHeight)
 				}
 				else -> {
@@ -204,6 +202,18 @@ class ActionModeDelegate : OnBackPressedCallback(false) {
 		}
 		viewTreeObserver.addOnPreDrawListener(listener)
 		actionModePreDraw = this to listener
+	}
+
+	private fun ActionBarContextView.applyTonalActionModeStyle(installLayoutHooks: Boolean) {
+		// Wrap the close "X" in a tonal circle to match the back buttons in the rest of the app.
+		findViewById<ImageView?>(androidx.appcompat.R.id.action_mode_close_button)
+			?.applyTonalIconButtonStyle()
+		// Group the selection actions into the same tonal pill used by the regular top bars.
+		if (installLayoutHooks) {
+			applyTonalActionMenuStyle()
+		} else {
+			applyTonalActionMenuStyleNow()
+		}
 	}
 
 	private fun clearActionModePreDraw() {

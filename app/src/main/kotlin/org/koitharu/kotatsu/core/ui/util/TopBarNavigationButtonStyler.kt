@@ -55,9 +55,8 @@ private class TonalBarMetrics(context: Context) {
 
 	/** Symmetric padding that centers an [iconSize] icon inside a [cellSize] cell. */
 	val iconInset = ((cellSize - iconSize) / 2).coerceAtLeast(0)
-	val iconTint: ColorStateList = ColorStateList.valueOf(
-		context.getThemeColor(materialR.attr.colorOnSurfaceVariant),
-	)
+	val iconTintColor = context.getThemeColor(materialR.attr.colorOnSurfaceVariant)
+	val iconTint: ColorStateList = ColorStateList.valueOf(iconTintColor)
 }
 
 fun Toolbar.applyTonalNavigationButtonStyle() {
@@ -101,10 +100,15 @@ fun ViewGroup.applyTonalActionMenuStyle() {
 	if (getTag(R.id.tag_tonal_action_menu) == null) {
 		setTag(R.id.tag_tonal_action_menu, true)
 		addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
-			(view as? ViewGroup)?.findActionMenuView()?.applyTonalPillStyle()
+			(view as? ViewGroup)?.applyTonalActionMenuStyleNow()
 		}
 	}
-	post { findActionMenuView()?.applyTonalPillStyle() }
+	applyTonalActionMenuStyleNow()
+	doOnPreDraw { applyTonalActionMenuStyleNow() }
+}
+
+internal fun ViewGroup.applyTonalActionMenuStyleNow() {
+	findActionMenuView()?.applyTonalPillStyle()
 }
 
 private fun ActionMenuView.applyTonalPillStyle() {
@@ -164,9 +168,7 @@ private fun View.applyTonalActionCell(metrics: TonalBarMetrics) {
 				scaleType = ImageView.ScaleType.FIT_CENTER
 			}
 			updatePaddingTo(metrics.iconInset)
-			if (imageTintList != metrics.iconTint) {
-				imageTintList = metrics.iconTint
-			}
+			forceImageIconTint(metrics)
 		}
 		// Icon-only ActionMenuItemView: the icon is a *left compound drawable*, which a TextView always
 		// draws at paddingLeft (gravity centers the text, not the drawable). So symmetric padding —
@@ -194,16 +196,21 @@ private fun TextView.forceCompoundIcon(metrics: TonalBarMetrics) {
 	// Re-size only when the drawable instance changes: setCompoundDrawables requests layout, so
 	// guarding here keeps steady-state passes from looping. setCompoundDrawables (not the
 	// …WithIntrinsicBounds variant) preserves the explicit icon bounds we set.
+	var iconChanged = false
 	if (getTag(R.id.tag_tonal_action_icon) !== icon) {
 		icon = icon.mutate().apply { setBounds(0, 0, metrics.iconSize, metrics.iconSize) }
 		setCompoundDrawables(icon, null, null, null)
 		setTag(R.id.tag_tonal_action_icon, icon)
+		iconChanged = true
 	}
-	// Always re-assert the tint so every icon matches the back button. Some bars re-tint the same
-	// drawable instance after we style it — notably the contextual action mode, whose overlay sets
-	// colorControlNormal = colorPrimary — so guarding on instance identity alone would let that
-	// colour win. setTintList only invalidates (no relayout), so re-applying each pass is loop-safe.
-	icon.setTintList(metrics.iconTint)
+	// Re-assert the tint so every icon matches the back button. Some bars replace or rebind drawables
+	// after we style them, so guarding on instance identity alone would let a later default tint win.
+	// Guarding by colour keeps the action-mode pre-draw loop from invalidating the bar when the
+	// drawable is already correct.
+	if (iconChanged || getTag(R.id.tag_tonal_action_tint_color) != metrics.iconTintColor) {
+		icon.setTintList(metrics.iconTint)
+		setTag(R.id.tag_tonal_action_tint_color, metrics.iconTintColor)
+	}
 }
 
 /**
@@ -222,9 +229,24 @@ private fun ImageView.applyTonalCircleButton(metrics: TonalBarMetrics) {
 		setTag(R.id.tag_tonal_action_item, true)
 		background = context.createCircleButtonBackground()
 	}
-	if (imageTintList != metrics.iconTint) {
-		imageTintList = metrics.iconTint
+	forceImageIconTint(metrics)
+}
+
+private fun ImageView.forceImageIconTint(metrics: TonalBarMetrics) {
+	val icon = drawable
+	val iconChanged = getTag(R.id.tag_tonal_action_icon) !== icon
+	val needsTint = iconChanged ||
+		getTag(R.id.tag_tonal_action_tint_color) != metrics.iconTintColor ||
+		imageTintList?.defaultColor != metrics.iconTintColor ||
+		colorFilter != null
+	if (!needsTint) {
+		return
 	}
+	clearColorFilter()
+	imageTintList = metrics.iconTint
+	icon?.mutate()?.setTintList(metrics.iconTint)
+	setTag(R.id.tag_tonal_action_icon, icon)
+	setTag(R.id.tag_tonal_action_tint_color, metrics.iconTintColor)
 }
 
 // region small idempotent view helpers

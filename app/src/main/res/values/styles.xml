@@ -428,8 +428,8 @@
 	</style>
 
 	<style name="ThemeOverlay.Kotatsu.ActionMode" parent="">
-		<item name="colorOnSurface">?colorPrimary</item>
-		<item name="colorControlNormal">?colorPrimary</item>
+		<item name="colorOnSurface">?attr/colorOnSurfaceVariant</item>
+		<item name="colorControlNormal">?attr/colorOnSurfaceVariant</item>
 	</style>
 
 	<!-- Popup theme for the contextual action mode (selection) overflow menu. Empty parent so it

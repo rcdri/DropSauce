@@ -10,10 +10,12 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -32,12 +34,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
@@ -45,7 +47,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -53,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -65,10 +67,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -81,7 +85,7 @@ import coil3.request.ImageResult
 import coil3.request.allowHardware
 import coil3.request.crossfade
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.getTitle
 import org.koitharu.kotatsu.core.model.isLocal
@@ -95,6 +99,7 @@ import org.koitharu.kotatsu.details.data.MangaDetails
 import org.koitharu.kotatsu.details.ui.model.HistoryInfo
 import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.list.ui.model.MangaListModel
+import org.koitharu.kotatsu.main.ui.nav.composeColorSchemeFromSeed
 import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaTag
@@ -156,11 +161,12 @@ fun DetailsExpressiveScreen(
 	val baseScheme = MaterialTheme.colorScheme
 	val typography = MaterialTheme.typography
 	val isDark = baseScheme.surface.luminance() < 0.5f
-	// "Colors from cover": when an accent was extracted, re-theme the whole details page so every
-	// MaterialTheme.colorScheme accent role (primary/secondary/tertiary + containers) is derived from
-	// the cover color. Surfaces stay neutral for readability. When null, the app theme is used as-is.
+	// "Colors from cover": when an accent was extracted from the cover, derive a FULL Material 3 tonal
+	// colour scheme from it (every role — accents, containers, and the surfaces/background — via the
+	// Material colour-utilities tonal palettes) so the whole page is recoloured by the cover instead of
+	// the app theme. When null, the app theme is used as-is.
 	val themedScheme = remember(accent, baseScheme, isDark) {
-		if (accent != null) coverColorScheme(baseScheme, accent, isDark) else baseScheme
+		if (accent != null) composeColorSchemeFromSeed(accent.toArgb(), isDark) else baseScheme
 	}
 
 	MaterialTheme(colorScheme = themedScheme, typography = typography) {
@@ -411,7 +417,22 @@ private fun CoverCard(
 	actions: DetailsExpressiveActions,
 ) {
 	val ctx = LocalContext.current
-	val scope = rememberCoroutineScope()
+	// "Colors from cover": extract an accent from the cover by decoding a software copy through the
+	// image loader and running Palette on it. Done here (not via AsyncImage's onSuccess, which wasn't
+	// reliably delivering a Palette-readable bitmap) so it always runs and always gets a non-hardware
+	// bitmap; the result feeds onAccentExtracted, which re-themes the whole page from the cover.
+	LaunchedEffect(coverUrl, manga.source, dynamicColorEnabled, isDark) {
+		if (!dynamicColorEnabled || coverUrl.isNullOrEmpty()) return@LaunchedEffect
+		val accent = withContext(Dispatchers.Default) {
+			val request = ImageRequest.Builder(ctx)
+				.data(coverUrl)
+				.allowHardware(false)
+				.mangaSourceExtra(manga.source)
+				.build()
+			coverAccent(imageLoader.execute(request), isDark)
+		}
+		accent?.let(onAccentExtracted)
+	}
 	Surface(
 		shape = RoundedCornerShape(corner),
 		color = MaterialTheme.colorScheme.surfaceVariant,
@@ -421,13 +442,10 @@ private fun CoverCard(
 			.width(width)
 			.height(height),
 	) {
-		// When "colors from cover" is on we decode in software (allowHardware = false) so Palette can
-		// read the pixels of the very bitmap that's displayed, and extract the accent on success.
-		val coverRequest = remember(coverUrl, manga.source, dynamicColorEnabled) {
+		val coverRequest = remember(coverUrl, manga.source) {
 			ImageRequest.Builder(ctx)
 				.data(coverUrl)
 				.crossfade(true)
-				.allowHardware(!dynamicColorEnabled)
 				.mangaSourceExtra(manga.source)
 				.build()
 		}
@@ -437,16 +455,6 @@ private fun CoverCard(
 				imageLoader = imageLoader,
 				contentDescription = null,
 				contentScale = ContentScale.Crop,
-				onSuccess = if (dynamicColorEnabled) {
-					{ state ->
-						val result = state.result
-						scope.launch(Dispatchers.Default) {
-							coverAccent(result, isDark)?.let(onAccentExtracted)
-						}
-					}
-				} else {
-					null
-				},
 				modifier = Modifier
 					.fillMaxSize()
 					.clickable { actions.onCoverClick(manga) },
@@ -759,7 +767,9 @@ private fun WavyProgressBar(progress: Float, color: Color, trackColor: Color, mo
 		val stroke = 4.5.dp.toPx()
 		val activeW = size.width * animatedProgress
 		val amplitude = (size.height / 2f - stroke / 2f) * 0.9f
-		val waveLength = 24.dp.toPx()
+		// Match the Material wavy LinearProgressIndicator used by the download list (its default
+		// active-wave wavelength, m3_comp_progress_indicator_linear_active_indicator_wave_wavelength).
+		val waveLength = 40.dp.toPx()
 		if (animatedProgress < 1f) {
 			drawLine(
 				color = trackColor,
@@ -818,53 +828,109 @@ private fun DescriptionCard(description: CharSequence?) {
 private fun TagsSection(tags: Set<MangaTag>, accent: Color, onTagClick: (MangaTag) -> Unit) {
 	if (tags.isEmpty()) return
 	var expanded by rememberSaveable { mutableStateOf(false) }
-	FlowRow(
+	val measurer = rememberTextMeasurer()
+	val density = LocalDensity.current
+	val chipStyle = MaterialTheme.typography.labelLarge
+
+	BoxWithConstraints(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = SCREEN_PADDING, vertical = 7.dp),
-		horizontalArrangement = Arrangement.spacedBy(8.dp),
-		verticalArrangement = Arrangement.spacedBy(8.dp),
-		maxLines = if (expanded) Int.MAX_VALUE else TAGS_COLLAPSED_ROWS,
-		overflow = FlowRowOverflow.expandOrCollapseIndicator(
-			expandIndicator = {
-				TagToggleChip(text = stringResource(R.string.more), accent = accent) { expanded = true }
-			},
-			collapseIndicator = {
-				TagToggleChip(text = stringResource(R.string.collapse), accent = accent) { expanded = false }
-			},
-		),
 	) {
-		tags.forEach { tag ->
-			Surface(
-				shape = RoundedCornerShape(15.dp),
-				color = MaterialTheme.colorScheme.secondaryContainer,
-				onClick = { onTagClick(tag) },
-			) {
-				Text(
-					text = tag.title,
-					style = MaterialTheme.typography.labelLarge,
-					color = MaterialTheme.colorScheme.onSecondaryContainer,
-					modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+		// Work out up-front whether the genres actually wrap past the collapsed row budget — only then
+		// is an expand/collapse toggle meaningful. Relying on FlowRow's own indicator alone reserves a
+		// slot on the last row and pops in a dead toggle for tag sets that already fit in <= 3 rows.
+		val needsToggle = remember(tags, maxWidth, chipStyle) {
+			with(density) {
+				val available = maxWidth.toPx()
+				val chipHorizontalPadding = 28.dp.toPx() // 14.dp on each side, mirrors the chip below
+				val gap = 8.dp.toPx()
+				var rows = 1
+				var rowWidth = 0f
+				for (tag in tags) {
+					val chipWidth = measurer.measure(tag.title, chipStyle).size.width + chipHorizontalPadding
+					rowWidth = when {
+						rowWidth == 0f -> chipWidth
+						rowWidth + gap + chipWidth <= available -> rowWidth + gap + chipWidth
+						else -> {
+							rows++
+							chipWidth
+						}
+					}
+				}
+				rows > TAGS_COLLAPSED_ROWS
+			}
+		}
+
+		FlowRow(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.spacedBy(8.dp),
+			verticalArrangement = Arrangement.spacedBy(8.dp),
+			maxLines = if (needsToggle && !expanded) TAGS_COLLAPSED_ROWS else Int.MAX_VALUE,
+			overflow = if (needsToggle) {
+				FlowRowOverflow.expandOrCollapseIndicator(
+					expandIndicator = {
+						TagToggleChip(text = stringResource(R.string.more), accent = accent, expanded = false) { expanded = true }
+					},
+					collapseIndicator = {
+						TagToggleChip(text = stringResource(R.string.collapse), accent = accent, expanded = true) { expanded = false }
+					},
 				)
+			} else {
+				FlowRowOverflow.Visible
+			},
+		) {
+			// Tint the genre chips from the page accent (themed primary, or the cover colour when
+			// "colors from cover" is on) so they follow the active theme instead of the baseline
+			// secondary container, which renders purple under the default colour scheme.
+			tags.forEach { tag ->
+				Surface(
+					shape = RoundedCornerShape(15.dp),
+					color = accent.copy(alpha = 0.16f),
+					onClick = { onTagClick(tag) },
+				) {
+					Text(
+						text = tag.title,
+						style = MaterialTheme.typography.labelLarge,
+						color = accent,
+						modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+					)
+				}
 			}
 		}
 	}
 }
 
 @Composable
-private fun TagToggleChip(text: String, accent: Color, onClick: () -> Unit) {
+private fun TagToggleChip(text: String, accent: Color, expanded: Boolean, onClick: () -> Unit) {
+	// Deliberately distinct from the filled tonal genre chips: an outlined chip with a chevron, so it
+	// reads as an action (expand / collapse) rather than just another genre tag.
 	Surface(
 		shape = RoundedCornerShape(15.dp),
-		color = accent.copy(alpha = 0.16f),
+		color = Color.Transparent,
+		border = BorderStroke(1.dp, accent.copy(alpha = 0.6f)),
 		onClick = onClick,
 	) {
-		Text(
-			text = text,
-			style = MaterialTheme.typography.labelLarge,
-			fontWeight = FontWeight.Medium,
-			color = accent,
-			modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-		)
+		Row(
+			modifier = Modifier.padding(start = 14.dp, end = 10.dp, top = 9.dp, bottom = 9.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			Text(
+				text = text,
+				style = MaterialTheme.typography.labelLarge,
+				fontWeight = FontWeight.SemiBold,
+				color = accent,
+			)
+			Icon(
+				painter = painterResource(R.drawable.ic_expand_more),
+				contentDescription = null,
+				tint = accent,
+				modifier = Modifier
+					.size(18.dp)
+					.rotate(if (expanded) 180f else 0f),
+			)
+		}
 	}
 }
 
@@ -939,6 +1005,10 @@ private fun RelatedSection(
 		state = carouselState,
 		preferredItemWidth = 150.dp,
 		itemSpacing = 10.dp,
+		// The carousel's default single-advance fling only moves one item per swipe — that's what felt
+		// sticky and stopped abruptly. The multi-browse fling lets a flick coast across several covers
+		// with momentum and settle on a clean item edge, while keeping the M3 multi-browse mask/peek look.
+		flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(state = carouselState),
 		contentPadding = PaddingValues(horizontal = SCREEN_PADDING),
 		modifier = Modifier
 			.fillMaxWidth()
@@ -1089,39 +1159,6 @@ private fun coverAccent(result: ImageResult, isDark: Boolean): Int? {
 	hsl[1] = hsl[1].coerceIn(0.35f, 0.85f)
 	hsl[2] = if (isDark) hsl[2].coerceIn(0.55f, 0.74f) else hsl[2].coerceIn(0.36f, 0.52f)
 	return ColorUtils.HSLToColor(hsl)
-}
-
-/**
- * Derives a [ColorScheme] whose accent roles (primary/secondary/tertiary and their containers) are
- * built from the cover [seed] colour, leaving surfaces from [base] untouched so backgrounds stay
- * neutral and readable. Used for the per-manga "colors from cover" option.
- */
-private fun coverColorScheme(base: ColorScheme, seed: Color, dark: Boolean): ColorScheme {
-	val seedArgb = seed.toArgb()
-	fun tone(lightness: Float): Color {
-		val hsl = FloatArray(3)
-		ColorUtils.colorToHSL(seedArgb, hsl)
-		hsl[2] = lightness
-		return Color(ColorUtils.HSLToColor(hsl))
-	}
-	val onSeed = if (seed.luminance() > 0.5f) Color.Black else Color.White
-	val container = tone(if (dark) 0.28f else 0.88f)
-	val onContainer = tone(if (dark) 0.90f else 0.18f)
-	return base.copy(
-		primary = seed,
-		onPrimary = onSeed,
-		primaryContainer = container,
-		onPrimaryContainer = onContainer,
-		inversePrimary = tone(if (dark) 0.42f else 0.78f),
-		secondary = seed,
-		onSecondary = onSeed,
-		secondaryContainer = container,
-		onSecondaryContainer = onContainer,
-		tertiary = seed,
-		onTertiary = onSeed,
-		tertiaryContainer = container,
-		onTertiaryContainer = onContainer,
-	)
 }
 
 private fun withTime(base: String, info: HistoryInfo, res: android.content.res.Resources): String {

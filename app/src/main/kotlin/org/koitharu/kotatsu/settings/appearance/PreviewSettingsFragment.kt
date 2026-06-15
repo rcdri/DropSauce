@@ -41,7 +41,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.DetailsUiMode
-import org.koitharu.kotatsu.parsers.util.names
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
@@ -73,15 +72,18 @@ class PreviewSettingsFragment : BaseComposeSettingsFragment(R.string.details_app
 @Composable
 private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 	val ctx = LocalContext.current
-	val uiModeEntries = remember { ctx.resources.getStringArray(R.array.details_ui).toList() }
-	val uiModeValues = remember { DetailsUiMode.entries.names().toList() }
+	// Compact is listed first (and is the default for new installs), then Centralized.
+	val uiModeEntries = remember {
+		listOf(ctx.getString(R.string.details_ui_compact), ctx.getString(R.string.details_ui_expressive))
+	}
+	val uiModeValues = remember { listOf(DetailsUiMode.COMPACT.name, DetailsUiMode.EXPRESSIVE.name) }
 
-	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.EXPRESSIVE.name)
+	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.COMPACT.name)
 	var backdrop by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP, true)
 	var dynamicColor by rememberBooleanPref(AppSettings.KEY_DETAILS_DYNAMIC_COLOR, false)
 
 	val mode = remember(uiMode) {
-		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.EXPRESSIVE
+		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.COMPACT
 	}
 
 	SettingsScaffold(title = stringResource(R.string.details_appearance), onBack = onBack) {
