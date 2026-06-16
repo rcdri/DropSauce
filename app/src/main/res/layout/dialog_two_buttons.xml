@@ -39,7 +39,7 @@
 		android:layout_height="wrap_content"
 		android:minHeight="56dp"
 		android:visibility="gone"
-		app:shapeAppearance="?shapeAppearanceCornerFull"
+		app:shapeAppearance="@style/ShapeAppearance.Kotatsu.CornerFull"
 		tools:text="Enable"
 		tools:visibility="visible" />
 
@@ -51,7 +51,7 @@
 		android:layout_marginTop="8dp"
 		android:minHeight="56dp"
 		android:visibility="gone"
-		app:shapeAppearance="?shapeAppearanceCornerFull"
+		app:shapeAppearance="@style/ShapeAppearance.Kotatsu.CornerFull"
 		tools:text="Ask every time"
 		tools:visibility="visible" />
 
@@ -63,7 +63,7 @@
 		android:layout_marginTop="8dp"
 		android:minHeight="56dp"
 		android:visibility="gone"
-		app:shapeAppearance="?shapeAppearanceCornerFull"
+		app:shapeAppearance="@style/ShapeAppearance.Kotatsu.CornerFull"
 		tools:text="No thanks"
 		tools:visibility="visible" />
 
