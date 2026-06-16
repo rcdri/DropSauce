@@ -103,11 +103,6 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 						shape = pos.shape,
 					)
 				}
-			}
-		}
-		item { Spacer(Modifier.height(8.dp).fillMaxWidth()) }
-		item {
-			SettingsGroup(title = stringResource(R.string.details_backdrop)) {
 				item { pos ->
 					SwitchSettingsItem(
 						title = stringResource(R.string.details_backdrop),
@@ -124,10 +119,6 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 	}
 }
 
-/**
- * A small, theme-aware mock of the details page that reflects the selected layout: a centered cover
- * for "Centralized" or a side cover for "Compact", with an optional blurred-cover backdrop band.
- */
 @Composable
 private fun DetailsStylePreview(centered: Boolean, backdropEnabled: Boolean) {
 	val scheme = MaterialTheme.colorScheme
@@ -135,24 +126,36 @@ private fun DetailsStylePreview(centered: Boolean, backdropEnabled: Boolean) {
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp)
-			.height(216.dp),
+			.height(280.dp),
 		shape = RoundedCornerShape(20.dp),
 		color = scheme.surface,
 		border = BorderStroke(1.dp, scheme.outlineVariant),
 	) {
 		Box(Modifier.fillMaxSize()) {
+			// Backdrop gradient covers the full preview
 			if (backdropEnabled) {
 				Box(
 					Modifier
 						.fillMaxWidth()
-						.fillMaxHeight(0.52f)
+						.fillMaxHeight()
 						.background(
 							Brush.verticalGradient(
-								listOf(scheme.primary.copy(alpha = 0.28f), Color.Transparent),
+								listOf(
+									scheme.primary.copy(alpha = 0.38f),
+									scheme.tertiary.copy(alpha = 0.18f),
+									Color.Transparent,
+								),
 							),
 						),
 				)
 			}
+			// Thin status-bar strip
+			Box(
+				Modifier
+					.fillMaxWidth()
+					.height(5.dp)
+					.background(scheme.outlineVariant.copy(alpha = 0.25f)),
+			)
 			if (centered) PreviewCentered(scheme) else PreviewCompact(scheme)
 		}
 	}
@@ -163,44 +166,105 @@ private fun PreviewCentered(scheme: ColorScheme) {
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.padding(top = 22.dp, start = 16.dp, end = 16.dp),
+			.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
 	) {
-		PreviewCover(scheme, 50.dp, 72.dp)
-		Spacer(Modifier.height(13.dp))
-		PreviewBar(122.dp, 10.dp, scheme.onSurface.copy(alpha = 0.9f))
-		Spacer(Modifier.height(7.dp))
-		PreviewBar(82.dp, 7.dp, scheme.onSurfaceVariant.copy(alpha = 0.6f))
-		Spacer(Modifier.height(13.dp))
-		Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-			PreviewPill(42.dp, scheme)
-			PreviewPill(30.dp, scheme)
-			PreviewPill(48.dp, scheme)
+		PreviewCover(scheme, 68.dp, 98.dp)
+		Spacer(Modifier.height(8.dp))
+		PreviewBar(148.dp, 11.dp, scheme.onSurface.copy(alpha = 0.9f))
+		Spacer(Modifier.height(5.dp))
+		PreviewBar(96.dp, 7.dp, scheme.onSurfaceVariant.copy(alpha = 0.6f))
+		Spacer(Modifier.height(10.dp))
+		Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+			PreviewPill(44.dp, scheme)
+			PreviewPill(32.dp, scheme)
+			PreviewPill(50.dp, scheme)
 		}
+		Spacer(Modifier.height(10.dp))
+		Box(
+			Modifier
+				.fillMaxWidth()
+				.height(24.dp)
+				.clip(RoundedCornerShape(12.dp))
+				.background(scheme.primaryContainer.copy(alpha = 0.75f)),
+		)
+		Spacer(Modifier.height(8.dp))
+		Box(
+			Modifier
+				.fillMaxWidth()
+				.height(6.dp)
+				.clip(RoundedCornerShape(50))
+				.background(scheme.onSurfaceVariant.copy(alpha = 0.25f)),
+		)
+		Spacer(Modifier.height(5.dp))
+		Box(
+			Modifier
+				.fillMaxWidth(0.8f)
+				.height(6.dp)
+				.clip(RoundedCornerShape(50))
+				.background(scheme.onSurfaceVariant.copy(alpha = 0.18f)),
+		)
+		Spacer(Modifier.height(5.dp))
+		Box(
+			Modifier
+				.fillMaxWidth(0.55f)
+				.height(6.dp)
+				.clip(RoundedCornerShape(50))
+				.background(scheme.onSurfaceVariant.copy(alpha = 0.12f)),
+		)
 	}
 }
 
 @Composable
 private fun PreviewCompact(scheme: ColorScheme) {
-	Row(
+	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.padding(top = 26.dp, start = 16.dp, end = 16.dp),
+			.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
 	) {
-		PreviewCover(scheme, 58.dp, 84.dp)
-		Spacer(Modifier.width(14.dp))
-		Column(modifier = Modifier.padding(top = 6.dp)) {
-			PreviewBar(132.dp, 11.dp, scheme.onSurface.copy(alpha = 0.9f))
-			Spacer(Modifier.height(9.dp))
-			PreviewBar(110.dp, 8.dp, scheme.onSurfaceVariant.copy(alpha = 0.6f))
-			Spacer(Modifier.height(6.dp))
-			PreviewBar(96.dp, 8.dp, scheme.onSurfaceVariant.copy(alpha = 0.6f))
-			Spacer(Modifier.height(14.dp))
-			Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-				PreviewPill(42.dp, scheme)
-				PreviewPill(32.dp, scheme)
+		Row {
+			PreviewCover(scheme, 76.dp, 110.dp)
+			Spacer(Modifier.width(12.dp))
+			Column(modifier = Modifier.weight(1f).padding(top = 4.dp)) {
+				PreviewBar(140.dp, 11.dp, scheme.onSurface.copy(alpha = 0.9f))
+				Spacer(Modifier.height(5.dp))
+				PreviewBar(104.dp, 7.dp, scheme.onSurface.copy(alpha = 0.9f))
+				Spacer(Modifier.height(6.dp))
+				PreviewBar(96.dp, 7.dp, scheme.onSurfaceVariant.copy(alpha = 0.6f))
+				Spacer(Modifier.height(5.dp))
+				PreviewBar(80.dp, 7.dp, scheme.onSurfaceVariant.copy(alpha = 0.45f))
+				Spacer(Modifier.height(12.dp))
+				Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+					PreviewPill(40.dp, scheme)
+					PreviewPill(30.dp, scheme)
+					PreviewPill(36.dp, scheme)
+				}
 			}
 		}
+		Spacer(Modifier.height(10.dp))
+		Box(
+			Modifier
+				.fillMaxWidth()
+				.height(24.dp)
+				.clip(RoundedCornerShape(12.dp))
+				.background(scheme.primaryContainer.copy(alpha = 0.75f)),
+		)
+		Spacer(Modifier.height(8.dp))
+		Box(
+			Modifier
+				.fillMaxWidth()
+				.height(6.dp)
+				.clip(RoundedCornerShape(50))
+				.background(scheme.onSurfaceVariant.copy(alpha = 0.25f)),
+		)
+		Spacer(Modifier.height(5.dp))
+		Box(
+			Modifier
+				.fillMaxWidth(0.8f)
+				.height(6.dp)
+				.clip(RoundedCornerShape(50))
+				.background(scheme.onSurfaceVariant.copy(alpha = 0.18f)),
+		)
 	}
 }
 

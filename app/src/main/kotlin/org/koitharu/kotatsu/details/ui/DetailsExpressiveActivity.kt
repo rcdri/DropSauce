@@ -154,6 +154,7 @@ class DetailsExpressiveActivity :
 					scrobblerService = viewModel.scrobblingInfo.value.firstOrNull()?.scrobbler,
 				)
 			},
+			onScrobblingCardClick = { index -> router.showScrobblingInfoSheet(index) },
 			onRelatedMore = { manga -> router.openRelated(manga) },
 			onRelatedClick = { item -> router.openDetails(item.toMangaWithOverride()) },
 		)

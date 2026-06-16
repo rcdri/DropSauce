@@ -88,6 +88,7 @@ import org.koitharu.kotatsu.core.util.FileSize
 import org.koitharu.kotatsu.core.util.ext.mangaSourceExtra
 import org.koitharu.kotatsu.details.data.MangaDetails
 import org.koitharu.kotatsu.details.ui.model.HistoryInfo
+import org.koitharu.kotatsu.details.ui.scrobbling.labelResId
 import org.koitharu.kotatsu.list.domain.ReadingProgress
 import org.koitharu.kotatsu.list.ui.model.MangaListModel
 import org.koitharu.kotatsu.parsers.model.ContentRating
@@ -111,6 +112,7 @@ class DetailsExpressiveActions(
 	val onAuthorClick: (String) -> Unit,
 	val onTagClick: (MangaTag) -> Unit,
 	val onScrobblingMore: () -> Unit,
+	val onScrobblingCardClick: (Int) -> Unit,
 	val onRelatedMore: (Manga) -> Unit,
 	val onRelatedClick: (MangaListModel) -> Unit,
 )
@@ -226,6 +228,7 @@ fun DetailsExpressiveScreen(
 						imageLoader = imageLoader,
 						accent = accentColor,
 						onMore = actions.onScrobblingMore,
+						onCardClick = actions.onScrobblingCardClick,
 					)
 				}
 
@@ -266,9 +269,7 @@ private fun ExpressiveBackdrop(
 			.build()
 	}
 	Box(
-		modifier = Modifier
-			.fillMaxWidth()
-			.height(480.dp),
+		modifier = Modifier.fillMaxSize(),
 	) {
 		val blurMod = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 			Modifier.blur(40.dp)
@@ -289,10 +290,10 @@ private fun ExpressiveBackdrop(
 				.fillMaxSize()
 				.background(
 					Brush.verticalGradient(
-						0f to surface.copy(alpha = 0.30f),
-						0.4f to surface.copy(alpha = 0.55f),
-						0.78f to surface.copy(alpha = 0.94f),
-						1f to surface,
+						0f to surface.copy(alpha = 0.15f),
+						0.25f to surface.copy(alpha = 0.42f),
+						0.55f to surface.copy(alpha = 0.68f),
+						1f to surface.copy(alpha = 0.84f),
 					),
 				),
 		)
@@ -894,18 +895,21 @@ private fun ScrobblingSection(
 	imageLoader: ImageLoader,
 	accent: Color,
 	onMore: () -> Unit,
+	onCardClick: (Int) -> Unit,
 ) {
 	SectionHeader(title = stringResource(R.string.tracking), action = stringResource(R.string.manage), accent = accent, onAction = onMore)
-	LazyRow(
-		contentPadding = PaddingValues(horizontal = SCREEN_PADDING),
-		horizontalArrangement = Arrangement.spacedBy(12.dp),
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = SCREEN_PADDING),
+		verticalArrangement = Arrangement.spacedBy(10.dp),
 	) {
-		items(items, key = { it.scrobbler.name + it.targetId }) { info ->
+		items.forEachIndexed { index, info ->
 			Surface(
 				shape = RoundedCornerShape(20.dp),
 				color = MaterialTheme.colorScheme.surfaceContainerHigh,
-				onClick = onMore,
-				modifier = Modifier.width(230.dp),
+				onClick = { onCardClick(index) },
+				modifier = Modifier.fillMaxWidth(),
 			) {
 				Row(
 					modifier = Modifier.padding(12.dp),
@@ -917,11 +921,41 @@ private fun ScrobblingSection(
 						contentDescription = null,
 						contentScale = ContentScale.Crop,
 						modifier = Modifier
-							.size(48.dp, 66.dp)
+							.size(52.dp, 74.dp)
 							.clip(RoundedCornerShape(12.dp)),
 					)
-					Spacer(Modifier.width(12.dp))
-					Column {
+					Spacer(Modifier.width(14.dp))
+					Column(modifier = Modifier.weight(1f)) {
+						Row(
+							modifier = Modifier.fillMaxWidth(),
+							horizontalArrangement = Arrangement.SpaceBetween,
+							verticalAlignment = Alignment.CenterVertically,
+						) {
+							Row(
+								verticalAlignment = Alignment.CenterVertically,
+								horizontalArrangement = Arrangement.spacedBy(5.dp),
+							) {
+								Icon(
+									painter = painterResource(info.scrobbler.iconResId),
+									contentDescription = null,
+									tint = Color.Unspecified,
+									modifier = Modifier.size(14.dp),
+								)
+								Text(
+									text = stringResource(info.scrobbler.titleResId),
+									style = MaterialTheme.typography.labelSmall,
+									color = MaterialTheme.colorScheme.onSurfaceVariant,
+								)
+							}
+							info.status?.let { status ->
+								Text(
+									text = stringResource(status.labelResId),
+									style = MaterialTheme.typography.labelSmall,
+									color = accent,
+								)
+							}
+						}
+						Spacer(Modifier.height(8.dp))
 						Text(
 							text = info.title,
 							style = MaterialTheme.typography.labelLarge,
@@ -929,19 +963,31 @@ private fun ScrobblingSection(
 							maxLines = 2,
 							overflow = TextOverflow.Ellipsis,
 						)
-						info.status?.let { status ->
-							Spacer(Modifier.height(4.dp))
-							Text(
-								text = status.name.lowercase().replaceFirstChar { it.uppercase() },
-								style = MaterialTheme.typography.bodySmall,
-								color = accent,
-							)
+						if (info.rating > 0f) {
+							Spacer(Modifier.height(10.dp))
+							Row(
+								verticalAlignment = Alignment.CenterVertically,
+								horizontalArrangement = Arrangement.spacedBy(4.dp),
+							) {
+								Icon(
+									painter = painterResource(R.drawable.ic_star_small),
+									contentDescription = null,
+									tint = accent,
+									modifier = Modifier.size(16.dp),
+								)
+								Text(
+									text = "${"%.1f".format(info.rating * 5)} / 5",
+									style = MaterialTheme.typography.bodyMedium,
+									color = MaterialTheme.colorScheme.onSurface,
+								)
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+	Spacer(Modifier.height(8.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
