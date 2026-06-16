@@ -32,4 +32,4 @@ val File.isPdfFile: Boolean
 	get() = isFile && isPdfExtension(extension)
 
 val File.isSupportedMangaArchive: Boolean
-	get() = isFile && (isZipExtension(extension) || isPdfExtension(extension))
+	get() = isFile && isSupportedArchive(name)

@@ -112,13 +112,6 @@ object WidgetCoverLoader {
 		bmp
 	}.onFailure { Log.w(TAG, "rasterizeDrawable failed", it) }.getOrNull()
 
-	@Suppress("UNUSED_PARAMETER")
-	private fun ImageResult?.extractBitmap(stage: String): Bitmap? = when (val r = this) {
-		null -> null
-		is SuccessResult -> r.toBitmapOrNull()
-		is ErrorResult -> null
-	}
-
 	private fun Bitmap.roundedCenterCrop(
 		@Px outW: Int,
 		@Px outH: Int,

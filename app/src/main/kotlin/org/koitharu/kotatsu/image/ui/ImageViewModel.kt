@@ -34,9 +34,8 @@ class ImageViewModel @Inject constructor(
 	fun saveImage(destination: Uri) {
 		launchLoadingJob(Dispatchers.Default) {
 			val request = ImageRequest.Builder(context)
-				.memoryCachePolicy(CachePolicy.READ_ONLY)
-				.data(savedStateHandle.require<Uri>(AppRouter.KEY_DATA))
 				.memoryCachePolicy(CachePolicy.DISABLED)
+				.data(savedStateHandle.require<Uri>(AppRouter.KEY_DATA))
 				.mangaSourceExtra(MangaSource(savedStateHandle[AppRouter.KEY_SOURCE]))
 				.build()
 			val bitmap = coil.execute(request).getDrawableOrThrow().toBitmap()

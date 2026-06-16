@@ -47,7 +47,6 @@ import org.koitharu.kotatsu.mihon.MihonExtensionManager
 import org.koitharu.kotatsu.parsers.util.longHashCode
 import org.koitharu.kotatsu.scrobbling.common.data.ScrobblingEntity
 import org.koitharu.kotatsu.stats.data.StatsEntity
-import java.net.URI
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -512,6 +511,3 @@ class MihonBackupManager @Inject constructor(
     return (normalizedIndex + 1) / chaptersCount.toFloat()
   }
 }
-
-
-

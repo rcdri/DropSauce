@@ -562,7 +562,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 			.attachToRecyclerView(viewBinding.recyclerViewSearch)
 	}
 
-
 	private fun setNavbarPinned(isPinned: Boolean) {
 		val bottomNavBar = viewBinding.bottomNav
 		bottomNavBar?.isPinned = isPinned

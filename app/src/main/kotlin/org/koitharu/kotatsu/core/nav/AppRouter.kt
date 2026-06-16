@@ -849,7 +849,6 @@ class AppRouter private constructor(
         const val ACTION_TRACKER = "${BuildConfig.APPLICATION_ID}.action.MANAGE_TRACKER"
 
         private const val TYPE_TEXT = "text/plain"
-        private const val TYPE_IMAGE = "image/*"
         private const val TYPE_CBZ = "application/x-cbz"
 
         private fun Class<out Fragment>.fragmentTag() = name // TODO
