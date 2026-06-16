@@ -127,7 +127,6 @@ class SearchV2Helper @AssistedInject constructor(
 		}
 	}
 
-
 	private fun Manga.matches(query: String, threshold: Float): Boolean {
 		return matchesTitles(title, query, threshold) || matchesTitles(altTitles.firstOrNull(), query, threshold)
 	}

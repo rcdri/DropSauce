@@ -57,7 +57,6 @@ private fun getVolumePath(volumeId: String, context: Context): String? {
 	}
 }
 
-
 private fun getVolumePathBeforeAndroid11(volumeId: String, context: Context): String? = runCatching {
 	val mStorageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
 	val storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")

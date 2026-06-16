@@ -24,7 +24,6 @@ interface ExtensionActionListener {
 	fun onExtensionHideClick(item: SourceCatalogItem.Extension)
 }
 
-
 fun sourceCatalogItemExtensionAD(
 	listener: ExtensionActionListener,
 ) = adapterDelegateViewBinding<SourceCatalogItem.Extension, ListModel, ItemSourceCatalogBinding>(

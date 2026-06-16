@@ -150,7 +150,6 @@ class AppearanceSettingsFragment : BaseComposeSettingsFragment(R.string.appearan
 		super.onDestroyView()
 	}
 
-
 	private fun openSystemLocaleSettings() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 			val intent = Intent(

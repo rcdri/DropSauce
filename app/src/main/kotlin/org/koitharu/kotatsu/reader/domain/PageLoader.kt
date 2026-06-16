@@ -363,7 +363,6 @@ class PageLoader @Inject constructor(
 			.tag(MangaSource::class.java, mangaSource)
 			.build()
 
-
 		@Blocking
 		private fun Uri.exists(): Boolean = when {
 			isFileUri() -> toFile().exists()

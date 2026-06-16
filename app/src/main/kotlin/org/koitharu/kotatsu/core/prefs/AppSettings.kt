@@ -484,7 +484,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 			}
 		}
 
-
 	var backupIncludeLibraryEntries: Boolean
 		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_LIBRARY, true)
 		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_LIBRARY, value) }

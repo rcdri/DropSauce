@@ -15,7 +15,6 @@ import org.koitharu.kotatsu.parsers.util.toArraySet
 import java.io.Serializable
 import java.util.EnumSet
 
-
 // https://issuetracker.google.com/issues/240585930
 
 inline fun <reified T : Parcelable> Bundle.getParcelableCompat(key: String): T? {

@@ -7,7 +7,6 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-
 data class CookieWrapper(
 	val cookie: Cookie,
 ) {

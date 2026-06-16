@@ -467,7 +467,6 @@ class MihonBackupManager @Inject constructor(
         return if (sourceId > 0) "MIHON_$sourceId" else "UNKNOWN"
     }
 
-
     private fun resolveSourceTitle(sourceId: Long, backupSources: List<MihonBackupSource>): String? {
         val installed = mihonExtensionManager.getMihonMangaSourceById(sourceId)
         return installed?.displayName ?: backupSources.firstOrNull { it.sourceId == sourceId }?.name

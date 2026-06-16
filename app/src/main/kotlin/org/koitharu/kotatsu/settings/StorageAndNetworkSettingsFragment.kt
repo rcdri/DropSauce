@@ -101,7 +101,6 @@ class StorageAndNetworkSettingsFragment : BaseComposeSettingsFragment(R.string.s
 		}
 	}
 
-
 	private fun buildProxySummary(): String {
 		val type = settings.proxyType
 		val address = settings.proxyAddress

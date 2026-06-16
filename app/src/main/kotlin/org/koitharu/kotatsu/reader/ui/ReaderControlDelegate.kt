@@ -52,7 +52,6 @@ class ReaderControlDelegate(
 
 			KeyEvent.KEYCODE_PAGE_DOWN -> switchBy(1, event, false)
 
-
 			KeyEvent.KEYCODE_NAVIGATE_PREVIOUS -> switchBy(-1, event, false)
 			KeyEvent.KEYCODE_PAGE_UP -> switchBy(-1, event, false)
 

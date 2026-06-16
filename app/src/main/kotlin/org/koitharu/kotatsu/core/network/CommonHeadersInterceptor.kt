@@ -36,12 +36,10 @@ class CommonHeadersInterceptor @Inject constructor(
 		}
 		val headersBuilder = request.headers.newBuilder()
 			.removeAll(CommonHeaders.MANGA_SOURCE)
-			
 		val requestHeaders = when (repository) {
-            is MihonMangaRepository -> (repository.mihonSource as? HttpSource)?.headers
-            else -> null
-        }
-        
+			is MihonMangaRepository -> (repository.mihonSource as? HttpSource)?.headers
+			else -> null
+		}
 		requestHeaders?.let {
 			headersBuilder.mergeWith(it, replaceExisting = false)
 		}

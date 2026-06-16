@@ -91,7 +91,6 @@ fun recommendationCarouselItemAD(
 	}
 }
 
-
 fun exploreSourceListItemAD(
 	listener: OnListItemClickListener<MangaSourceItem>,
 ) = adapterDelegateViewBinding<MangaSourceItem, ListModel, ItemExploreSourceListBinding>(

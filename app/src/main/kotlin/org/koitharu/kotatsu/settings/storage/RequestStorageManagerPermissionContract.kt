@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
-
 @RequiresApi(Build.VERSION_CODES.R)
 class RequestStorageManagerPermissionContract : ActivityResultContract<String, Boolean>() {
 
