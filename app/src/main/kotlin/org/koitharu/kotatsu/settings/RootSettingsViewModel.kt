@@ -15,8 +15,6 @@ class RootSettingsViewModel @Inject constructor(
 	sourcesRepository: MangaSourcesRepository,
 ) : BaseViewModel() {
 
-	val totalSourcesCount = 0 // Sources come from extensions
-
 	val enabledSourcesCount = sourcesRepository.observeEnabledSourcesCount()
 		.withErrorHandling()
 		.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Eagerly, -1)

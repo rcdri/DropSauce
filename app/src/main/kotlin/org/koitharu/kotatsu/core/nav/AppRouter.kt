@@ -700,13 +700,13 @@ class AppRouter private constructor(
 		private fun resolveSettings(context: Context) =
 			EntryPointAccessors.fromApplication<AppRouterEntryPoint>(context.applicationContext).settings
 
-		private fun detailsActivityClass(context: Context) = DetailsExpressiveActivity::class.java
+		private fun detailsActivityClass() = DetailsExpressiveActivity::class.java
 
-        fun detailsIntent(context: Context, manga: Manga) = Intent(context, detailsActivityClass(context))
+        fun detailsIntent(context: Context, manga: Manga) = Intent(context, detailsActivityClass())
             .putExtra(KEY_MANGA, ParcelableManga(manga))
             .setData(shortMangaUrl(manga.id))
 
-        fun detailsIntent(context: Context, mangaId: Long) = Intent(context, detailsActivityClass(context))
+        fun detailsIntent(context: Context, mangaId: Long) = Intent(context, detailsActivityClass())
             .putExtra(KEY_ID, mangaId)
             .setData(shortMangaUrl(mangaId))
 
