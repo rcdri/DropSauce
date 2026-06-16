@@ -1615,6 +1615,14 @@
 
 		</activity-alias>
 
+		<provider
+			android:name="org.acra.attachment.AcraContentProvider"
+			android:authorities="${applicationId}.acra"
+			android:exported="false"
+			android:grantUriPermissions="true"
+			android:process=":acra"
+			tools:node="replace" />
+
 	</application>
 
 </manifest>
