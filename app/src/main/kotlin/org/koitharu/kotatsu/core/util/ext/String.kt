@@ -1,11 +1,9 @@
 package org.koitharu.kotatsu.core.util.ext
 
 import android.content.Context
-import androidx.collection.arraySetOf
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.parsers.util.ellipsize
 import java.util.UUID
-
 
 fun String.toUUIDOrNull(): UUID? = try {
 	UUID.fromString(this)
@@ -40,7 +38,7 @@ fun String.transliterate(skipMissing: Boolean): String {
 }
 
 fun String.toFileNameSafe(): String = this.transliterate(false)
-	.replace(Regex("[^a-z0-9_\\-]", arraySetOf(RegexOption.IGNORE_CASE)), " ")
+	.replace(Regex("[^a-z0-9_\\-]", setOf(RegexOption.IGNORE_CASE)), " ")
 	.replace(Regex("\\s+"), "_")
 
 fun CharSequence.sanitize(): CharSequence {

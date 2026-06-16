@@ -76,7 +76,6 @@ open class BaseApp : Application(), Configuration.Provider {
 			return
 		}
 		AppCompatDelegate.setDefaultNightMode(settings.theme)
-		// Keep default platform security provider.
 		setupActivityLifecycleCallbacks()
 		cleanupDownloadedExtensionApks()
 		processLifecycleScope.launch {

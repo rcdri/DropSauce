@@ -150,10 +150,8 @@ fun Context.getLocalesConfig(): LocaleListCompat {
 	try {
 		val xpp: XmlPullParser = resources.getXml(R.xml.locales_config)
 		while (xpp.eventType != XmlPullParser.END_DOCUMENT) {
-			if (xpp.eventType == XmlPullParser.START_TAG) {
-				if (xpp.name == "locale") {
-					tagsList.add(xpp.getAttributeValue(0))
-				}
+			if (xpp.eventType == XmlPullParser.START_TAG && xpp.name == "locale") {
+				tagsList.add(xpp.getAttributeValue(0))
 			}
 			xpp.next()
 		}

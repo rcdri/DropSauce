@@ -36,13 +36,7 @@ fun <T> List<T>.takeMostFrequent(limit: Int): List<T> {
 	for (item in this) {
 		map[item] = map.getOrDefault(item, 0) + 1
 	}
-	val entries = map.entries.sortedByDescending { it.value }
-	val count = minOf(limit, entries.size)
-	return buildList(count) {
-		repeat(count) { i ->
-			add(entries[i].key)
-		}
-	}
+	return map.entries.sortedByDescending { it.value }.take(limit).map { it.key }
 }
 
 inline fun <reified E : Enum<E>> Collection<E>.toEnumSet(): EnumSet<E> = if (isEmpty()) {
@@ -78,19 +72,15 @@ fun <R : MutableCollection<Long>> LongSet.toCollection(out: R): R = out.also { r
 
 fun <T, R> Collection<T>.mapSortedByCount(isDescending: Boolean = true, mapper: (T) -> R): List<R> {
 	val grouped = groupBy(mapper).toList()
-	val sortSelector: (Pair<R, List<T>>) -> Int = { it.second.size }
-	val sorted = if (isDescending) {
-		grouped.sortedByDescending(sortSelector)
-	} else {
-		grouped.sortedBy(sortSelector)
-	}
-	return sorted.map { it.first }
+	return (if (isDescending) grouped.sortedByDescending { it.second.size } else grouped.sortedBy { it.second.size })
+		.map { it.first }
 }
 
-fun Collection<CharSequence?>.contains(element: CharSequence?, ignoreCase: Boolean): Boolean = any { x ->
+private fun charSequencesMatch(x: CharSequence?, element: CharSequence?, ignoreCase: Boolean): Boolean =
 	(x == null && element == null) || (x != null && element != null && x.contains(element, ignoreCase))
-}
 
-fun Collection<CharSequence?>.indexOfContains(element: CharSequence?, ignoreCase: Boolean): Int = indexOfFirst { x ->
-	(x == null && element == null) || (x != null && element != null && x.contains(element, ignoreCase))
-}
+fun Collection<CharSequence?>.contains(element: CharSequence?, ignoreCase: Boolean): Boolean =
+	any { charSequencesMatch(it, element, ignoreCase) }
+
+fun Collection<CharSequence?>.indexOfContains(element: CharSequence?, ignoreCase: Boolean): Int =
+	indexOfFirst { charSequencesMatch(it, element, ignoreCase) }
