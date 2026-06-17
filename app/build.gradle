@@ -256,8 +256,6 @@ dependencies {
 	implementation libs.acra.dialog
 
 
-	debugImplementation libs.leakcanary.android
-
 	testImplementation libs.junit
 	testImplementation libs.kotlinx.coroutines.test
 
