@@ -1,0 +1,3 @@
+## 2024-06-17 - [Optimized MihonBackupManager Batch Inserts]
+**Learning:** Found significant N+1 queries during backup restoration logic in `MihonBackupManager`. It was previously inserting `TagRelations`, `Favourites`, `Stats`, and `Scrobblings` row-by-row during loop traversal of thousands of objects, generating tens of thousands of database calls.
+**Action:** Created `@Upsert` and batch `upsertAll` methods across the DAOs (`MangaDao`, `FavouritesDao`, `StatsDao`, `ScrobblingDao`) that accept `List<T>`. Flattened nested loop traversals from `pending.forEach { ... }` into collections mapping `.flatMap`, filtering out empties before calling batch database routines once.

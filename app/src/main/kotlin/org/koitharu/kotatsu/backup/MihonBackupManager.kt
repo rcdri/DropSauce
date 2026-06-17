@@ -391,21 +391,39 @@ class MihonBackupManager @Inject constructor(
         pending.flatMapTo(linkedSetOf()) { it.tags }
             .takeIf { it.isNotEmpty() }
             ?.let { db.getTagsDao().upsert(it.toList()) }
-        pending.forEach { item -> db.getMangaDao().upsert(item.manga, item.tags) }
-        pending.forEach { item -> item.favourites.forEach { db.getFavouritesDao().upsert(it) } }
+
+        val mangasAndTags = pending.map { it.manga to it.tags }
+        if (mangasAndTags.isNotEmpty()) {
+            db.getMangaDao().upsertAll(mangasAndTags)
+        }
+
+        val favourites = pending.flatMap { it.favourites }
+        if (favourites.isNotEmpty()) {
+            db.getFavouritesDao().upsert(favourites)
+        }
+
         pending.forEach { item -> db.getChaptersDao().replaceAll(item.manga.id, item.chapters) }
-        pending.forEach { item -> item.history?.let { db.getHistoryDao().upsert(it) } }
-        pending.forEach { item -> item.stats?.let { db.getStatsDao().upsert(it) } }
+
+        val histories = pending.mapNotNull { it.history }
+        if (histories.isNotEmpty()) {
+            db.getHistoryDao().upsert(histories)
+        }
+
+        val stats = pending.mapNotNull { it.stats }
+        if (stats.isNotEmpty()) {
+            db.getStatsDao().upsert(stats)
+        }
+
         pending.forEach { item ->
             if (item.bookmarks.isNotEmpty()) {
                 db.getBookmarksDao().upsert(item.bookmarks)
             }
         }
-        pending.forEach { item ->
-            item.scrobblings.forEach {
-                db.getScrobblingDao().upsert(it)
-                diagnostics.restoredTrackingCount += 1
-            }
+
+        val scrobblings = pending.flatMap { it.scrobblings }
+        if (scrobblings.isNotEmpty()) {
+            db.getScrobblingDao().upsert(scrobblings)
+            diagnostics.restoredTrackingCount += scrobblings.size
         }
 
         diagnostics.restoredMangaCount += pending.size

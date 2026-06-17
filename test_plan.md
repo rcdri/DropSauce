@@ -1,0 +1,6 @@
+1. **Identify Performance Bottleneck**: The `MihonBackupManager.restoreManga` method processes restoring relationships, favourites, history, stats, and scrobblings in a loop (N+1 query problem). For example, `pending.forEach { item -> item.scrobblings.forEach { db.getScrobblingDao().upsert(it) } }` issues a separate DB query for every single scrobbling track, which incurs significant overhead. Additionally, `MangaDao.upsert(manga, tags)` inserts tags one by one using `.forEach { insertTagRelation(it) }`.
+2. **Optimize `MangaDao`**: Add a batch insert method `@Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun insertTagRelations(tags: List<MangaTagsEntity>)` to `MangaDao.kt` and use it inside `upsert(manga, tags)` instead of iterating.
+3. **Optimize DAOs**: Add `@Upsert abstract suspend fun upsert(entities: List<T>)` to `FavouritesDao`, `StatsDao`, and `ScrobblingDao`.
+4. **Optimize `MihonBackupManager`**: Refactor `restoreManga` loops to collect all entities and call the batch `upsert` methods once per type, effectively reducing thousands of database queries into a handful of batch queries.
+5. **Run tests & lint**: Run `./gradlew ktlintCheck` and `./gradlew testDebugUnitTest -PskipLint` to verify everything is correct.
+6. **Submit PR**: Submit the PR with the performance metrics documented.

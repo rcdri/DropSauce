@@ -51,14 +51,23 @@ abstract class MangaDao {
 	@Upsert
 	protected abstract suspend fun upsert(manga: MangaEntity)
 
+	@Upsert
+	protected abstract suspend fun upsert(mangas: List<MangaEntity>)
+
 	@Update(onConflict = OnConflictStrategy.IGNORE)
 	abstract suspend fun update(manga: MangaEntity): Int
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	abstract suspend fun insertTagRelation(tag: MangaTagsEntity): Long
 
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	protected abstract suspend fun insertTagRelations(tags: List<MangaTagsEntity>)
+
 	@Query("DELETE FROM manga_tags WHERE manga_id = :mangaId")
 	abstract suspend fun clearTagRelation(mangaId: Long)
+
+	@Query("DELETE FROM manga_tags WHERE manga_id IN (:mangaIds)")
+	abstract suspend fun clearTagRelations(mangaIds: List<Long>)
 
 	@Transaction
 	@Delete
@@ -87,6 +96,24 @@ abstract class MangaDao {
 			}.forEach {
 				insertTagRelation(it)
 			}
+		}
+	}
+
+	@Transaction
+	open suspend fun upsertAll(mangasAndTags: List<Pair<MangaEntity, Iterable<TagEntity>?>>) {
+		upsert(mangasAndTags.map { it.first })
+		val mangaIdsWithTags = mangasAndTags.filter { it.second != null }.map { it.first.id }.chunked(900)
+		mangaIdsWithTags.forEach { ids ->
+			if (ids.isNotEmpty()) {
+				clearTagRelations(ids)
+			}
+		}
+
+		val tagRelations = mangasAndTags.flatMap { (manga, tags) ->
+			tags?.map { MangaTagsEntity(manga.id, it.id) } ?: emptyList()
+		}
+		if (tagRelations.isNotEmpty()) {
+			insertTagRelations(tagRelations)
 		}
 	}
 }
