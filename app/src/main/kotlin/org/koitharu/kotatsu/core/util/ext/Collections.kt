@@ -45,12 +45,6 @@ fun <T> List<T>.takeMostFrequent(limit: Int): List<T> {
 	}
 }
 
-inline fun <reified E : Enum<E>> Collection<E>.toEnumSet(): EnumSet<E> = if (isEmpty()) {
-	EnumSet.noneOf(E::class.java)
-} else {
-	EnumSet.copyOf(this)
-}
-
 fun <E : Enum<E>> Collection<E>.sortedByOrdinal() = sortedBy { it.ordinal }
 
 fun <T> Iterable<T>.sortedWithSafe(comparator: Comparator<in T>): List<T> = try {
@@ -74,17 +68,6 @@ fun LongSet.toSet(): Set<Long> = toCollection(ArraySet(size))
 
 fun <R : MutableCollection<Long>> LongSet.toCollection(out: R): R = out.also { result ->
 	forEach(result::add)
-}
-
-fun <T, R> Collection<T>.mapSortedByCount(isDescending: Boolean = true, mapper: (T) -> R): List<R> {
-	val grouped = groupBy(mapper).toList()
-	val sortSelector: (Pair<R, List<T>>) -> Int = { it.second.size }
-	val sorted = if (isDescending) {
-		grouped.sortedByDescending(sortSelector)
-	} else {
-		grouped.sortedBy(sortSelector)
-	}
-	return sorted.map { it.first }
 }
 
 fun Collection<CharSequence?>.contains(element: CharSequence?, ignoreCase: Boolean): Boolean = any { x ->

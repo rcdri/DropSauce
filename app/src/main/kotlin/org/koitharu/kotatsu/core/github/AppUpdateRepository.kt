@@ -13,7 +13,6 @@ import org.json.JSONObject
 import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.network.BaseHttpClient
-import org.koitharu.kotatsu.core.os.AppValidator
 import org.koitharu.kotatsu.core.util.ext.asArrayList
 import org.koitharu.kotatsu.core.util.ext.printStackTraceDebug
 import org.koitharu.kotatsu.parsers.util.await
@@ -28,7 +27,6 @@ private const val CONTENT_TYPE_APK = "application/vnd.android.package-archive"
 
 @Singleton
 class AppUpdateRepository @Inject constructor(
-	private val appValidator: AppValidator,
 	@BaseHttpClient private val okHttp: OkHttpClient,
 	@ApplicationContext context: Context,
 ) {

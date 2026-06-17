@@ -1,8 +1,6 @@
 package org.koitharu.kotatsu.main.ui
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -11,8 +9,6 @@ import android.widget.LinearLayout
 import androidx.activity.viewModels
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.MenuProvider
 import androidx.core.view.WindowInsetsCompat
@@ -88,7 +84,6 @@ import org.koitharu.kotatsu.search.ui.suggestion.SearchSuggestionMenuProvider
 import org.koitharu.kotatsu.search.ui.suggestion.SearchSuggestionViewModel
 import org.koitharu.kotatsu.search.ui.suggestion.adapter.SearchSuggestionAdapter
 import javax.inject.Inject
-import com.google.android.material.R as materialR
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNavOwner, MainFabInvalidator,
@@ -507,20 +502,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), AppBarOwner, BottomNav
 		adjustFabVisibility(isSearchOpened = isOpened)
 		bottomNav?.showOrHide(!isOpened)
 		updateContainerBottomMargin()
-	}
-
-	private fun requestNotificationsPermission() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ContextCompat.checkSelfPermission(
-				this,
-				Manifest.permission.POST_NOTIFICATIONS,
-			) != PERMISSION_GRANTED
-		) {
-			ActivityCompat.requestPermissions(
-				this,
-				arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-				1,
-			)
-		}
 	}
 
 	private fun handleSearchSuggestionsInsets(insets: WindowInsetsCompat) {

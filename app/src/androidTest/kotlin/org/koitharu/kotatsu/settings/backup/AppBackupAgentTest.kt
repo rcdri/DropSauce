@@ -17,7 +17,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.koitharu.kotatsu.SampleData
 import org.koitharu.kotatsu.backup.MihonBackupManager
 import org.koitharu.kotatsu.backup.model.MihonBackup
 import org.koitharu.kotatsu.backup.model.MihonBackupCategory

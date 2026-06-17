@@ -10,7 +10,6 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okio.buffer
 import okio.source
-import org.koitharu.kotatsu.core.model.FavouriteCategory
 import org.koitharu.kotatsu.core.model.MangaSource
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaSource
@@ -31,11 +30,7 @@ object SampleData {
 
 	val mangaDetails: Manga = loadAsset("manga/full.json", Manga::class)
 
-	val tag = mangaDetails.tags.elementAt(2)
-
 	val chapter = checkNotNull(mangaDetails.chapters)[2]
-
-	val favouriteCategory: FavouriteCategory = loadAsset("categories/simple.json", FavouriteCategory::class)
 
 	fun <T : Any> loadAsset(name: String, cls: KClass<T>): T {
 		val assets = InstrumentationRegistry.getInstrumentation().context.assets

@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.star
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,8 +66,6 @@ import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.settings.SettingsActivity
 import org.koitharu.kotatsu.settings.about.changelog.ChangelogFragment
 import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
-import org.koitharu.kotatsu.settings.compose.CategoryPalette
-import org.koitharu.kotatsu.settings.compose.ComposeOwnedScreen
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
 import org.koitharu.kotatsu.settings.compose.SettingsGroup

@@ -19,11 +19,9 @@
 	<dimen name="grid_spacing_outer_double">4dp</dimen>
 	<dimen name="manga_list_details_item_height">120dp</dimen>
 	<dimen name="recommendation_item_height">90dp</dimen>
-	<dimen name="bookmark_item_height">120dp</dimen>
 	<dimen name="chapter_list_item_height">48dp</dimen>
 	<dimen name="preferred_grid_width">120dp</dimen>
 	<dimen name="small_grid_width">92dp</dimen>
-	<dimen name="smaller_grid_width">102dp</dimen>
 	<dimen name="list_footer_height_outer">48dp</dimen>
 	<dimen name="extension_action_button_size">40dp</dimen>
 	<dimen name="extension_action_button_group_width">124dp</dimen>
@@ -55,7 +53,6 @@
 	<dimen name="search_suggestions_manga_spacing">6dp</dimen>
 
 	<dimen name="card_indicator_size">32dp</dimen>
-	<dimen name="card_indicator_size_small">24dp</dimen>
 	<dimen name="card_indicator_offset">4dp</dimen>
 
 	<dimen name="chapter_check_size">16dp</dimen>
@@ -89,8 +86,6 @@
 	<dimen name="search_bar_margin_horizontal">8dp</dimen>
 	<dimen name="search_bar_min_height">64dp</dimen>
 
-	<dimen name="m3_side_sheet_width">400dp</dimen>
-	<dimen name="m3_card_corner">12dp</dimen>
 	<dimen name="onboarding_icon_size">72dp</dimen>
 	<dimen name="onboarding_content_side_padding">0dp</dimen>
 	<dimen name="onboarding_title_horizontal_margin">16dp</dimen>
@@ -105,7 +100,6 @@
 
 	<dimen name="badge_offset">12dp</dimen>
 	<dimen name="chip_icon_corner">3dp</dimen>
-	<dimen name="read_button_min_width">92dp</dimen>
 	<dimen name="menu_popup_corner_radius">20dp</dimen>
 	<dimen name="menu_popup_content_padding">0dp</dimen>
 	<dimen name="menu_popup_content_padding_left">0dp</dimen>

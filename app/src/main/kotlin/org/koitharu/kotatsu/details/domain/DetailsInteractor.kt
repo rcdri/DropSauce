@@ -13,7 +13,6 @@ import org.koitharu.kotatsu.core.prefs.TriStateOption
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
 import org.koitharu.kotatsu.details.data.MangaDetails
 import org.koitharu.kotatsu.favourites.domain.FavouritesRepository
-import org.koitharu.kotatsu.history.data.HistoryRepository
 import org.koitharu.kotatsu.local.data.LocalMangaRepository
 import org.koitharu.kotatsu.local.domain.model.LocalManga
 import org.koitharu.kotatsu.parsers.model.Manga
@@ -25,7 +24,6 @@ import javax.inject.Inject
 
 /* TODO: remove */
 class DetailsInteractor @Inject constructor(
-	private val historyRepository: HistoryRepository,
 	private val favouritesRepository: FavouritesRepository,
 	private val localMangaRepository: LocalMangaRepository,
 	private val trackingRepository: TrackingRepository,

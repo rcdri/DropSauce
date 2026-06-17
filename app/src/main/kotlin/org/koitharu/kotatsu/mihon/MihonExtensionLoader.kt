@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Build
 import androidx.core.content.pm.PackageInfoCompat
 import dagger.Lazy
-import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
@@ -26,7 +25,6 @@ import javax.inject.Singleton
 
 @Singleton
 class MihonExtensionLoader @Inject constructor(
-	@ApplicationContext private val applicationContext: Context,
 	private val injektBridge: Lazy<KotoInjektBridge>,
 ) {
 

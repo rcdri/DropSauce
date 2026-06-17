@@ -106,10 +106,6 @@
 		<item>@string/pages</item>
 		<item>@string/bookmarks</item>
 	</string-array>
-	<string-array name="details_ui" translatable="false">
-		<item>@string/details_ui_expressive</item>
-		<item>@string/details_ui_compact</item>
-	</string-array>
 	<string-array name="download_formats" translatable="false">
 		<item>@string/automatic</item>
 		<item>@string/single_cbz_file</item>
@@ -124,17 +120,6 @@
 	<string-array name="reader_crop" translatable="false">
 		<item>@string/pages</item>
 		<item>@string/webtoon</item>
-	</string-array>
-	<string-array name="progress_indicators" translatable="false">
-		<item>@string/disabled</item>
-		<item>@string/percent_read</item>
-		<item>@string/percent_left</item>
-		<item>@string/chapters_read</item>
-		<item>@string/chapters_left</item>
-	</string-array>
-	<string-array name="tracker_download_strategies" translatable="false">
-		<item>@string/never</item>
-		<item>@string/manga_with_downloaded_chapters</item>
 	</string-array>
 	<string-array name="metered_network_options" translatable="false">
 		<item>@string/allow_always</item>
@@ -170,17 +155,5 @@
 		<item>ENABLED</item>
 		<item>ASK</item>
 		<item>DISABLED</item>
-	</string-array>
-	<string-array name="protect_app_timeout_options" translatable="false">
-		<item>@string/lock_timeout_instant</item>
-		<item>@string/lock_timeout_10_seconds</item>
-		<item>@string/lock_timeout_1_minute</item>
-		<item>@string/lock_timeout_5_minutes</item>
-	</string-array>
-	<string-array name="protect_app_timeout_values" translatable="false">
-		<item>INSTANT</item>
-		<item>SECONDS_10</item>
-		<item>MINUTE_1</item>
-		<item>MINUTES_5</item>
 	</string-array>
 </resources>

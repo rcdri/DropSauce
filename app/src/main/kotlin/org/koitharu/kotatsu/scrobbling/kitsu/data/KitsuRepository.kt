@@ -9,7 +9,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import org.json.JSONObject
-import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.core.util.ext.parseJsonOrNull
 import org.koitharu.kotatsu.parsers.util.await
@@ -36,10 +35,6 @@ class KitsuRepository(
 	private val storage: ScrobblerStorage,
 	private val db: MangaDatabase,
 ) : ScrobblerRepository {
-
-	// not in use yet
-	private val clientId = context.getString(R.string.kitsu_clientId)
-	private val clientSecret = context.getString(R.string.kitsu_clientSecret)
 
 	override val oauthUrl: String = "kotatsu+kitsu://auth"
 

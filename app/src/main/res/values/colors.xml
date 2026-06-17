@@ -7,7 +7,6 @@
 	<color name="onErrorContainer">#410001</color>
 
 	<!-- AMOLED Theme -->
-	<color name="surface_amoled">#080808</color>
 	<color name="background_amoled">#000000</color>
 
 	<!-- Other Colors -->
@@ -25,9 +24,6 @@
 	<color name="common_yellow">#FBC02D</color>
 	<color name="nsfw_18">#FF8A65</color>
 	<color name="nsfw_16">#FFD54F</color>
-
-	<!-- Panorama cover scrim -->
-	<color name="scrim_panorama">#66000000</color>
 
 	<!-- Color schemes colors -->
 	<color name="background_miku">#F7FAF8</color>

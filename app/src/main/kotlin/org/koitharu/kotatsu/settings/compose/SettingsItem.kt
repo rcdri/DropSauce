@@ -196,31 +196,6 @@ fun SwitchSettingsItem(
 	)
 }
 
-/** A row whose trailing slot shows the current value text (typical of ListPreference). */
-@Composable
-fun ValueSettingsItem(
-	title: String,
-	value: String?,
-	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
-	subtitle: String? = null,
-	@DrawableRes icon: Int? = null,
-	iconColors: CategoryIconColors? = null,
-	shape: Shape = MaterialTheme.shapes.medium,
-	enabled: Boolean = true,
-) {
-	SettingsItem(
-		title = title,
-		modifier = modifier,
-		subtitle = subtitle ?: value,
-		icon = icon,
-		iconColors = iconColors,
-		shape = shape,
-		enabled = enabled,
-		onClick = onClick,
-	)
-}
-
 @Composable
 private fun SettingsIconBubble(
 	@DrawableRes iconRes: Int,

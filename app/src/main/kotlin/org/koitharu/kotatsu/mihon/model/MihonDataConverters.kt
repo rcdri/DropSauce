@@ -162,30 +162,6 @@ fun Page.toMangaPage(source: MihonMangaSource, chapterUrl: String): MangaPage = 
 	source = source,
 )
 
-// ============ HttpSource URL Helpers ============
-
-/**
- * Get the public URL for a manga from an HttpSource.
- */
-fun HttpSource.getPublicMangaUrl(manga: SManga): String {
-	return try {
-		getMangaUrl(manga)
-	} catch (e: Exception) {
-		""
-	}
-}
-
-/**
- * Get the public URL for a chapter from an HttpSource.
- */
-fun HttpSource.getPublicChapterUrl(chapter: SChapter): String {
-	return try {
-		getChapterUrl(chapter)
-	} catch (e: Exception) {
-		""
-	}
-}
-
 // ============ Internal Helpers ============
 
 private fun stableId(sourceName: String, type: String, value: String): Long {

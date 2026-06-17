@@ -85,7 +85,7 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		binding.pager.setCurrentItem(defaultTab, false)
 		binding.tabs.isVisible = adapter.itemCount > 1
 
-		val menuProvider = ChapterPagesMenuProvider(viewModel, this, binding.pager, settings)
+		val menuProvider = ChapterPagesMenuProvider(this, binding.pager, settings)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, menuProvider)
 		binding.toolbar.addMenuProvider(menuProvider)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, searchBackCallback)

@@ -10,7 +10,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import coil3.ImageLoader
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
@@ -38,7 +37,6 @@ import org.koitharu.kotatsu.core.util.ext.enqueueWith
 import org.koitharu.kotatsu.core.util.ext.getDisplayIcon
 import org.koitharu.kotatsu.core.util.ext.getDisplayMessage
 import org.koitharu.kotatsu.core.util.ext.getParcelableExtraCompat
-import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.mangaSourceExtra
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
@@ -46,7 +44,6 @@ import org.koitharu.kotatsu.core.util.ext.start
 import org.koitharu.kotatsu.databinding.ActivityImageBinding
 import org.koitharu.kotatsu.databinding.ItemErrorStateBinding
 import javax.inject.Inject
-import androidx.appcompat.R as appcompatR
 
 @AndroidEntryPoint
 class ImageActivity : BaseActivity<ActivityImageBinding>(),

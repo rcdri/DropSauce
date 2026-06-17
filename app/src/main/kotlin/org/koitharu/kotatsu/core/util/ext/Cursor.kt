@@ -1,6 +1,5 @@
 package org.koitharu.kotatsu.core.util.ext
 
-import android.content.ContentValues
 import android.database.Cursor
 import androidx.collection.ArraySet
 
@@ -19,6 +18,3 @@ inline fun <T, C: MutableCollection<in T>> Cursor.mapTo(destination: C, mapper: 
 	destination
 }
 
-inline fun buildContentValues(capacity: Int, block: ContentValues.() -> Unit): ContentValues {
-	return ContentValues(capacity).apply(block)
-}

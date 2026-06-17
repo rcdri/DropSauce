@@ -2,7 +2,6 @@ package org.koitharu.kotatsu.settings.compose
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.util.TypedValue
 import androidx.appcompat.R as appcompatR
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.foundation.BorderStroke
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.ColorScheme
 import org.koitharu.kotatsu.core.util.ext.HapticEffect
 import org.koitharu.kotatsu.core.util.ext.rememberHapticEffect

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
-import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.PendingIntentCompat
@@ -15,7 +14,6 @@ import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -186,7 +184,6 @@ class PeriodicalBackupWorker @AssistedInject constructor(
 
 	companion object {
 
-		private const val WORKER_CHANNEL_ID = BaseBackupRestoreService.CHANNEL_ID
 		private const val FOREGROUND_NOTIFICATION_ID = 41
 		private const val RESULT_NOTIFICATION_ID = 42
 		private const val TAG = "periodical_backup"

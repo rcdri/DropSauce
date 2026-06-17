@@ -16,7 +16,6 @@ android {
 			minorApiLevel = 0
 		}
 	}
-	buildToolsVersion = '37.0.0'
 	namespace = 'org.koitharu.kotatsu'
 
 	defaultConfig {
@@ -25,7 +24,6 @@ android {
 		targetSdk = 37
 		versionCode = 44
 		versionName = '0.2.1'
-		generatedDensities = []
 		testInstrumentationRunner = 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
 			arg('room.generateKotlin', 'true')
@@ -137,8 +135,7 @@ android {
 			'NotifyDataSetChanged',
 			// Play SDK Index policy notes on play-services-auth.
 			// Irrelevant for GitHub distribution; not published to the Play Store.
-			'PlaySdkIndexNonCompliant',
-			'PlaySdkIndexEolSdk'
+			'PlaySdkIndexNonCompliant'
 	}
 	testOptions {
 		unitTests.includeAndroidResources = true
@@ -173,7 +170,6 @@ dependencies {
 	}
 
 	coreLibraryDesugaring libs.desugar.jdk.libs
-	implementation libs.kotlin.stdlib
 	implementation libs.kotlinx.coroutines.android
 	implementation libs.kotlinx.coroutines.guava
 
@@ -189,7 +185,6 @@ dependencies {
 	implementation libs.androidx.constraintlayout
 	implementation libs.androidx.documentfile
 	implementation libs.androidx.swiperefreshlayout
-	implementation libs.androidx.palette
 	implementation libs.androidx.recyclerview
 	implementation libs.androidx.viewpager2
 	implementation libs.androidx.preference
@@ -208,13 +203,11 @@ dependencies {
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.compose.runtime
     implementation libs.androidx.compose.ui
-    implementation libs.androidx.compose.ui.tooling.preview
     implementation libs.androidx.compose.foundation
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.material.icons.core
     implementation libs.androidx.compose.activity
     implementation libs.androidx.graphics.shapes
-    debugImplementation libs.androidx.compose.ui.tooling
 
 	implementation libs.androidx.room.runtime
 	implementation libs.androidx.room.ktx
@@ -264,15 +257,11 @@ dependencies {
 
 
 	debugImplementation libs.leakcanary.android
-	debugImplementation libs.workinspector
 
 	testImplementation libs.junit
-	testImplementation libs.json
 	testImplementation libs.kotlinx.coroutines.test
 
 	androidTestImplementation libs.androidx.runner
-	androidTestImplementation libs.androidx.rules
-	androidTestImplementation libs.androidx.test.core
 	androidTestImplementation libs.androidx.junit
 
 	androidTestImplementation libs.kotlinx.coroutines.test

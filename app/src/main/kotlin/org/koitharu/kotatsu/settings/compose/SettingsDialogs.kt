@@ -190,65 +190,6 @@ fun TextInputDialog(
 }
 
 /**
- * Integer-valued slider dialog used by settings screens.
- */
-@Composable
-fun SliderDialog(
-	title: String,
-	initialValue: Int,
-	valueFrom: Int,
-	valueTo: Int,
-	stepSize: Int,
-	unitSuffix: String = "",
-	onConfirm: (Int) -> Unit,
-	onDismiss: () -> Unit,
-) {
-	var value by remember { mutableFloatStateOf(initialValue.toFloat()) }
-	val steps = if (stepSize > 0) ((valueTo - valueFrom) / stepSize - 1).coerceAtLeast(0) else 0
-	val haptic = rememberHapticEffect()
-	var lastStep by remember { mutableFloatStateOf(initialValue.toFloat()) }
-	AlertDialog(
-		onDismissRequest = onDismiss,
-		title = { Text(title) },
-		text = {
-			Column {
-				Text(
-					text = "${value.roundToInt()}$unitSuffix",
-					style = MaterialTheme.typography.headlineSmall,
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(bottom = 12.dp),
-				)
-				Slider(
-					value = value,
-					onValueChange = {
-						value = it
-						val snapped = it.roundToInt().toFloat()
-						if (snapped != lastStep) {
-							lastStep = snapped
-							haptic(HapticEffect.TICK)
-						}
-					},
-					onValueChangeFinished = { haptic(HapticEffect.GESTURE_END) },
-					valueRange = valueFrom.toFloat()..valueTo.toFloat(),
-					steps = steps,
-				)
-			}
-		},
-		confirmButton = {
-			TextButton(onClick = {
-				haptic(HapticEffect.CONFIRM)
-				onConfirm(value.roundToInt())
-				onDismiss()
-			}) { Text("OK") }
-		},
-		dismissButton = {
-			TextButton(onClick = onDismiss) { Text("Cancel") }
-		},
-	)
-}
-
-/**
  * Generic info / confirm dialog with a single OK button. Useful for "are you sure"-style
  * prompts launched from a Preference's onClick.
  */
@@ -275,25 +216,4 @@ fun ConfirmDialog(
 			{ TextButton(onClick = onDismiss) { Text(dismissLabel) } }
 		} else null,
 	)
-}
-
-/** Small visual chip used as a value summary in some settings rows. */
-@Composable
-fun ValueChip(text: String) {
-	Box(
-		modifier = Modifier
-			.heightIn(min = 24.dp)
-			.clip(CircleShape)
-			.background(MaterialTheme.colorScheme.primaryContainer)
-			.padding(horizontal = 10.dp, vertical = 4.dp),
-		contentAlignment = Alignment.Center,
-	) {
-		Text(
-			text = text,
-			style = MaterialTheme.typography.labelMedium,
-			color = MaterialTheme.colorScheme.onPrimaryContainer,
-			maxLines = 1,
-			overflow = TextOverflow.Ellipsis,
-		)
-	}
 }

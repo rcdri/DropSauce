@@ -6,7 +6,6 @@ import android.os.Looper
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.RememberObserver
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -109,45 +108,4 @@ fun rememberAnyDrawablePainter(@DrawableRes resId: Int): DrawablePainter {
 		val d = ContextCompat.getDrawable(context, resId)!!.mutate()
 		DrawablePainter(d)
 	}
-}
-
-private val SELECTED_STATES = intArrayOf(
-	android.R.attr.state_checked,
-	android.R.attr.state_selected,
-	android.R.attr.state_enabled,
-)
-private val UNSELECTED_STATES = intArrayOf(android.R.attr.state_enabled)
-
-/**
- * Remember a [DrawablePainter] for [resId] and push checked/unchecked state through to it.
- *
- * The painter is keyed *only* on [resId] (not on [selected]) on purpose — for
- * `<animated-selector>` drawables, the inter-state morph animation only plays when state
- * changes on the SAME [Drawable] instance. Creating a fresh drawable per selection would
- * land it already in the target state with no transition.
- *
- * First composition is primed via [Drawable.setState] without recording the previous-state
- * jump as a transition (we explicitly set it twice in onRemembered's path), so the morph
- * only fires when the user actually toggles selection.
- */
-@Composable
-fun rememberSelectorPainter(@DrawableRes resId: Int, selected: Boolean): DrawablePainter {
-	val context = LocalContext.current
-	val painter = remember(context, resId) {
-		val d = ContextCompat.getDrawable(context, resId)!!.mutate()
-		// Prime initial state without a transition. Setting state twice (any state, then the
-		// real one) is the standard trick to suppress AnimatedStateListDrawable's first
-		// transition on inflate.
-		d.state = intArrayOf()
-		d.jumpToCurrentState()
-		DrawablePainter(d)
-	}
-	SideEffect {
-		val target = if (selected) SELECTED_STATES else UNSELECTED_STATES
-		val current = painter.drawable.state
-		if (!current.contentEquals(target)) {
-			painter.drawable.state = target
-		}
-	}
-	return painter
 }

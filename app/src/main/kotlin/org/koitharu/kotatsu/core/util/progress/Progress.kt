@@ -46,8 +46,6 @@ data class Progress(
 		total = total * child.total,
 	)
 
-	fun percentSting() = (percent * 100f).toInt().toString()
-
 	companion object {
 
 		val INDETERMINATE = Progress(0, -1)

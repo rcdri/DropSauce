@@ -6,7 +6,6 @@
 	<string name="url_dropsauce_website" translatable="false">https://drop-sauce.app/</string>
 	<string name="url_weblate" translatable="false">https://hosted.weblate.org/engage/kotatsu</string>
 	<string name="url_user_manual" translatable="false">https://kotatsu.app/manuals/guides/getting-started/</string>
-	<string name="url_error_report" translatable="false">https://github.com/HuzaifaKhalid1311/DropSauce/issues/new</string>
 	<string name="github_updates_repo" translatable="false">HuzaifaKhalid1311/DropSauce</string>
 	<string name="shikimori_clientId" translatable="false">Mw6F0tPEOgyV7F9U9Twg50Q8SndMY7hzIOfXg0AX_XU</string>
 	<string name="shikimori_clientSecret" translatable="false">euBMt1GGRSDpVIFQVPxZrO7Kh6X4gWyv0dABuj4B-M8</string>
@@ -25,9 +24,6 @@
 	<string-array name="values_track_sources" translatable="false">
 		<item>favourites</item>
 		<item>history</item>
-	</string-array>
-	<string-array name="values_track_sources_default" translatable="false">
-		<item>favourites</item>
 	</string-array>
 	<string-array name="values_network_policy" translatable="false">
 		<item>1</item>
@@ -49,10 +45,6 @@
 		<item>0</item>
 		<item>1</item>
 		<item>2</item>
-	</string-array>
-	<string-array name="details_ui_values" translatable="false">
-		<item>EXPRESSIVE</item>
-		<item>COMPACT</item>
 	</string-array>
 	<string-array name="values_tracker_frequency" translatable="false">
 		<item>-1</item>

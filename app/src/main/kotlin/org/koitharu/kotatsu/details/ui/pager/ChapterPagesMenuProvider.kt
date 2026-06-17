@@ -20,7 +20,6 @@ import org.koitharu.kotatsu.details.ui.pager.ChaptersPagesSheet.Companion.TAB_PA
 import java.lang.ref.WeakReference
 
 class ChapterPagesMenuProvider(
-	private val viewModel: ChaptersPagesViewModel,
 	private val sheet: BaseAdaptiveSheet<*>,
 	private val pager: ViewPager2,
 	private val settings: AppSettings,
