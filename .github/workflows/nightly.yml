@@ -78,7 +78,7 @@ jobs:
     - name: Build Nightly APK
       if: steps.check.outputs.should_build == 'true'
       run: |
-        ./gradlew assembleNightly --no-daemon --stacktrace \
+        ./gradlew assemblePreview --no-daemon --stacktrace \
           -PRELEASE_STORE_FILE=../release.keystore \
           -PRELEASE_STORE_PASSWORD="${{ secrets.RELEASE_STORE_PASSWORD || 'password' }}" \
           -PRELEASE_KEY_ALIAS="${{ secrets.RELEASE_KEY_ALIAS || 'release' }}" \
@@ -95,9 +95,9 @@ jobs:
 
         mkdir -p release
         shopt -s nullglob
-        APK_FILES=(app/build/outputs/apk/nightly/*.apk)
+        APK_FILES=(app/build/outputs/apk/preview/*.apk)
         if [ ${#APK_FILES[@]} -eq 0 ]; then
-          echo "Error: No nightly APK found"
+          echo "Error: No preview APK found"
           exit 1
         fi
         for apk in "${APK_FILES[@]}"; do

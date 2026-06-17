@@ -64,9 +64,9 @@ jobs:
         echo "::error::JitPack artifact for kotatsu-parsers:${PARSERS_VERSION} not available after 10 attempts"
         exit 1
 
-    - name: Build preview APK (nightly variant)
+    - name: Build preview APK (preview variant)
       run: |
-        ./gradlew assembleNightly --no-daemon --stacktrace \
+        ./gradlew assemblePreview --no-daemon --stacktrace \
           -PRELEASE_STORE_FILE=../release.keystore \
           -PRELEASE_STORE_PASSWORD="${{ secrets.RELEASE_STORE_PASSWORD || 'password' }}" \
           -PRELEASE_KEY_ALIAS="${{ secrets.RELEASE_KEY_ALIAS || 'release' }}" \
@@ -77,9 +77,9 @@ jobs:
       run: |
         mkdir -p preview
         shopt -s nullglob
-        APK_FILES=(app/build/outputs/apk/nightly/*.apk)
+        APK_FILES=(app/build/outputs/apk/preview/*.apk)
         if [ ${#APK_FILES[@]} -eq 0 ]; then
-          echo "::error::No nightly APK produced"
+          echo "::error::No preview APK produced"
           exit 1
         fi
         SHORT_SHA=$(git rev-parse --short HEAD)
