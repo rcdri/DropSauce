@@ -81,7 +81,6 @@
     <string name="text_history_holder_secondary">Ja nav ko lasīt, vari kaut ko atrast \"Meklēšana\" nodalījumā</string>
     <string name="text_empty_holder_secondary_filtered">Neeksistē manga, kas atbilstu tevis atlasītajiem filtriem</string>
     <string name="text_local_holder_primary">Vispirms saglabā kaut ko</string>
-    <string name="manga_shelf">Skapis</string>
     <string name="pages_animation">Lapas animācija</string>
     <string name="manga_save_location">Lejupielāžu mape</string>
     <string name="not_available">Nav pieejams</string>
@@ -91,12 +90,9 @@
     <string name="all_favourites">Visi patīkošie</string>
     <string name="favourites_category_empty">Tukša ketegorija</string>
     <string name="read_later">Lasīt vēlāk</string>
-    <string name="feed_will_update_soon">Drīz atjaunināsies</string>
-    <string name="dont_check">Nemeklēt</string>
     <string name="enter_password">Ievadi paroli</string>
     <string name="wrong_password">Nepareiza parole</string>
     <string name="protect_application">Pasargāt aplikāciju</string>
-    <string name="protect_application_summary">Prasīt paroli, kad atver DropSauce</string>
     <string name="repeat_password">Atkārto paroli</string>
     <string name="passwords_mismatch">Nesakrīt paroles</string>
     <string name="about">Par</string>
@@ -110,7 +106,6 @@
     <string name="pages">Lapas</string>
     <string name="clear">Attīrīt</string>
     <string name="remove">Noņemt</string>
-    <string name="_s_deleted_from_local_storage">\"%s\" izdzēsts no vietējās krātuves</string>
     <string name="save_page">Saglabāt lapu</string>
     <string name="page_saved">Saglabāta</string>
     <string name="share_image">Kopīgot attēlu</string>
@@ -124,7 +119,6 @@
     <string name="clear_search_history">Attīrīt meklēšanas vēsturi</string>
     <string name="search_history_cleared">Attīrīts</string>
     <string name="external_storage">Ārējā krātuve</string>
-    <string name="domain">Domēns</string>
     <string name="app_update_available">Ir pieejama jauna aplikācijas versija</string>
     <string name="open_in_browser">Atvērt pārlūkprogrammā</string>
     <string name="notifications_settings">Paziņojumu iestatījumi</string>
@@ -132,7 +126,6 @@
     <string name="light_indicator">LED rādītājs</string>
     <string name="text_empty_holder_primary">Šeit ir vientuļi…</string>
     <string name="text_search_holder_secondary">Pamēģini pārformulēt meklējumu.</string>
-    <string name="recent_manga">Nesenie</string>
     <string name="updates">Atjauninājumi</string>
     <string name="text_feed_holder">Jaunas daļas no tā, ko tu lasi parādās šeit</string>
     <string name="search_results">Meklēšanas rezultāti</string>
@@ -149,9 +142,7 @@
     <string name="backup_restore">Dublēt un atjaunot</string>
     <string name="create_backup">Dublēt datus</string>
     <string name="restore_backup">Atjaunot no dublējuma</string>
-    <string name="data_restored">Atjaunots</string>
     <string name="file_not_found">Fails nav atrasts</string>
-    <string name="backup_information">Tu vari dublēt savu vēsturi un patīokšos un tos atjaunot</string>
     <string name="just_now">Šobrīd</string>
     <string name="long_ago">Aiz trejdeviņiem gadiem</string>
     <string name="group">Grupa</string>

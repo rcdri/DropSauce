@@ -14,7 +14,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.koitharu.kotatsu.core.exceptions.CloudFlareException
-import org.koitharu.kotatsu.core.network.CommonHeaders
 import org.koitharu.kotatsu.core.network.cookies.MutableCookieJar
 import org.koitharu.kotatsu.core.network.proxy.ProxyProvider
 import org.koitharu.kotatsu.core.util.ext.configureForParser
@@ -24,7 +23,6 @@ import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class WebViewExecutor @Inject constructor(

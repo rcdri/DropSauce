@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="url_github" translatable="false">https://github.com/HuzaifaKhalid1311/DropSauce</string>
-	<string name="url_github_trans" translatable="false">https://github.com/YakaTeam/translate</string>
 	<string name="url_discord_web" translatable="false">https://discord.gg/PTd2bYgz9m</string>
 	<string name="url_dropsauce_website" translatable="false">https://drop-sauce.app/</string>
 	<string name="url_weblate" translatable="false">https://hosted.weblate.org/engage/kotatsu</string>
@@ -12,8 +11,6 @@
 	<string name="anilist_clientId" translatable="false">9887</string>
 	<string name="anilist_clientSecret" translatable="false">wrMqFosItQWsmB8dtAHfIFPDt15FfQi2ZGiKkJoW</string>
 	<string name="mal_clientId" translatable="false">6cd8e6349e9a36bc1fc1ab97703c9fd1</string>
-	<string name="kitsu_clientId" translatable="false">dd031b32d2f56c990b1425efe6c42ad847e7fe3ab46bf1299f05ecd856bdb7dd</string>
-	<string name="kitsu_clientSecret" translatable="false">54d7307928f63414defd96399fc31ba847961ceaecef3a5fd93144e960c0e151</string>
 	<string name="discord_app_id" translatable="false">1444242650067894303</string>
 	<string name="app_icon_url" translatable="false">https://raw.githubusercontent.com/YakaTeam/artifacts/refs/heads/main/.github/assets/icon.png</string>
 	<string-array name="values_theme" translatable="false">

@@ -38,7 +38,6 @@
     <string name="follow_system">Urmeaza setarile implicite</string>
     <string name="clear">Goleste</string>
     <string name="remove">Sterge</string>
-    <string name="_s_deleted_from_local_storage">\"%s\" sters din stocarea locala</string>
     <string name="save_page">Salveaza pagina</string>
     <string name="page_saved">Salvat</string>
     <string name="delete">Sterge</string>

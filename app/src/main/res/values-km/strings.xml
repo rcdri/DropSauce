@@ -41,7 +41,6 @@
     <string name="filter">តម្រង</string>
     <string name="theme">ប្រភេទពណ័</string>
     <string name="follow_system">ប្រព័ន្ធតាមដាន</string>
-    <string name="_s_deleted_from_local_storage">\"%s\" ត្រូវបានលុបចេញពីការផ្ទុកទុក</string>
     <string name="save_page">រក្សាទុកទំព័រ</string>
     <string name="operation_not_supported">ប្រតិបត្តិការនេះមិនបានគាំទ្រទេ</string>
     <string name="no_description">គ្មានការពន្យល់</string>
@@ -98,7 +97,6 @@
     <string name="search_history_cleared">សម្អាត់រួចរាល់</string>
     <string name="internal_storage">ឃ្លាំងទិន្នន័យផ្ទៃក្នុង</string>
     <string name="external_storage">ឃ្លាំងទិន្នន័យផ្ទៃក្រៅ</string>
-    <string name="domain">ដូមេន</string>
     <string name="app_update_available">មានកំណែថ្មីនៃកម្មវិធី</string>
     <string name="new_chapters">ជំពូកថ្មី</string>
     <string name="vibration">រំញ័រ</string>
@@ -108,8 +106,6 @@
     <string name="text_empty_holder_primary">វាដូចជាទទេនៅទីនេះ…</string>
     <string name="text_search_holder_secondary">ព្យាយាមកែទម្រង់សំណួរ។</string>
     <string name="text_history_holder_primary">អ្វីដែលអ្នកអាននឹងត្រូវបានបង្ហាញនៅទីនេះ</string>
-    <string name="manga_shelf">ធ្នើ</string>
-    <string name="recent_manga">ថ្មីៗ</string>
     <string name="text_local_holder_primary">រក្សាទុកអ្វីមួយជាមុនសិន</string>
     <string name="text_local_holder_secondary">រក្សាទុកអ្វីមួយពីកាតាឡុកអនឡាញ ឬនាំវាចូលពីឯកសារ។</string>
     <string name="pages_animation">ចលនា</string>
@@ -118,10 +114,6 @@
     <string name="skip_all">រំលងទាំងអស់</string>
     <string name="stuck">ជាប់</string>
     <string name="external_source">ខាងក្រៅ/កម្មវិធីជំនួយ</string>
-    <string name="chapters_left">ជំពូកដែលនៅសល់</string>
-    <string name="chapters_read">ជំពូកបានអាន</string>
-    <string name="percent_left">ភាគរយនៅសល់</string>
-    <string name="percent_read">ភាគរយបានអាន</string>
     <string name="recent_sources">ប្រភពថ្មីៗ</string>
     <string name="sources_unpinned">ដក​ខ្ទាស់​ប្រភពទាំងអស់</string>
     <string name="source_unpinned">ដក​ខ្ទាស់​ប្រភព</string>

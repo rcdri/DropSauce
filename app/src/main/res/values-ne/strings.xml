@@ -51,7 +51,6 @@
     <string name="by_rating">मूल्याङ्कन</string>
     <string name="new_chapters">नयाँ अध्यायहरू</string>
     <string name="remove">हटाउनुहोस्</string>
-    <string name="_s_deleted_from_local_storage">लोकल भण्डारणबाट %s हटाइयो</string>
     <string name="page_saved">सेभ गरियो</string>
     <string name="save_page">पृष्ठ सेभ गर्नुहोस्</string>
     <string name="share_image">छवि साझा गर्नुहोस्</string>
@@ -70,7 +69,6 @@
     <string name="search_history_cleared">खाली गरियो</string>
     <string name="clear_thumbs_cache">थम्बनेल क्यास खाली गर्नुहोस्</string>
     <string name="clear_search_history">खोज इतिहास खाली गर्नुहोस्</string>
-    <string name="domain">डोमेन</string>
     <string name="internal_storage">आन्तरिक भण्डारण</string>
     <string name="app_update_available">एपको नयाँ संस्करण उपलब्ध छ</string>
     <string name="external_storage">बाह्य भण्डारण</string>
@@ -87,7 +85,6 @@
     <string name="text_history_holder_secondary">«अन्वेषण» खण्डमा गएर के पढ्ने हेर्नुहोस्</string>
     <string name="pages_animation">पृष्ठ एनिमेसन</string>
     <string name="manga_save_location">डाउनलोड फोल्डर</string>
-    <string name="recent_manga">हालैका</string>
     <string name="not_available">उपलब्ध छैन</string>
     <string name="text_feed_holder">तपाईंले पढिरहनु भएको माङ्गाको नयाँ अध्यायहरू यहाँ देखाइएको छ</string>
     <string name="search_results">खोज परिणामहरू</string>
@@ -105,14 +102,12 @@
     <string name="text_local_holder_secondary">अनलाइन क्याटलगबाट केहि सेभ गर्नुहोस् वा फाइलबाट आयात गर्नुहोस्।</string>
     <string name="updates_feed_cleared">खाली गरियो</string>
     <string name="protect_application">एप सुरक्षित गर्नुहोस्</string>
-    <string name="protect_application_summary">DropSauce सुरु गर्दा पासवर्ड माग्नुहोस्</string>
     <string name="repeat_password">पासवर्ड दोहोर्याउनुहोस्</string>
     <string name="delete">हटाउनुहोस्</string>
     <string name="text_file_not_supported">या त ZIP वा CBZ फाइल छान्नुहोस्।</string>
     <string name="text_file_sizes">B|kB|MB|GB|TB</string>
     <string name="notifications">सूचनाहरू</string>
     <string name="enabled_d_of_d" tools:ignore="PluralsCandidate">%2$d को %1$d अन</string>
-    <string name="manga_shelf">दराज</string>
     <string name="cannot_find_available_storage">भण्डारण उपलब्ध छैन</string>
     <string name="other_storage">अन्य भण्डारण</string>
     <string name="done">सकियो</string>
@@ -122,9 +117,7 @@
     <string name="updates">अपडेटहरू</string>
     <string name="new_version_s">नयाँ संस्करण: %s</string>
     <string name="size_s">साइज: %s</string>
-    <string name="feed_will_update_soon">फिड अपडेट चाँडै सुरु हुनेछ</string>
     <string name="track_sources">अपडेटहरू खोज्नुहोस्</string>
-    <string name="dont_check">जाँच नगर्नुहोस्</string>
     <string name="wrong_password">गलत पासवर्ड</string>
     <string name="check_for_updates">अपडेटका लागि जाँच गर्नुहोस्</string>
     <string name="no_update_available">कुनै अपडेट उपलब्ध छैन</string>
@@ -143,12 +136,10 @@
     <string name="backup_restore">जगेडाना र पुनर्स्थापना</string>
     <string name="create_backup">डाटा ब्याकअप सिर्जना गर्नुहोस्</string>
     <string name="restore_backup">ब्याकअपबाट पुनर्स्थापना गर्नुहोस्</string>
-    <string name="data_restored">पुनर्स्थापित</string>
     <string name="preparing_">तयारी गर्दै…</string>
     <string name="file_not_found">फाइल फेला परेन</string>
     <string name="data_restored_success">सबै डाटा पुनर्स्थापित गरियो</string>
     <string name="data_restored_with_errors">डाटा पुनर्स्थापित गरियो, तर त्यहाँ त्रुटिहरू पनि छन्</string>
-    <string name="backup_information">तपाईं आफ्नो इतिहास र मनपर्ने को जगेडा सिर्जना र यसलाई पुनर्स्थापित गर्न सक्नुहुन्छ</string>
     <string name="yesterday">हिजो</string>
     <string name="long_ago">धेरै पहिले</string>
     <string name="group">समूह</string>
@@ -158,7 +149,6 @@
     <string name="clear_cookies">कुकीहरू खाली गर्नुहोस्</string>
     <string name="cookies_cleared">सबै कुकीहरू हटाइयो</string>
     <string name="clear_feed">फिड खाली गर्नुहोस्</string>
-    <string name="default_s">पूर्वनिर्धारित: %s</string>
     <string name="protect_application_subtitle">एप सुरु गर्न पासवर्ड प्रविष्ट गर्नुहोस्</string>
     <string name="confirm">पुष्टि गर्नुहोस्</string>
     <string name="password_length_hint">पासवर्ड ४ वर्ण वा सोभन्दा बढी हुनुपर्छ</string>
@@ -170,14 +160,11 @@
     <string name="tracker_warning">केही यन्त्रहरूमा फरक प्रणाली व्यवहार हुन्छ, जसले पृष्ठभूमि कार्यहरू तोड्न सक्छ।</string>
     <string name="queued">लामबद्ध</string>
     <string name="about_app_translation_summary">यो एप अनुवाद गर्नुहोस्</string>
-    <string name="about_app_translation">अनुवादन</string>
-    <string name="auth_complete">अधिकृत</string>
     <string name="auth_not_supported_by">%s मा लग इन गर्न समर्थित छैन</string>
     <string name="text_clear_cookies_prompt">मा लग इन गर्न समर्थित छैन</string>
     <string name="state_finished">समाप्त भयो</string>
     <string name="state_ongoing">जारी छ</string>
     <string name="system_default">पूर्वनिर्धारित</string>
-    <string name="exclude_nsfw_from_history">इतिहासबाट NSFW मङ्गा बहिष्कार गर्नुहोस्</string>
     <string name="show_pages_numbers">अंकित पृष्ठहरू</string>
     <string name="screenshots_policy">स्क्रिनसट नीति</string>
     <string name="screenshots_allow">अनुमति दिनुहोस्</string>
@@ -205,19 +192,15 @@
     <string name="chapters_empty">यो मङ्गामा कुनै अध्याय छैन</string>
     <string name="captcha_required">क्याप्चा आवश्यक छ</string>
     <string name="sign_in">साइन इन गर्नुहोस्</string>
-    <string name="reverse">उल्टो</string>
-    <string name="read_more">थप पढ्नुहोस्</string>
     <string name="chapter_is_missing">अध्याय हराइरहेको छ</string>
     <string name="genres">विधाहरू</string>
     <string name="suggestions_summary">तपाईको प्राथमिकतामा आधारित मंगा सुझाव दिनुहोस्</string>
-    <string name="onboard_text">तपाईले मङ्गा पढ्न चाहनुहुने भाषाहरू चयन गर्नुहोस्। तपाईं यसलाई पछि सेटिङहरूमा परिवर्तन गर्न सक्नुहुन्छ।</string>
     <string name="various_languages">विभिन्न भाषाहरू</string>
     <string name="search_chapters">अध्याय खोज्नुहोस्</string>
     <string name="appearance">उपस्थिति</string>
     <string name="history_shortcuts">हालैको मंगा सर्टकट देखाउनुहोस्</string>
     <string name="reader_control_ltr_summary">दायाँ किनारामा ट्याप गर्नुहोस् वा दायाँ कुञ्जी थिच्दा सधैं अर्को पृष्ठमा स्विच हुन्छ</string>
     <string name="reader_control_ltr">Ergonomic पाठक नियन्त्रण</string>
-    <string name="manga_error_description_pattern">त्रुटि विवरण:&lt;br&gt; &lt;tt&gt;%1$s&lt;/tt&gt;&lt;br&gt;&lt;br&gt; 1. &lt;a href=%2$s&gt;वेब ब्राउजरमा मंगा खोल्ने&lt;/a&gt; प्रयास गर्नुहोस् कि यो यसको स्रोतमा उपलब्ध छ&lt;br&gt; 2. निश्चित गर्नुहोस् कि तपाइँ &lt;a href=kotatsu://about&gt;DropSauce को नवीनतम संस्करण&lt;/a&gt; प्रयोग गर्दै हुनुहुन्छ&lt;br&gt; 3. यदि यो उपलब्ध छ भने, विकासकर्ताहरूलाई त्रुटि रिपोर्ट पठाउनुहोस्।</string>
     <string name="suggestions_excluded_genres">जानरा अलग गर्नु</string>
     <string name="suggestions_updating">सुझावहरू अपडेट गर्दै</string>
     <string name="text_empty_holder_secondary_filtered">तपाईंले चयन गर्नुभएको फिल्टरसँग मिल्दो कुनै माङ्गा छैन</string>
@@ -232,10 +215,6 @@
     <string name="back">पछाडि</string>
     <string name="chapters_will_removed_background">अध्याय पृष्ठभूमिमा हटाइनेछ</string>
     <string name="canceled">रद्द गरियो</string>
-    <string name="account_already_exists">खाता पहिल्यै अवस्थित छ</string>
-    <string name="sync">सिंक्रोनाइजेसन</string>
-    <string name="sync_title">आफ्नो डाटा सिंक गर्नुहोस्</string>
-    <string name="email_enter_hint">जारी राख्न आफ्नो इमेल प्रविष्ट गर्नुहोस्</string>
     <string name="hide">लुकाउनुहोस्</string>
     <string name="pages_saved">पृष्ठहरू सुरक्षित गरियो</string>
 </resources>

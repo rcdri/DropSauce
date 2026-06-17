@@ -46,7 +46,6 @@
     <string name="pages">Pàgines</string>
     <string name="clear">Neteja</string>
     <string name="remove">Suprimir</string>
-    <string name="_s_deleted_from_local_storage">\"%s\" eliminat de l\'emmagatzematge local</string>
     <string name="save_page">Desa la pàgina</string>
     <string name="page_saved">Desat</string>
     <string name="share_image">Comparteix la imatge</string>

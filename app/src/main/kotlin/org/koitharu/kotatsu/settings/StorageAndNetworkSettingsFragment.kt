@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,13 +27,10 @@ import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.FileSize
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.parsers.util.names
-import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
 import org.koitharu.kotatsu.settings.compose.CategoryPalette
-import org.koitharu.kotatsu.settings.compose.ComposeOwnedScreen
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.EditTextSettingsItem
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
-import org.koitharu.kotatsu.settings.compose.InfoSettingsItem
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
 import org.koitharu.kotatsu.settings.compose.NavigationSettingsItem
 import org.koitharu.kotatsu.settings.compose.StorageUsageRow

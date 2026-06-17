@@ -93,10 +93,3 @@ private fun <T> rememberPrefValue(
 		}
 	}
 }
-
-/** Convenience accessor for screens that need the prefs handle directly (e.g. for compound writes). */
-@Composable
-fun rememberDefaultSharedPreferences(): SharedPreferences {
-	val context = LocalContext.current
-	return remember(context) { PreferenceManager.getDefaultSharedPreferences(context) }
-}

@@ -54,8 +54,6 @@
     <string name="vibration">Dirring</string>
     <string name="favourites_categories">Hopar til leiting</string>
     <string name="text_local_holder_secondary">Hent ifrå nettkjelder eller før inn filer.</string>
-    <string name="manga_shelf">Hylla</string>
-    <string name="recent_manga">Nytt</string>
     <string name="manga_save_location">Legg henta mangaar i:</string>
     <string name="done">Ferdig</string>
     <string name="all_favourites">Alt du likar</string>
@@ -67,7 +65,6 @@
     <string name="updates_feed_cleared">Tømt</string>
     <string name="rotate_screen">Snu skjermen</string>
     <string name="track_sources">Leit etter oppdateringar</string>
-    <string name="dont_check">Nei</string>
     <string name="about">Om</string>
     <string name="check_for_updates">Leit etter oppdateringar</string>
     <string name="right_to_left">Høgre-til-venstre</string>
@@ -77,7 +74,6 @@
     <string name="black_dark_theme">Svart</string>
     <string name="backup_restore">Tryggleikskopiering og gjenoppretting</string>
     <string name="create_backup">Lag ein tryggleikskopi</string>
-    <string name="data_restored">Gjenoppretta</string>
     <string name="file_not_found">Fann ikkje fila</string>
     <string name="data_restored_success">Gjenoppretta all data</string>
     <string name="data_restored_with_errors">Gjenoppretta dataa, men med feil</string>
@@ -110,7 +106,6 @@
     <string name="zoom_mode_fit_center">Midtstill</string>
     <string name="zoom_mode_keep_start">Auk byrjinga av sida</string>
     <string name="restore_backup">Gjenopprett</string>
-    <string name="backup_information">Du kan tryggleikskopiera historikken og likerlista di til seinare gjenoppretting</string>
     <string name="preparing_">Førebur …</string>
     <string name="system_default">Forval</string>
     <string name="just_now">No</string>
@@ -136,15 +131,11 @@
     <string name="confirm">Stadfest</string>
     <string name="password_length_hint">Lykelordet må vera lengre enn fire teikn</string>
     <string name="backup_saved">Tryggleikskopi laga</string>
-    <string name="read_more">Les meir</string>
     <string name="queued">I kø</string>
     <string name="about_app_translation_summary">Omset denne appen</string>
-    <string name="about_app_translation">Omsetjing</string>
-    <string name="auth_complete">Godkjend</string>
     <string name="genres">Slag</string>
     <string name="state_finished">Fullgjort</string>
     <string name="state_ongoing">I gang</string>
-    <string name="exclude_nsfw_from_history">Utelèt mangaar med vakse innhald ifrå historikken</string>
     <string name="show_pages_numbers">Sidetal</string>
     <string name="screenshots_policy">Skjermbilete</string>
     <string name="screenshots_block_all">Hindre alltid</string>
@@ -163,10 +154,7 @@
     <string name="download_slowdown_summary">Lægjer vona for at IP-adressa di vert blokkert</string>
     <string name="local_manga_processing">Handsamar henta manga</string>
     <string name="canceled">Avbroten</string>
-    <string name="account_already_exists">Kontoen finst alt</string>
     <string name="back">Attende</string>
-    <string name="sync_title">Synkroniser dataet ditt</string>
-    <string name="email_enter_hint">Rit inn e-postadressa di for å halda fram</string>
     <string name="hide">Skjul</string>
     <string name="name">Namn</string>
     <string name="edit">Brigd</string>
@@ -183,7 +171,6 @@
     <string name="detect_reader_mode">Finn sjølvverkande ut av lesing</string>
     <string name="detect_reader_mode_summary">Finn sjølvverkande ut av om mangaen er ein nettserie</string>
     <string name="disable_battery_optimization">Slå av batterilenging</string>
-    <string name="send">Send</string>
     <string name="status_reading">Les</string>
     <string name="status_planned">Skal lesa</string>
     <string name="status_re_reading">Les att</string>
@@ -191,9 +178,6 @@
     <string name="status_on_hold">På vent</string>
     <string name="status_dropped">Gjeven opp</string>
     <string name="disable_all">Slå av alle</string>
-    <string name="appwidget_recent_description">Mangaar du har nyleg lese</string>
-    <string name="data_deletion">Sletting av data</string>
-    <string name="show_reading_indicators_summary">Vis % lesen i historikken og likerlista</string>
     <string name="clear_cookies_summary">Kan løysa nokre feil. Alle godkjenningar vert ugilde</string>
     <string name="show_all">Vis alle</string>
     <string name="invalid_domain_message">Ugildt domene</string>
@@ -203,8 +187,6 @@
     <string name="no_bookmarks_yet">Ingen bokmerke endå</string>
     <string name="no_bookmarks_summary">Du kan lage bokmerke medan du les</string>
     <string name="bookmarks_removed">Tok bort bokmerka</string>
-    <string name="no_manga_sources">Ingen mangakjelder</string>
-    <string name="no_manga_sources_text">Slå på minst ei mangakjelde for å lesa mangaar på nett</string>
     <string name="random">Tilfeldig</string>
     <string name="reorder">Flytt</string>
     <string name="empty">Tom</string>
@@ -226,18 +208,12 @@
     <string name="text_unsaved_changes_prompt">Spar eller avvis dei usparte brigda\?</string>
     <string name="discard">Avvis</string>
     <string name="error_no_space_left">Eininga er fylt</string>
-    <string name="reader_slider">Vis ei rulleline til blading</string>
     <string name="webtoon_zoom">Auk/mink nettseriar</string>
     <string name="network_unavailable">Nettverk ikkje tilgjengeleg</string>
-    <string name="network_unavailable_hint">Slå på Wi-Fi eller mobilnettverk for å lesa mangaar på nett</string>
     <string name="server_error">Tjenarfeil (%1$d). Røyn att seinare</string>
-    <string name="source_disabled">Kjelde avslegen</string>
     <string name="prefetch_content">Hent inn innhald på forhand</string>
     <string name="mark_as_current">Merk som aktuelt</string>
     <string name="language">Språk</string>
-    <string name="share_logs">Del loggføringar</string>
-    <string name="enable_logging">Loggfør</string>
-    <string name="enable_logging_summary">Ta opp nokre gjerder til bruk i istandsetjing</string>
     <string name="theme_name_dynamic">Skiftande</string>
     <string name="color_theme">Letar</string>
     <string name="show_in_grid_view">Vis som rutenett</string>
@@ -255,14 +231,12 @@
     <string name="screenshots_block_nsfw">Hindre ved vakse innhald</string>
     <string name="remove_category">Slett</string>
     <string name="text_empty_holder_primary">Her var det tomt …</string>
-    <string name="protect_application_summary">Spør om lykelordet ved byrjing av appen</string>
     <string name="wrong_password">Feil lykelord</string>
     <string name="protect_application">Vern appen</string>
     <string name="auth_required">Logg inn for å sjå dette innhaldet</string>
     <string name="protect_application_subtitle">Vern appen med eit lykelord</string>
     <string name="suggestions_info">All data vert handsama på eininga di og vert ikkje førte over til noka teneste</string>
     <string name="disabled">Avslegen</string>
-    <string name="onboard_text">Vel språka du vil lesa mangaar på. Du kan endre på dette seinare i innstillingane.</string>
     <string name="never">Aldri</string>
     <string name="only_using_wifi">Berre på Wi-Fi</string>
     <string name="nsfw">18+</string>
@@ -272,8 +246,6 @@
     <string name="text_delete_local_manga_batch">Slett valde ting ifrå eininga di\?</string>
     <string name="logged_in_as">Logga inn som %s</string>
     <string name="suggestions_excluded_genres_summary">Opplys om kva slags slag du ikkje vil få råd om</string>
-    <string name="sync">Synkronisering</string>
-    <string name="new_sources_text">Nye mangakjelder tilgjengelege</string>
     <string name="show_notification_new_chapters_on">Du kjem til å få varsel når mangaar du les vert oppdaterte</string>
     <string name="notifications_enable">Slå på varsel</string>
     <string name="bookmark_added">La til eit bokmerke</string>
@@ -281,8 +253,6 @@
     <string name="undo">Angre</string>
     <string name="use_fingerprint">Nytt fingermerke om tilgjengeleg</string>
     <string name="show_reading_indicators">Vis leseframgang</string>
-    <string name="appwidget_shelf_description">Mangaar du likar</string>
-    <string name="exclude_nsfw_from_history_summary">Mangaar merkte med vakse innhald vert ikkje lagde til i historikken din, og framgangen din vert ikkje spart</string>
     <string name="categories_delete_confirm">Slett dei valde hopane? \nDu kan ikkje angre. Alle mangaane inni vert tekne ut av likerlista.</string>
     <string name="options">Oppsett</string>
     <string name="last_2_hours">Dei siste to timane</string>
@@ -294,7 +264,6 @@
     <string name="import_completed_hint">Slett den opphavlege fila for å frigjera rom</string>
     <string name="import_will_start_soon">Byrjar å føra inn snart</string>
     <string name="contrast">Motsetjing</string>
-    <string name="show_suspicious_content">Vis mistenksamt innhald</string>
     <string name="theme_name_mion">Mion</string>
     <string name="theme_name_miku">Miku</string>
     <string name="settings_apply_restart_required">Byrja om appen for å nytta desse brigda</string>
@@ -303,12 +272,10 @@
     <string name="chapter_d_of_d">Kapittel %1$d av %2$d</string>
     <string name="operation_not_supported">Ustødd gjerd</string>
     <string name="text_file_sizes">B|kB|MB|GB|TB</string>
-    <string name="domain">Domene</string>
     <string name="new_chapters">Nye kapittel</string>
     <string name="pages_animation">Siderørsle</string>
     <string name="text_feed_holder">Nye kapittel av det du les vert viste her</string>
     <string name="check_for_new_chapters">Sjå etter nye kapittel</string>
-    <string name="reverse">Siste øvst</string>
     <string name="tracker_warning">Nokre einingar har systemåtferd som kan knuse bakgrunnsføreloger.</string>
     <string name="chapter_is_missing">Saknar kapittelet</string>
     <string name="search_chapters">Finn kapittel</string>
@@ -329,8 +296,6 @@
     <string name="clear_new_chapters_counters">Tøm au opplysingar om nye kapittel</string>
     <string name="scrobbling_empty_hint">Trykk «Meny → Spor» på ei mangadetaljside for å spore leseframdrifta.</string>
     <string name="got_it">Skjønar</string>
-    <string name="sources_reorder_tip">Trykk og hald på eit element for å flytta på det</string>
-    <string name="_s_deleted_from_local_storage">Sletta «%s» ifrå eininga</string>
     <string name="internal_storage">Indre gøyme</string>
     <string name="external_storage">Ytre gøyme</string>
     <string name="cannot_find_available_storage">Ingen tilgjengelege gøyme</string>
@@ -341,23 +306,16 @@
     <string name="search_on_s">Søk på %s</string>
     <string name="text_history_holder_secondary">Finn lesnadar i sidemenyen.</string>
     <string name="screenshots_allow">Tillat</string>
-    <string name="allow_unstable_updates">Tillat ustøe oppdateringar</string>
     <string name="downloads_wifi_only">Hent berre på WiFi</string>
-    <string name="downloads_wifi_only_summary">Stans all henting når du byter til eit mobilnettverk</string>
     <string name="find_similar">Finn liknande</string>
     <string name="sort_order">Skiljingsrekkjefølgd</string>
     <string name="auth_not_supported_by">Innlogging på %s er ikkje stødd</string>
-    <string name="sync_host_description">Du kan nytte ein sjølvhusa synkroniseringstenar, eller den vanlege. Om du er uviss, ikkje rør.</string>
     <string name="cancel_all_downloads_confirm">Alle pågåande hentingar vert avbrotne, og uheile data sletta</string>
-    <string name="network">Nettverk</string>
     <string name="reader_info_bar_summary">Vis klokka og leseframgangen på toppen av skjermen</string>
-    <string name="default_s">Forvalt: %s</string>
     <string name="reset_filter">Attendestill silen</string>
     <string name="report">Sei ifrå</string>
     <string name="storage_usage">Gøymebruk</string>
     <string name="history_shortcuts">Vis snarvegen for nylege mangaar</string>
-    <string name="sync_settings">Synkroniseringsinnstillingar</string>
-    <string name="server_address">Tenaradresse</string>
     <string name="resume">Hald fram</string>
     <string name="remove_completed">Ta bort fullgjorde</string>
     <string name="cancel_all">Avbryt alle</string>
@@ -368,7 +326,6 @@
     <string name="invert_colors">Snu på letane</string>
     <string name="username">Brukarnamn</string>
     <string name="password">Passord</string>
-    <string name="data_and_privacy">Data og personvern</string>
     <string name="restore_summary">Gjenopprett ifrå ein tryggleiskopi</string>
     <string name="show_pages_numbers_summary">Vis sidetal i nedre hjørne</string>
     <string name="no_thanks">Nei takk</string>
@@ -384,6 +341,5 @@
     <string name="downloads_cancelled">Avbraut hentingane</string>
     <string name="suggestions_enable_prompt">Vil du få personlege mangaråd\?</string>
     <string name="downloads_paused">Stansa hentingane</string>
-    <string name="sync_auth_hint">Du kan logge inn på ein konto du alt har, eller lage ein ny ein</string>
     <string name="invalid_value_message">Ugild verdi</string>
 </resources>

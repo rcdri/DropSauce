@@ -18,7 +18,6 @@
 	<dimen name="grid_spacing_outer_large">6dp</dimen>
 	<dimen name="grid_spacing_outer_double">4dp</dimen>
 	<dimen name="manga_list_details_item_height">120dp</dimen>
-	<dimen name="recommendation_item_height">90dp</dimen>
 	<dimen name="chapter_list_item_height">48dp</dimen>
 	<dimen name="preferred_grid_width">120dp</dimen>
 	<dimen name="small_grid_width">92dp</dimen>
@@ -38,9 +37,6 @@
 	<dimen name="top_bar_action_icon_size">24dp</dimen>
 	<!-- Start margin (16) + button (46) + 16 gap, so the title keeps the same rhythm as the edges. -->
 	<dimen name="top_bar_title_inset_with_navigation">78dp</dimen>
-	<dimen name="widget_cover_height">116dp</dimen>
-	<dimen name="widget_cover_width">84dp</dimen>
-	<dimen name="scrobbling_list_spacing">12dp</dimen>
 	<dimen name="explore_grid_width">135dp</dimen>
 	<dimen name="chapter_grid_width">80dp</dimen>
 	<dimen name="side_card_offset">8dp</dimen>
@@ -87,10 +83,6 @@
 	<dimen name="search_bar_min_height">64dp</dimen>
 
 	<dimen name="onboarding_icon_size">72dp</dimen>
-	<dimen name="onboarding_content_side_padding">0dp</dimen>
-	<dimen name="onboarding_title_horizontal_margin">16dp</dimen>
-	<dimen name="onboarding_title_min_height">64dp</dimen>
-	<dimen name="onboarding_body_top_spacing">20dp</dimen>
 
 	<dimen name="reader_scroll_delta_min">200dp</dimen>
 	<dimen name="reader_docked_toolbar_padding_vertical">2dp</dimen>

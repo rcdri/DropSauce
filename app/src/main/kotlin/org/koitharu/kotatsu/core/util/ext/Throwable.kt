@@ -10,7 +10,6 @@ import kotlinx.coroutines.CancellationException
 import okhttp3.Response
 import okhttp3.internal.http2.StreamResetException
 import okio.FileNotFoundException
-import okio.IOException
 import okio.ProtocolException
 import org.acra.ktx.sendSilentlyWithAcra
 import org.acra.ktx.sendWithAcra

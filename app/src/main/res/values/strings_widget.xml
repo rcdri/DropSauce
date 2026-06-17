@@ -5,7 +5,6 @@
 	<string name="widget_continue_reading_description">Resume your last-read manga in one tap</string>
 	<string name="widget_continue_reading_empty">No reading history yet</string>
 	<string name="widget_continue_reading_open">Open</string>
-	<string name="widget_chapter_progress">Ch. %1$d / %2$d</string>
 	<string name="widget_chapter_position">%1$d / %2$d</string>
 	<string name="widget_progress_percent">%1$d%%</string>
 
@@ -14,7 +13,6 @@
 	<string name="widget_stats_description">Track your reading time and streak</string>
 	<string name="widget_stats_empty">Start reading to see stats</string>
 	<string name="widget_stats_today">Today</string>
-	<string name="widget_stats_week">Last 7 days</string>
 	<string name="widget_stats_minutes_short">%1$d min</string>
 	<string name="widget_stats_hours_short">%1$dh %2$dm</string>
 
@@ -29,6 +27,5 @@
 	<string name="widget_favorites_limit_reached">You can pin up to %1$d favorites</string>
 
 	<!-- Common -->
-	<string name="widget_refresh">Refresh</string>
 	<string name="widget_cover_content_description">Manga cover</string>
 </resources>

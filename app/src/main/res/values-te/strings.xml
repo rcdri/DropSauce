@@ -51,7 +51,6 @@
     <string name="pages">పేజీలు</string>
     <string name="clear">క్లియర్ చెయ్యి</string>
     <string name="remove">తీసివేయి</string>
-    <string name="_s_deleted_from_local_storage">“%s” లోకల్ స్టోరేజ్ నుండి తొలగించబడింది</string>
     <string name="save_page">పేజీ సేవ్ చెయ్యి</string>
     <string name="page_saved">పేజీలు సేవ్ అయ్యాయి</string>
     <string name="pages_saved">పేజీలు సేవ్ అయ్యాయి</string>
@@ -79,7 +78,6 @@
     <string name="search_history_cleared">చరిత్ర క్లియర్ అయ్యింది</string>
     <string name="internal_storage">అంతర్గత స్టోరేజ్</string>
     <string name="external_storage">బాహ్య స్టోరేజ్</string>
-    <string name="domain">డొమైన్</string>
     <string name="app_update_available">ఒక కొత్త వెర్షన్ అందుబాటులో ఉంది</string>
     <string name="open_in_browser">వెబ్ బ్రౌజర్‌లో తెరవండి</string>
     <string name="notifications">నోటిఫికేషన్స్</string>
@@ -99,8 +97,6 @@
     <string name="text_empty_holder_secondary_filtered">మీరు ఎంచుకున్న ఫిల్టర్లకు సరిపోలిన మంగా లేదు</string>
     <string name="text_local_holder_primary">ముందుగా ఏదైనా సేవ్ చేయండి</string>
     <string name="text_local_holder_secondary">ఆన్‌లైన్ కేటలాగ్ నుండి ఏదైనా సేవ్ చేయండి లేదా ఫైల్ నుండి దిగుమతి చేసుకోండి.</string>
-    <string name="manga_shelf">షెల్ఫ్</string>
-    <string name="recent_manga">తాజా మంగా</string>
     <string name="pages_animation">పేజీ యానిమేషన్</string>
     <string name="manga_save_location">డౌన్‌లోడ్స్ ఫోల్డర్</string>
     <string name="not_available">ఉపలబ్ధం లేదు</string>

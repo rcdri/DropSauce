@@ -51,11 +51,9 @@
     <string name="pages">Kaca</string>
     <string name="standard">Pajeging</string>
     <string name="read_mode">Mode waos</string>
-    <string name="telegram_integration">Panyawijining Telegram</string>
     <string name="clear_pages_cache">Resiki singgahan platar</string>
     <string name="clear">Resiki</string>
     <string name="remove">Busek</string>
-    <string name="_s_deleted_from_local_storage">\"%s\" dibusek saka panyimpenan</string>
     <string name="save_page">Dekek Plataran</string>
     <string name="page_saved">Plataran dipundekek</string>
     <string name="pages_saved">Plataran dipundekek</string>
