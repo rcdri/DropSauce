@@ -43,10 +43,11 @@ class SyncWorker @AssistedInject constructor(
 	override suspend fun doWork(): Result {
 		trySetForeground()
 		return try {
-			when (repository.sync()) {
+			when (val result = repository.sync()) {
 				is SyncResult.Success -> Result.success()
 				is SyncResult.SignInRequired -> Result.failure()
-				is SyncResult.Error -> if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
+				is SyncResult.Error ->
+					if (result.retryable && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
 			}
 		} catch (e: Exception) {
 			e.printStackTraceDebug()

@@ -47,7 +47,15 @@ class GoogleDriveApi @Inject constructor(
 		@SerialName("id") val id: String,
 		@SerialName("name") val name: String? = null,
 		@SerialName("modifiedTime") val modifiedTime: String? = null,
+		@SerialName("createdTime") val createdTime: String? = null,
+		// Drive's monotonically-increasing change counter; bumps on every content/metadata write. Used
+		// as an optimistic-concurrency token to detect a concurrent write from another device. Drive
+		// encodes int64 fields as JSON strings, so this is a String and only ever compared for equality.
+		@SerialName("version") val version: String? = null,
 	)
+
+	@Serializable
+	private class FileVersion(@SerialName("version") val version: String? = null)
 
 	@Serializable
 	class DriveUser(
@@ -74,16 +82,30 @@ class GoogleDriveApi @Inject constructor(
 		httpClient.newCall(request).execute().parse<AboutResponse>()?.user
 	}
 
-	/** Finds the existing sync file in appDataFolder, or null. */
-	suspend fun findSyncFile(token: String): DriveFile? = withContext(Dispatchers.IO) {
+	/**
+	 * Lists all sync files in appDataFolder, oldest first. Normally there is exactly one, but a
+	 * first-run race between two devices can create duplicates; the caller merges and de-duplicates
+	 * them. Trashed files are excluded so a not-yet-purged delete can't shadow the live file.
+	 */
+	suspend fun findSyncFiles(token: String): List<DriveFile> = withContext(Dispatchers.IO) {
 		val url = "$DRIVE_BASE/files".toHttpUrl().newBuilder()
 			.addQueryParameter("spaces", "appDataFolder")
-			.addQueryParameter("q", "name = '$FILE_NAME'")
-			.addQueryParameter("fields", "files(id,name,modifiedTime)")
-			.addQueryParameter("pageSize", "10")
+			.addQueryParameter("q", "name = '$FILE_NAME' and trashed = false")
+			.addQueryParameter("fields", "files(id,name,modifiedTime,createdTime,version)")
+			.addQueryParameter("orderBy", "createdTime")
+			.addQueryParameter("pageSize", "100")
 			.build()
 		val request = Request.Builder().url(url).get().authorize(token).build()
-		httpClient.newCall(request).execute().parse<FileList>()?.files?.firstOrNull()
+		httpClient.newCall(request).execute().parse<FileList>()?.files.orEmpty()
+	}
+
+	/** Reads just the current [DriveFile.version] of a file, for a pre-upload concurrency re-check. */
+	suspend fun getFileVersion(token: String, fileId: String): String? = withContext(Dispatchers.IO) {
+		val url = "$DRIVE_BASE/files/$fileId".toHttpUrl().newBuilder()
+			.addQueryParameter("fields", "version")
+			.build()
+		val request = Request.Builder().url(url).get().authorize(token).build()
+		httpClient.newCall(request).execute().parse<FileVersion>()?.version
 	}
 
 	/** Downloads the raw sync file content (plain JSON bytes). */
