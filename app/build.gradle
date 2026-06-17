@@ -27,8 +27,8 @@ android {
 		applicationId = 'org.haziffe.dropsauce'
 		minSdk = 23
 		targetSdk = 37
-		versionCode = 43
-		versionName = '0.2.0'
+		versionCode = 44
+		versionName = '0.2.1'
 		generatedDensities = []
 		testInstrumentationRunner = 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
