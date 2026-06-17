@@ -1,7 +1,9 @@
 package org.koitharu.kotatsu.core.parser
 
+import android.content.Context
 import androidx.annotation.AnyThread
 import androidx.collection.ArrayMap
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.koitharu.kotatsu.core.cache.MemoryContentCache
 import org.koitharu.kotatsu.core.model.LocalMangaSource
 import org.koitharu.kotatsu.core.model.MangaSource as ResolveMangaSource
@@ -69,6 +71,7 @@ interface MangaRepository {
 		private val localMangaRepository: LocalMangaRepository,
 		private val contentCache: MemoryContentCache,
 		private val mihonExtensionManager: MihonExtensionManager,
+		@ApplicationContext private val context: Context,
 	) {
 
 		private val cache = ArrayMap<MangaSource, WeakReference<MangaRepository>>()
@@ -97,6 +100,7 @@ interface MangaRepository {
 						source = unwrapped,
 						extensionManager = mihonExtensionManager,
 						cache = contentCache,
+						context = context,
 					)
 					cache[unwrapped] = WeakReference(lazyRepo)
 					lazyRepo
@@ -134,6 +138,7 @@ interface MangaRepository {
 			is MihonMangaSource -> MihonMangaRepository(
 				source = source,
 				cache = contentCache,
+				context = context,
 			)
 
 			else -> null

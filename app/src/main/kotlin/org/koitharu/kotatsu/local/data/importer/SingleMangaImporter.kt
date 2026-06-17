@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import androidx.documentfile.provider.DocumentFile
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -79,30 +80,7 @@ class SingleMangaImporter @Inject constructor(
 		val outputFile = File(getOutputDir(), outputName)
 		try {
 			contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
-				PdfRenderer(pfd).use { renderer ->
-					if (renderer.pageCount <= 0) {
-						throw IOException("PDF has no pages: $uri")
-					}
-					ZipOutputStream(outputFile.outputStream().buffered()).use { zip ->
-						for (index in 0 until renderer.pageCount) {
-							renderer.openPage(index).use { page ->
-								val maxPageSize = maxOf(page.width, page.height).coerceAtLeast(1)
-								val scale = minOf(PDF_RENDER_SCALE, MAX_RENDER_DIMENSION / maxPageSize.toFloat())
-								val matrix = Matrix().apply { setScale(scale, scale) }
-								val width = (page.width * scale).roundToInt().coerceAtLeast(1)
-								val height = (page.height * scale).roundToInt().coerceAtLeast(1)
-								val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-								bitmap.eraseColor(Color.WHITE)
-								page.render(bitmap, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-								val entryName = String.format(Locale.US, "%04d.png", index + 1)
-								zip.putNextEntry(ZipEntry(entryName))
-								bitmap.compress(Bitmap.CompressFormat.PNG, 100, zip)
-								zip.closeEntry()
-								bitmap.recycle()
-							}
-						}
-					}
-				}
+				renderPdfToCbz(pfd, outputFile)
 			} ?: throw IOException("Cannot open descriptor for uri: $uri")
 			return outputFile
 		} catch (e: Exception) {
@@ -111,16 +89,66 @@ class SingleMangaImporter @Inject constructor(
 		}
 	}
 
-	private suspend fun importDirectory(uri: Uri): LocalManga {
+	private fun renderPdfToCbz(pfd: ParcelFileDescriptor, outputFile: File) {
+		PdfRenderer(pfd).use { renderer ->
+			if (renderer.pageCount <= 0) {
+				throw IOException("PDF has no pages")
+			}
+			ZipOutputStream(outputFile.outputStream().buffered()).use { zip ->
+				for (index in 0 until renderer.pageCount) {
+					renderer.openPage(index).use { page ->
+						val maxPageSize = maxOf(page.width, page.height).coerceAtLeast(1)
+						val scale = minOf(PDF_RENDER_SCALE, MAX_RENDER_DIMENSION / maxPageSize.toFloat())
+						val matrix = Matrix().apply { setScale(scale, scale) }
+						val width = (page.width * scale).roundToInt().coerceAtLeast(1)
+						val height = (page.height * scale).roundToInt().coerceAtLeast(1)
+						val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+						bitmap.eraseColor(Color.WHITE)
+						page.render(bitmap, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+						val entryName = String.format(Locale.US, "%04d.png", index + 1)
+						zip.putNextEntry(ZipEntry(entryName))
+						bitmap.compress(Bitmap.CompressFormat.PNG, 100, zip)
+						zip.closeEntry()
+						bitmap.recycle()
+					}
+				}
+			}
+		}
+	}
+
+	private suspend fun importDirectory(uri: Uri): LocalManga = withContext(Dispatchers.IO) {
 		val root = requireNotNull(DocumentFile.fromTreeUri(context, uri)) {
 			"Provided uri $uri is not a tree"
 		}
+		val allFiles = root.listFiles()
+		val pdfFiles = allFiles
+			.filter { it.isFile && hasPdfExtension(it.name ?: "") }
+			.sortedBy { it.name }
+
+		if (pdfFiles.isNotEmpty()) {
+			val dest = File(getOutputDir(), root.requireName())
+			dest.mkdir()
+			for (pdfFile in pdfFiles) {
+				val chapterName = pdfFile.name!!.substringBeforeLast('.')
+				val cbzFile = File(dest, "$chapterName.cbz")
+				try {
+					contentResolver.openFileDescriptor(pdfFile.uri, "r")?.use { pfd ->
+						renderPdfToCbz(pfd, cbzFile)
+					} ?: throw IOException("Cannot open PDF: ${pdfFile.name}")
+				} catch (e: Exception) {
+					cbzFile.delete()
+					throw e
+				}
+			}
+			return@withContext LocalMangaParser(dest).getManga(withDetails = false)
+		}
+
 		val dest = File(getOutputDir(), root.requireName())
 		dest.mkdir()
-		for (docFile in root.listFiles()) {
+		for (docFile in allFiles) {
 			docFile.copyTo(dest)
 		}
-		return LocalMangaParser(dest).getManga(withDetails = false)
+		LocalMangaParser(dest).getManga(withDetails = false)
 	}
 
 	private suspend fun DocumentFile.copyTo(destDir: File) {
@@ -158,7 +186,7 @@ class SingleMangaImporter @Inject constructor(
 	}
 
 	private companion object {
-		private const val PDF_RENDER_SCALE = 2f
+		private const val PDF_RENDER_SCALE = 4f
 		private const val MAX_RENDER_DIMENSION = 4096
 	}
 }

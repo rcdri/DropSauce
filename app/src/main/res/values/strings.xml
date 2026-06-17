@@ -368,8 +368,8 @@
     <string name="automatic_scroll">Automatic scroll</string>
     <string name="reader_info_pattern">Ch. %1$d/%2$d Pg. %3$d/%4$d</string>
     <string name="reader_info_bar">Show information bar in reader</string>
-    <string name="comics_archive">Comics archive</string>
-    <string name="folder_with_images">Folder with images</string>
+    <string name="comics_archive">Single file</string>
+    <string name="folder_with_images">Directory</string>
     <string name="importing_manga">Importing manga</string>
     <string name="import_completed">Import completed</string>
     <string name="import_completed_hint">You can delete the original file from storage to save space</string>
@@ -413,8 +413,8 @@
     <string name="got_it">Got it</string>
     <string name="user_agent">UserAgent header</string>
     <string name="settings_apply_restart_required">Please restart the application to apply these changes</string>
-    <string name="comics_archive_import_description">You can select one or more .cbz, .pdf or .zip files, each file will be recognized as a separate manga.</string>
-    <string name="folder_with_images_import_description">You can select a directory with archives or images. Each archive (or subdirectory) will be recognized as a chapter.</string>
+    <string name="comics_archive_import_description">Select one or more .cbz, .zip, or .pdf files. Each file is imported as a separate manga.</string>
+    <string name="folder_with_images_import_description">Select a folder to import. If it contains PDF files, each PDF becomes a chapter. Otherwise each archive or subdirectory becomes a chapter.</string>
     <string name="speed">Speed</string>
     <string name="show_on_shelf">Show on the Shelf</string>
     <string name="find_similar">Find similar</string>

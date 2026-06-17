@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.mihon
 
+import android.content.Context
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.Headers
@@ -38,6 +39,7 @@ class LazyMihonMangaRepository(
 	override val source: MissingMangaSource,
 	private val extensionManager: MihonExtensionManager,
 	private val cache: MemoryContentCache,
+	private val context: Context,
 ) : MangaRepository {
 
 	@Volatile
@@ -93,7 +95,7 @@ class LazyMihonMangaRepository(
 					"Install the matching Mihon extension to read this manga",
 					manga,
 				)
-			val real = MihonMangaRepository(mihonSource, cache)
+			val real = MihonMangaRepository(mihonSource, cache, context)
 			delegate = real
 			real
 		}

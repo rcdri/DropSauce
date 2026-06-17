@@ -2,6 +2,7 @@
 
 package org.koitharu.kotatsu.mihon
 
+import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.source.model.FilterList
@@ -15,6 +16,7 @@ import kotlinx.coroutines.withContext
 import org.koitharu.kotatsu.core.cache.MemoryContentCache
 import org.koitharu.kotatsu.core.exceptions.CloudFlareException
 import org.koitharu.kotatsu.core.parser.CachingMangaRepository
+import org.koitharu.kotatsu.core.prefs.SourceSettings
 import org.koitharu.kotatsu.mihon.model.MihonMangaSource
 import org.koitharu.kotatsu.mihon.model.toManga
 import org.koitharu.kotatsu.mihon.model.toMangaChapter
@@ -36,7 +38,10 @@ import java.util.EnumSet
 class MihonMangaRepository(
 	override val source: MihonMangaSource,
 	cache: MemoryContentCache,
+	context: Context,
 ) : CachingMangaRepository(cache) {
+
+	private val sourceSettings = SourceSettings(context, source)
 
 	companion object {
 		private const val TAG = "MihonMangaRepository"
@@ -60,7 +65,11 @@ class MihonMangaRepository(
 		add(SortOrder.RELEVANCE)
 	}.let { EnumSet.copyOf(it) }
 
-	override var defaultSortOrder: SortOrder = SortOrder.POPULARITY
+	override var defaultSortOrder: SortOrder
+		get() = sourceSettings.defaultSortOrder ?: SortOrder.POPULARITY
+		set(value) {
+			sourceSettings.defaultSortOrder = value
+		}
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
