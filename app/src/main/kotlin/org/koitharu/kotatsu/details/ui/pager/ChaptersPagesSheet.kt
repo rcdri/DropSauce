@@ -7,8 +7,6 @@ import android.view.ViewGroup
 import androidx.appcompat.view.ActionMode
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayout
@@ -50,9 +48,6 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 	lateinit var settings: AppSettings
 
 	private val viewModel by ChaptersPagesViewModel.ActivityVMLazy(this)
-
-	// Tracks the current drag-handle visibility so the show/hide is only animated when it actually flips.
-	private var dragHandleShown = true
 
 	override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): SheetChaptersPagesBinding {
 		return SheetChaptersPagesBinding.inflate(inflater, container, false)
@@ -134,16 +129,18 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		// at the centre position) or fully expanded — it only hides during selection action mode.
 		val isModalOrExpanded = dialog != null || newState == STATE_EXPANDED
 		binding.toolbar.menuView?.isVisible = isModalOrExpanded && !isActionModeStarted
-		// The drag handle is the grab affordance for the floating/centre state; at full screen the sheet
-		// behaves like a normal top-level screen, so the handle is dropped and the toolbar sits directly
-		// under the status bar like the rest of the app. Animate the swap so docking to full screen
-		// doesn't snap the toolbar upward.
-		val showHandle = newState != STATE_EXPANDED
-		if (dragHandleShown != showHandle) {
-			dragHandleShown = showHandle
-			TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition().setDuration(200))
-			binding.headerBar.setDragHandleVisible(showHandle)
-		}
+		// Snap the drag handle to its final collapse state. During a manual drag onSlide already drove it
+		// there continuously, so this is a no-op then; it only matters for programmatic state changes
+		// (e.g. entering selection action mode) where no slide occurs.
+		binding.headerBar.setDragHandleCollapseProgress(if (newState == STATE_EXPANDED) 1f else 0f)
+	}
+
+	override fun onSlide(sheet: View, slideOffset: Float) {
+		// Melt the drag handle away over the top stretch of the drag so reaching full screen is one
+		// seamless upward motion rather than a rise followed by a separate "handle disappears" step.
+		val binding = viewBinding ?: return
+		val progress = (slideOffset - DRAG_HANDLE_COLLAPSE_START) / (1f - DRAG_HANDLE_COLLAPSE_START)
+		binding.headerBar.setDragHandleCollapseProgress(progress)
 	}
 
 	override fun onActionModeStarted(mode: ActionMode) {
@@ -212,5 +209,9 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 
 		// How much of the screen height the sheet covers when it first opens at the centre position.
 		private const val HALF_EXPANDED_RATIO = 0.62f
+
+		// Slide offset (0 = centre/half, 1 = full screen) at which the drag handle starts collapsing.
+		// Kept above the half-expanded resting offset so the handle stays full at the centre position.
+		private const val DRAG_HANDLE_COLLAPSE_START = 0.65f
 	}
 }

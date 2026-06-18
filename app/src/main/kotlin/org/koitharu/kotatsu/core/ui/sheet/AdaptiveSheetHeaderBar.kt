@@ -14,8 +14,10 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.ancestors
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.databinding.LayoutSheetHeaderAdaptiveBinding
+import kotlin.math.roundToInt
 
 class AdaptiveSheetHeaderBar @JvmOverloads constructor(
 	context: Context,
@@ -26,6 +28,7 @@ class AdaptiveSheetHeaderBar @JvmOverloads constructor(
 	private val binding =
 		LayoutSheetHeaderAdaptiveBinding.inflate(LayoutInflater.from(context), this)
 	private var sheetBehavior: AdaptiveSheetBehavior? = null
+	private var dragHandleFullHeight = 0
 
 	var title: CharSequence?
 		get() = binding.shTextViewTitle.text
@@ -91,14 +94,25 @@ class AdaptiveSheetHeaderBar @JvmOverloads constructor(
 	}
 
 	/**
-	 * Shows or hides the bottom-sheet drag handle. Used to drop the handle once a sheet is expanded to
-	 * full screen, where it reads as a normal top-level screen rather than a draggable sheet. No-op on
-	 * side sheets, which never show a drag handle.
+	 * Collapses the bottom-sheet drag handle as the sheet approaches full screen: `0f` keeps it at full
+	 * height, `1f` shrinks it to nothing (height + alpha). Driven continuously from the sheet's slide
+	 * offset, the handle melts away as part of the same upward motion instead of snapping out in a second
+	 * step once full screen is reached. No-op on side sheets, which never show a drag handle.
 	 */
-	fun setDragHandleVisible(visible: Boolean) {
-		if (sheetBehavior is AdaptiveSheetBehavior.Bottom) {
-			binding.shDragHandle.isVisible = visible
+	fun setDragHandleCollapseProgress(progress: Float) {
+		if (sheetBehavior !is AdaptiveSheetBehavior.Bottom) {
+			return
 		}
+		val handle = binding.shDragHandle
+		val fullHeight = dragHandleFullHeight.takeIf { it > 0 }
+			?: handle.height.takeIf { it > 0 }?.also { dragHandleFullHeight = it }
+			?: return
+		val clamped = progress.coerceIn(0f, 1f)
+		val target = (fullHeight * (1f - clamped)).roundToInt()
+		if (handle.layoutParams.height != target) {
+			handle.updateLayoutParams { height = target }
+		}
+		handle.alpha = 1f - clamped
 	}
 
 	private fun setBottomSheetBehavior(behavior: AdaptiveSheetBehavior?) {

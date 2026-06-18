@@ -2,11 +2,13 @@ package org.koitharu.kotatsu.core.ui.sheet
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.view.Window
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedDispatcher
 import androidx.annotation.CallSuper
@@ -22,6 +24,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.sidesheet.SideSheetDialog
 import dagger.hilt.android.EntryPointAccessors
 import org.koitharu.kotatsu.R
@@ -29,6 +32,7 @@ import org.koitharu.kotatsu.core.exceptions.resolve.ExceptionResolver
 import org.koitharu.kotatsu.core.ui.BaseActivity
 import org.koitharu.kotatsu.core.ui.BaseActivityEntryPoint
 import org.koitharu.kotatsu.core.ui.util.ActionModeDelegate
+import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import com.google.android.material.R as materialR
 
 abstract class BaseAdaptiveSheet<B : ViewBinding> : AppCompatDialogFragment(),
@@ -98,14 +102,28 @@ abstract class BaseAdaptiveSheet<B : ViewBinding> : AppCompatDialogFragment(),
 		} else {
 			BottomSheetDialogImpl(context, theme)
 		}
-		// The sheet floats on colorSurfaceContainerHigh, so its contextual action bar must paint the same
-		// colour to match its toolbar (the default window background would look like a mismatched slab).
+		// The contextual action bar must paint the sheet's own surface colour so it matches the sheet's
+		// toolbar (the default window background would look like a mismatched slab). The exact colour
+		// depends on the sheet style, so it's read from the live sheet view rather than guessed.
 		actionModeDelegate = ActionModeDelegate(
-			backgroundColorAttr = materialR.attr.colorSurfaceContainerHigh,
+			backgroundColorResolver = ::resolveSheetSurfaceColor,
 		).also {
 			dialog.onBackPressedDispatcher.addCallback(it)
 		}
 		return dialog
+	}
+
+	// Reads the colour the sheet is actually drawn with (its MaterialShapeDrawable fill / solid colour)
+	// so the contextual action bar can paint the exact same surface. Falls back to the window background
+	// when the sheet view or its background can't be resolved (e.g. side sheets).
+	private fun resolveSheetSurfaceColor(window: Window): Int {
+		val sheetView = window.findViewById<View>(materialR.id.design_bottom_sheet)
+		val color = when (val background = sheetView?.background) {
+			is MaterialShapeDrawable -> background.fillColor?.defaultColor
+			is ColorDrawable -> background.color
+			else -> null
+		}
+		return color ?: window.context.getThemeColor(android.R.attr.colorBackground)
 	}
 
 	@CallSuper
