@@ -22,13 +22,6 @@ object KotatsuColors {
 	}
 
 	@ColorInt
-	fun segmentColorRandom(context: Context, seed: Any): Int {
-		val color = random(seed)
-		val backgroundColor = context.getThemeColor(R.attr.colorSurfaceContainerHigh)
-		return MaterialColors.harmonize(color, backgroundColor)
-	}
-
-	@ColorInt
 	fun random(seed: Any): Int {
 		val hue = (seed.hashCode() % 360).absoluteValue.toFloat()
 		return ColorUtils.HSLToColor(floatArrayOf(hue, 0.5f, 0.5f))

@@ -64,11 +64,6 @@ class LoadingIndicatorSwipeRefreshLayout @JvmOverloads constructor(
 		indicator.setIndicatorColor(color)
 	}
 
-	/** Tints the container (the rounded background the morphing shapes sit inside). */
-	fun setContainerColor(@ColorInt color: Int) {
-		indicator.containerColor = color
-	}
-
 	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 		measureChild(indicator, widthMeasureSpec, heightMeasureSpec)

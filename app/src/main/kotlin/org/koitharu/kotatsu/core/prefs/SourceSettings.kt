@@ -27,8 +27,6 @@ class SourceSettings(context: Context, source: MangaSource) : MangaSourceConfig 
 		get() = prefs.getEnumValue(KEY_SORT_ORDER, SortOrder::class.java)
 		set(value) = prefs.edit { putEnumValue(KEY_SORT_ORDER, value) }
 
-	val isSlowdownEnabled: Boolean
-		get() = prefs.getBoolean(KEY_SLOWDOWN, false)
 
 	val isCaptchaNotificationsDisabled: Boolean
 		get() = prefs.getBoolean(KEY_NO_CAPTCHA, false)
@@ -106,7 +104,6 @@ class SourceSettings(context: Context, source: MangaSource) : MangaSourceConfig 
 			}
 		}
 
-		const val KEY_DOMAIN = "domain"
 		const val KEY_NO_CAPTCHA = "no_captcha"
 		const val KEY_SLOWDOWN = "slowdown"
 		const val KEY_SORT_ORDER = "sort_order"

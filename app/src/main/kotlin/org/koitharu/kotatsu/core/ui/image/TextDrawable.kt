@@ -86,14 +86,5 @@ class TextDrawable(
 			drawable.paint.letterSpacing = textAppearance.letterSpacing
 			return drawable
 		}
-
-		fun compound(textView: TextView, text: String): TextDrawable? {
-			val drawable = TextDrawable(text)
-			drawable.textSize = textView.textSize
-			drawable.textColor = textView.textColors
-			return drawable.takeIf {
-				PaintCompat.hasGlyph(drawable.paint, text)
-			}
-		}
 	}
 }

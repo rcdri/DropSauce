@@ -32,13 +32,6 @@ abstract class EditTextValidator : DefaultTextWatcher {
 		}
 	}
 
-	fun attachToEditText(editText: EditText) {
-		editTextRef = WeakReference(editText)
-		editText.removeTextChangedListener(this)
-		editText.addTextChangedListener(this)
-		afterTextChanged(editText.text)
-	}
-
 	abstract fun validate(text: String): ValidationResult
 
 	sealed class ValidationResult {

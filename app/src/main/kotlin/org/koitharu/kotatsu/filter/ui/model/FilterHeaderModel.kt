@@ -8,7 +8,4 @@ data class FilterHeaderModel(
 	val sortOrder: SortOrder?,
 	val isFilterApplied: Boolean,
 ) {
-
-	val textSummary: String
-		get() = chips.mapNotNull { if (it.isChecked) it.title else null }.joinToString()
 }

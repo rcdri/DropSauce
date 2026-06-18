@@ -108,46 +108,11 @@ class DotsIndicator @JvmOverloads constructor(
 		)
 	}
 
-	fun bindToViewPager(pager: ViewPager2) {
-		pager.registerOnPageChangeCallback(ViewPagerCallback())
-		pager.adapter?.let {
-			it.registerAdapterDataObserver(AdapterObserver(it))
-		}
-	}
-
 	private fun getDotSize() = if (indicatorSize <= 0) {
 		(height - paddingTop - paddingBottom).toFloat()
 	} else {
 		indicatorSize
 	}
 
-	private inner class ViewPagerCallback : ViewPager2.OnPageChangeCallback() {
 
-		override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-			super.onPageScrolled(position, positionOffset, positionOffsetPixels)
-			this@DotsIndicator.position = position
-			this@DotsIndicator.positionOffset = positionOffset
-			invalidate()
-		}
-	}
-
-	private inner class AdapterObserver(
-		private val adapter: RecyclerView.Adapter<*>,
-	) : AdapterDataObserver() {
-
-		override fun onChanged() {
-			super.onChanged()
-			max = adapter.itemCount
-		}
-
-		override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-			super.onItemRangeInserted(positionStart, itemCount)
-			max = adapter.itemCount
-		}
-
-		override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-			super.onItemRangeRemoved(positionStart, itemCount)
-			max = adapter.itemCount
-		}
-	}
 }

@@ -120,10 +120,6 @@ class LocalMangaDirOutput(
 		}
 	}
 
-	fun setIndex(newIndex: MangaIndex) {
-		index.setFrom(newIndex)
-	}
-
 	private suspend fun ZipOutput.flushAndFinish() = runInterruptible(Dispatchers.IO) {
 		val e: Throwable? = try {
 			finish()

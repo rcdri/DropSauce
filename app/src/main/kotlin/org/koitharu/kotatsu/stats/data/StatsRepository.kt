@@ -50,17 +50,6 @@ class StatsRepository @Inject constructor(
 		return result
 	}
 
-	suspend fun getTimePerPage(mangaId: Long): Long = db.withTransaction {
-		val dao = db.getStatsDao()
-		val pages = dao.getReadPagesCount(mangaId)
-		val time = if (pages >= 10) {
-			dao.getAverageTimePerPage(mangaId)
-		} else {
-			dao.getAverageTimePerPage()
-		}
-		time
-	}
-
 	suspend fun getChapterReadingStats(): ChapterReadingStats = db.withTransaction {
 		val dao = db.getStatsDao()
 		ChapterReadingStats(

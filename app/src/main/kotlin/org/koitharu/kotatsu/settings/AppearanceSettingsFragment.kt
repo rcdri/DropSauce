@@ -210,11 +210,7 @@ private fun AppearanceScreen(
 	// Enum-backed array sources
 	val themeEntries = remember { ctx.resources.getStringArray(R.array.themes).toList() }
 	val themeValues = remember { ctx.resources.getStringArray(R.array.values_theme).toList() }
-	val colorSchemes = remember { ColorScheme.getAvailableList() }
-	val colorSchemeEntries = remember(colorSchemes) {
-		colorSchemes.map { ctx.getString(it.titleResId) }
-	}
-	val colorSchemeValues = remember(colorSchemes) { colorSchemes.map { it.name } }
+
 	val listModeEntries = remember { ctx.resources.getStringArray(R.array.list_modes).toList() }
 	val listModeValues = remember { ListMode.entries.names().toList() }
 	val badgeEntries = remember { ctx.resources.getStringArray(R.array.list_badges).toList() }

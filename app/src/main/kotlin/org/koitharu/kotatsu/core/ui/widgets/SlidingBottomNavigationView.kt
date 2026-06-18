@@ -54,9 +54,6 @@ open class SlidingBottomNavigationView @JvmOverloads constructor(
 			}
 		}
 
-	val isShownOrShowing: Boolean
-		get() = isVisible && currentState == STATE_UP
-
 	override fun getBehavior(): CoordinatorLayout.Behavior<*> {
 		return behavior
 	}

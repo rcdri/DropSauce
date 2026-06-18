@@ -184,11 +184,7 @@ abstract class BaseActivity<B : ViewBinding> :
 		}.getOrNull() == true
 	}
 
-	protected fun isDarkAmoledTheme(): Boolean {
-		val uiMode = resources.configuration.uiMode
-		val isNight = uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-		return isNight && isAmoledTheme
-	}
+
 
 	@CallSuper
 	override fun onSupportActionModeStarted(mode: ActionMode) {

@@ -249,7 +249,7 @@ class AppRouter private constructor(
         )
     }
 
-    fun openHistory() = startActivity(HistoryActivity::class.java)
+
 
     fun openFavorites() = startActivity(FavouritesActivity::class.java)
 
@@ -307,13 +307,7 @@ class AppRouter private constructor(
         startActivity(suggestionsSettingsIntent(contextOrNull() ?: return))
     }
 
-    fun openSourcesSettings() {
-        startActivity(sourcesSettingsIntent(contextOrNull() ?: return))
-    }
 
-    fun openDiscordSettings() {
-        startActivity(discordSettingsIntent(contextOrNull() ?: return))
-    }
 
     fun openReaderTapGridSettings() = startActivity(ReaderTapGridConfigActivity::class.java)
 
@@ -324,9 +318,7 @@ class AppRouter private constructor(
         )
     }
 
-    fun openSourceAuth(source: MangaSource) {
-        startActivity(sourceAuthIntent(contextOrNull() ?: return, source))
-    }
+
 
     fun openStatistic() = startActivity(StatsActivity::class.java)
 
@@ -506,9 +498,7 @@ class AppRouter private constructor(
         }.showDistinct()
     }
 
-    fun showWelcomeSheet() {
-        WelcomeSheet().showDistinct()
-    }
+
 
     fun showChapterPagesSheet() {
         ChaptersPagesSheet().showDistinct()
@@ -591,18 +581,7 @@ class AppRouter private constructor(
         return sheet?.dialog?.isShowing == true
     }
 
-    fun closeWelcomeSheet(): Boolean {
-        val tag = fragmentTag<WelcomeSheet>()
-        val sheet = fragment?.findFragmentByTagRecursive(tag)
-            ?: activity?.supportFragmentManager?.findFragmentByTag(tag)
-            ?: return false
-        return if (sheet is WelcomeSheet) {
-            sheet.dismissAllowingStateLoss()
-            true
-        } else {
-            false
-        }
-    }
+
 
     /** Private utils **/
 

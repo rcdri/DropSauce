@@ -138,10 +138,6 @@ class FavouritesRepository @Inject constructor(
 			.map { it?.toFavouriteCategory() }
 	}
 
-	fun observeCategoriesIds(mangaId: Long): Flow<Set<Long>> {
-		return db.getFavouritesDao().observeIds(mangaId).map { it.toSet() }
-	}
-
 	fun observeCategories(mangaId: Long): Flow<Set<FavouriteCategory>> {
 		return db.getFavouritesDao().observeCategories(mangaId).map {
 			it.mapTo(LinkedHashSet(it.size)) { x -> x.toFavouriteCategory() }
@@ -221,10 +217,6 @@ class FavouritesRepository @Inject constructor(
 
 	suspend fun updateCategoryTracking(id: Long, isTrackingEnabled: Boolean) {
 		db.getFavouriteCategoriesDao().updateTracking(id, isTrackingEnabled)
-	}
-
-	suspend fun updateCategoryNewChaptersDownload(id: Long, isEnabled: Boolean) {
-		db.getFavouriteCategoriesDao().updateNewChaptersDownload(id, isEnabled)
 	}
 
 	suspend fun setNewChaptersDownloadCategories(ids: Set<Long>) {

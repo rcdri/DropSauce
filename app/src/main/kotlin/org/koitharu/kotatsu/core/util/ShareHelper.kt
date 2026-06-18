@@ -76,9 +76,4 @@ class ShareHelper(private val context: Context) {
 			.startChooser()
 	}
 
-	fun getShareTextIntent(text: String): Intent = ShareCompat.IntentBuilder(context)
-		.setText(text)
-		.setType(TYPE_TEXT)
-		.setChooserTitle(R.string.share)
-		.createChooserIntent()
 }

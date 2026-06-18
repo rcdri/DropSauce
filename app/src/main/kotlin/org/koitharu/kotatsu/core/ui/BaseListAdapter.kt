@@ -53,14 +53,4 @@ open class BaseListAdapter<T : ListModel> : AsyncListDifferDelegationAdapter<T>(
 		}
 		return null
 	}
-
-	fun observeItems(): Flow<List<T>> = callbackFlow {
-		val listListener = ListListener<T> { _, list ->
-			trySendBlocking(list)
-		}
-		addListListener(listListener)
-		awaitClose { removeListListener(listListener) }
-	}.onStart {
-		emit(items)
-	}
 }

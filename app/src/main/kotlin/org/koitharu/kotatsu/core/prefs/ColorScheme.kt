@@ -43,9 +43,5 @@ enum class ColorScheme(
 			}
 			return list
 		}
-
-		fun safeValueOf(name: String): ColorScheme? {
-			return ColorScheme.entries.find(name)
-		}
 	}
 }

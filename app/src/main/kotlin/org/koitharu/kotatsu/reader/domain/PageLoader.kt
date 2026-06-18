@@ -145,28 +145,6 @@ class PageLoader @Inject constructor(
 		return coil.execute(request).image?.toImageSource()
 	}
 
-	fun peekPreviewSource(preview: String?): ImageSource? {
-		if (preview.isNullOrEmpty()) {
-			return null
-		}
-		coil.memoryCache?.let { cache ->
-			val key = MemoryCache.Key(preview)
-			cache[key]?.image?.let {
-				return if (it is BitmapImage) {
-					ImageSource.cachedBitmap(it.toBitmap())
-				} else {
-					ImageSource.bitmap(it.toBitmap())
-				}
-			}
-		}
-		coil.diskCache?.let { cache ->
-			cache.openSnapshot(preview)?.use { snapshot ->
-				return ImageSource.file(snapshot.data.toFile())
-			}
-		}
-		return null
-	}
-
 	fun loadPageAsync(page: MangaPage, force: Boolean): ProgressDeferred<Uri, Float> {
 		var task = tasks[page.id]?.takeIf { it.isValid() }
 		if (force) {

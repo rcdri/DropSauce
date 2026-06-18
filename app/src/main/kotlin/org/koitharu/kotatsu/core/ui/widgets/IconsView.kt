@@ -37,21 +37,6 @@ class IconsView @JvmOverloads constructor(
 		}
 	}
 
-	fun setIcons(icons: Iterable<Drawable>) {
-		var index = 0
-		for (icon in icons) {
-			val imageView = (getChildAt(index) as ImageView?) ?: addImageView()
-			imageView.setImageDrawable(icon)
-			imageView.isVisible = true
-			index++
-		}
-		for (i in index until childCount) {
-			val imageView = getChildAt(i) as? ImageView ?: continue
-			imageView.setImageDrawable(null)
-			imageView.isVisible = false
-		}
-	}
-
 	fun clearIcons() {
 		repeat(childCount) { i ->
 			getChildAt(i).isVisible = false

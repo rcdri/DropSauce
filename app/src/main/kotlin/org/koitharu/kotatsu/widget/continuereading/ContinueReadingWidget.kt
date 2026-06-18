@@ -227,16 +227,6 @@ class ContinueReadingWidget : AppWidgetProvider() {
 		private const val TAG = "ContinueReadingWidget"
 		const val ACTION_REFRESH = "org.koitharu.kotatsu.widget.continuereading.REFRESH"
 
-		fun refreshIntent(context: Context): PendingIntent {
-			val intent = Intent(context, ContinueReadingWidget::class.java).setAction(ACTION_REFRESH)
-			return PendingIntent.getBroadcast(
-				context,
-				0,
-				intent,
-				PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-			)
-		}
-
 		fun nudgeAll(context: Context) {
 			val mgr = AppWidgetManager.getInstance(context)
 			val ids = mgr.getAppWidgetIds(ComponentName(context, ContinueReadingWidget::class.java))

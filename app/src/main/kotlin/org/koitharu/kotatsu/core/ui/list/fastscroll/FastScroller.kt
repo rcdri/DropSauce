@@ -489,15 +489,6 @@ class FastScroller @JvmOverloads constructor(
 	 */
 	fun setBubbleTextColor(@ColorInt color: Int) = binding.bubble.setTextColor(color)
 
-	/**
-	 * Set the scaled pixel text size of the section bubble.
-	 *
-	 * @param size The scaled pixel text size for the section bubble
-	 */
-	fun setBubbleTextSize(size: Int) {
-		binding.bubble.textSize = size.toFloat()
-	}
-
 	private fun getRecyclerViewTargetPosition(y: Float) = recyclerView?.let { recyclerView ->
 		val itemCount = recyclerView.adapter?.itemCount ?: 0
 

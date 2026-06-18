@@ -94,9 +94,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		putBoolean(KEY_THEME_AMOLED, enabled)
 	}
 
-	val isHapticFeedbackEnabled: Boolean
-		get() = prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true)
-
 	var isOnboardingCompleted: Boolean
 		get() = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
 			&& prefs.getString(KEY_ONBOARDING_INSTALL_ID, null) == onboardingInstallId
@@ -155,18 +152,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isQuickFilterEnabled: Boolean
 		get() = prefs.getBoolean(KEY_QUICK_FILTER, true)
 
-	val isDescriptionExpanded: Boolean
-		get() = !prefs.getBoolean(KEY_COLLAPSE_DESCRIPTION, true)
-
 	val isBackdropEnabled: Boolean
 		get() = prefs.getBoolean(KEY_DETAILS_BACKDROP, true)
-
-	val isBackdropExtended: Boolean
-		get() = prefs.getBoolean(KEY_DETAILS_BACKDROP_EXTEND, true)
-
-	var backdropBlurAmount: Int
-		get() = prefs.getInt(KEY_DETAILS_BACKDROP_BLUR_AMOUNT, 60)
-		set(value) = prefs.edit { putInt(KEY_DETAILS_BACKDROP_BLUR_AMOUNT, value.coerceIn(0, 100)) }
 
 	var historyListMode: ListMode
 		get() = prefs.getEnumValue(KEY_LIST_MODE_HISTORY, listMode)
@@ -379,9 +366,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_PROTECT_APP_BIOMETRIC, true)
 		set(value) = prefs.edit { putBoolean(KEY_PROTECT_APP_BIOMETRIC, value) }
 
-	val isMirrorSwitchingEnabled: Boolean
-		get() = prefs.getBoolean(KEY_MIRROR_SWITCHING, false)
-
 	val isExitConfirmationEnabled: Boolean
 		get() = prefs.getBoolean(KEY_EXIT_CONFIRM, false)
 
@@ -428,10 +412,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	var sourcesVersion: Int
 		get() = prefs.getInt(KEY_SOURCES_VERSION, 0)
 		set(value) = prefs.edit { putInt(KEY_SOURCES_VERSION, value) }
-
-	var preferredSourceLanguages: Set<String>
-		get() = prefs.getStringSet(KEY_SOURCES_PREFERRED_LANGUAGES, emptySet()).orEmpty()
-		set(value) = prefs.edit { putStringSet(KEY_SOURCES_PREFERRED_LANGUAGES, value) }
 
 	/**
 	 * The active language chosen per logical source (a package + source-name pair) for
@@ -484,26 +464,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 			}
 		}
 
-
-	var backupIncludeLibraryEntries: Boolean
-		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_LIBRARY, true)
-		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_LIBRARY, value) }
-
-	var backupIncludeAppSettings: Boolean
-		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_APP_SETTINGS, true)
-		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_APP_SETTINGS, value) }
-
-	var backupIncludeSourceSettings: Boolean
-		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_SOURCE_SETTINGS, true)
-		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_SOURCE_SETTINGS, value) }
-
-	var backupIncludeExtensionRepo: Boolean
-		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_EXTENSION_REPO, true)
-		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_EXTENSION_REPO, value) }
-
-	var backupIncludeTracking: Boolean
-		get() = prefs.getBoolean(KEY_BACKUP_INCLUDE_TRACKING, true)
-		set(value) = prefs.edit { putBoolean(KEY_BACKUP_INCLUDE_TRACKING, value) }
 
 	val isPagesNumbersEnabled: Boolean
 		get() = prefs.getBoolean(KEY_PAGES_NUMBERS, false)
@@ -885,7 +845,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_UPDATES_FEED_CLEAR = "updates_feed_clear"
 		const val KEY_GRID_SIZE = "grid_size"
 		const val KEY_GRID_SIZE_PAGES = "grid_size_pages"
-		const val KEY_REMOTE_SOURCES = "remote_sources"
 		const val KEY_LOCAL_STORAGE = "local_storage"
 		const val KEY_READER_DOUBLE_PAGES = "reader_double_pages"
 		const val KEY_READER_DOUBLE_PAGES_SENSITIVITY = "reader_double_pages_sensitivity_2"
@@ -900,16 +859,12 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_TRACKER_WIFI_ONLY = "tracker_wifi"
 		const val KEY_TRACKER_FREQUENCY = "tracker_freq"
 		const val KEY_TRACK_SOURCES = "track_sources"
-		const val KEY_TRACK_CATEGORIES = "track_categories"
-		const val KEY_TRACK_WARNING = "track_warning"
 		const val KEY_TRACKER_NOTIFICATIONS = "tracker_notifications"
 		const val KEY_TRACKER_NO_NSFW = "tracker_no_nsfw"
 		const val KEY_TRACKER_DOWNLOAD = "tracker_download"
-		const val KEY_NOTIFICATIONS_SETTINGS = "notifications_settings"
 		const val KEY_NOTIFICATIONS_SOUND = "notifications_sound"
 		const val KEY_NOTIFICATIONS_VIBRATE = "notifications_vibrate"
 		const val KEY_NOTIFICATIONS_LIGHT = "notifications_light"
-		const val KEY_NOTIFICATIONS_INFO = "tracker_notifications_info"
 		const val KEY_READER_ANIMATION = "reader_animation2"
 		const val KEY_READER_CONTROLS = "reader_controls"
 		const val KEY_READER_MODE = "reader_mode"
@@ -936,10 +891,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_SUGGESTIONS_EXCLUDE_NSFW = "suggestions_exclude_nsfw"
 		const val KEY_SUGGESTIONS_EXCLUDE_TAGS = "suggestions_exclude_tags"
 		const val KEY_SUGGESTIONS_NOTIFICATIONS = "suggestions_notifications"
-		const val KEY_SHIKIMORI = "shikimori"
-		const val KEY_ANILIST = "anilist"
-		const val KEY_MAL = "mal"
-		const val KEY_KITSU = "kitsu"
 		const val KEY_DOWNLOADS_METERED_NETWORK = "downloads_metered_network"
 		const val KEY_DOWNLOADS_FORMAT = "downloads_format"
 		const val KEY_ALL_FAVOURITES_VISIBLE = "all_favourites_visible"
@@ -954,7 +905,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_READER_BACKGROUND = "reader_background"
 		const val KEY_READER_SCREEN_ON = "reader_screen_on"
 		const val KEY_SHORTCUTS = "dynamic_shortcuts"
-		const val KEY_READER_TAP_ACTIONS = "reader_tap_actions"
 		const val KEY_READER_OPTIMIZE = "reader_optimize"
 		const val KEY_LOCAL_LIST_ORDER = "local_order"
 		const val KEY_HISTORY_ORDER = "history_order"
@@ -971,11 +921,9 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_READER_AUTOSCROLL_SPEED = "as_speed"
 		const val KEY_READER_AUTOSCROLL_FAB = "as_fab"
 		const val KEY_MIRROR_SWITCHING = "mirror_switching"
-		const val KEY_PROXY = "proxy"
 		const val KEY_PROXY_TYPE = "proxy_type_2"
 		const val KEY_PROXY_ADDRESS = "proxy_address"
 		const val KEY_PROXY_PORT = "proxy_port"
-		const val KEY_PROXY_AUTH = "proxy_auth"
 		const val KEY_PROXY_LOGIN = "proxy_login"
 		const val KEY_PROXY_PASSWORD = "proxy_password"
 		const val KEY_IMAGES_PROXY = "images_proxy_2"
@@ -993,12 +941,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_MIHON_PER_EXT_ACTIVE_LANG = "mihon_per_ext_active_lang"
 		const val KEY_MIHON_HIDDEN_PACKAGES = "mihon_hidden_packages"
 		const val KEY_EXTERNAL_EXTENSIONS_REPO_URL = "external_extensions_repo_url"
-		const val KEY_BACKUP_INCLUDE_LIBRARY = "backup_include_library"
-		const val KEY_BACKUP_INCLUDE_APP_SETTINGS = "backup_include_app_settings"
-		const val KEY_BACKUP_INCLUDE_SOURCE_SETTINGS = "backup_include_source_settings"
-		const val KEY_BACKUP_INCLUDE_EXTENSION_REPO = "backup_include_extension_repo"
-		const val KEY_BACKUP_INCLUDE_TRACKING = "backup_include_tracking"
-		const val KEY_SOURCES_CATALOG = "sources_catalog"
 		const val KEY_CF_BRIGHTNESS = "cf_brightness"
 		const val KEY_CF_CONTRAST = "cf_contrast"
 		const val KEY_CF_INVERTED = "cf_inverted"
@@ -1029,27 +971,14 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 		// keys for non-persistent preferences
 		const val KEY_APP_VERSION = "app_version"
-		const val KEY_IGNORE_DOZE = "ignore_dose"
-		const val KEY_TRACKER_DEBUG = "tracker_debug"
-		const val KEY_LINK_WEBLATE = "about_app_translation"
-		const val KEY_LINK_TELEGRAM = "about_telegram"
-		const val KEY_LINK_GITHUB = "about_github"
-		const val KEY_LINK_MANUAL = "about_help"
-		const val KEY_PROXY_TEST = "proxy_test"
-		const val KEY_OPEN_BROWSER = "open_browser"
 		const val KEY_HANDLE_LINKS = "handle_links"
 		const val KEY_CLEAR_MANGA_DATA = "manga_data_clear"
-		const val KEY_STORAGE_USAGE = "storage_usage"
 		const val KEY_WEBVIEW_CLEAR = "webview_clear"
-		const val KEY_RESTORE_BACKUP = "restore_backup"
-		const val KEY_CREATE_BACKUP = "create_backup"
-		const val KEY_RESTORE_LOCAL_BACKUP = "restore_local_backup"
 		const val KEY_BACKUP_PERIODICAL_ENABLED = "backup_periodic"
 		const val KEY_BACKUP_PERIODICAL_OUTPUT = "backup_periodic_output"
 		const val KEY_BACKUP_PERIODICAL_FREQ = "backup_periodic_freq"
 		const val KEY_BACKUP_PERIODICAL_TRIM = "backup_periodic_trim"
 		const val KEY_BACKUP_PERIODICAL_COUNT = "backup_periodic_count"
-		const val KEY_BACKUP_PERIODICAL_LAST = "backup_periodic_last"
 
 		// old keys are for migration only
 		private const val KEY_IMAGES_PROXY_OLD = "images_proxy"

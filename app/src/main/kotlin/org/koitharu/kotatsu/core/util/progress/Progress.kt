@@ -41,6 +41,7 @@ data class Progress(
 		)
 	}
 
+
 	operator fun plus(child: Progress) = Progress(
 		progress = progress * child.total + child.progress,
 		total = total * child.total,

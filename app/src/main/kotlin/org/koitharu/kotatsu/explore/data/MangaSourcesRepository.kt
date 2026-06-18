@@ -41,12 +41,6 @@ class MangaSourcesRepository @Inject constructor(
 		return buildSortedSourceInfoList(getMihonSources()).map { it.mangaSource }
 	}
 
-	/** All installed sources including those disabled via per-extension language toggles
-	 *  (still respects the NSFW filter). Used by suggestions when "include disabled sources" is on. */
-	fun getAllSources(): List<MangaSource> {
-		return buildSortedSourceInfoList(getAllMihonSources()).map { it.mangaSource }
-	}
-
 	fun getPinnedSources(): Set<MangaSource> {
 		val sourcesByKey = getMihonSources().associateBy(::sourceKeyOf)
 		return getPinnedSourceKeys()
@@ -80,19 +74,10 @@ class MangaSourcesRepository @Inject constructor(
 		mihon.map { it to true }
 	}
 
-	fun setPositions(sources: List<MangaSource>) {
-		// No-op for Mihon-only mode
-	}
-
 	fun observeHasNewSources(): Flow<Boolean> = kotlinx.coroutines.flow.flowOf(false)
 
 	fun clearNewSourcesBadge() {
 		settings.sourcesVersion = org.koitharu.kotatsu.BuildConfig.VERSION_CODE
-	}
-
-	fun isSetupRequired(): Boolean {
-		// Setup is not required for Mihon-only mode, extensions are installed separately
-		return false
 	}
 
 	fun setIsPinned(sources: Collection<MangaSource>, isPinned: Boolean): ReversibleHandle {
@@ -194,27 +179,6 @@ class MangaSourcesRepository @Inject constructor(
 			SourcesSortOrder.MANUAL -> Unit
 		}
 		return pinned + unpinned
-	}
-
-	fun queryMihonSources(
-		query: String?,
-		locale: String?,
-	): List<MihonMangaSource> {
-		val sources = getMihonSources().toMutableList()
-		if (settings.isNsfwContentDisabled) {
-			sources.removeAll { it.isNsfw }
-		}
-		if (locale != null) {
-			sources.retainAll { it.language == locale }
-		}
-		if (!query.isNullOrEmpty()) {
-			sources.retainAll {
-				it.displayName.contains(query, ignoreCase = true) ||
-					it.pkgName.contains(query, ignoreCase = true)
-			}
-		}
-		sources.sortBy { it.displayName.lowercase() }
-		return sources
 	}
 
 	/**

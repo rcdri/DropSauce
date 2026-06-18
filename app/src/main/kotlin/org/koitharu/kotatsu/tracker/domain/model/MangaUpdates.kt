@@ -30,6 +30,5 @@ sealed interface MangaUpdates {
 		val error: Throwable?,
 	) : MangaUpdates {
 
-		fun shouldRetry() = error is TooManyRequestExceptions
 	}
 }
