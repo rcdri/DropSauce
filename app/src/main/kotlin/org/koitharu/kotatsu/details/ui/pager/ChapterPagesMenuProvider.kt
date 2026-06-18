@@ -13,6 +13,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.ui.sheet.BaseAdaptiveSheet
 import org.koitharu.kotatsu.core.util.ext.setValueRounded
+import org.koitharu.kotatsu.core.util.ext.setOptionalIconsVisibleCompat
 import org.koitharu.kotatsu.core.util.progress.IntPercentLabelFormatter
 import org.koitharu.kotatsu.details.ui.pager.ChaptersPagesSheet.Companion.TAB_BOOKMARKS
 import org.koitharu.kotatsu.details.ui.pager.ChaptersPagesSheet.Companion.TAB_CHAPTERS
@@ -23,6 +24,7 @@ class ChapterPagesMenuProvider(
 	private val sheet: BaseAdaptiveSheet<*>,
 	private val pager: ViewPager2,
 	private val settings: AppSettings,
+	private val viewModel: ChaptersPagesViewModel,
 ) : OnBackPressedCallback(false), MenuProvider, MenuItem.OnActionExpandListener,
 	Slider.OnChangeListener {
 
@@ -31,8 +33,12 @@ class ChapterPagesMenuProvider(
 	override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 		val tab = getCurrentTab()
 		when (tab) {
-			// Chapter search now lives inline in the sheet toolbar, not in the menu.
-			TAB_CHAPTERS -> Unit
+			// Chapter search lives inline in the sheet toolbar; the overflow carries the list options.
+			TAB_CHAPTERS -> {
+				menuInflater.inflate(R.menu.opt_chapters, menu)
+				// Match the rest of the app's checkable overflow menus (e.g. the home incognito toggle).
+				menu.setOptionalIconsVisibleCompat(true)
+			}
 
 			TAB_PAGES, TAB_BOOKMARKS -> {
 				menuInflater.inflate(R.menu.opt_pages, menu)
@@ -44,7 +50,34 @@ class ChapterPagesMenuProvider(
 		}
 	}
 
-	override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
+	override fun onPrepareMenu(menu: Menu) {
+		super.onPrepareMenu(menu)
+		menu.findItem(R.id.action_reversed)?.isChecked = settings.isChaptersReverse
+		menu.findItem(R.id.action_grid_view)?.isChecked = settings.isChaptersGridView
+		menu.findItem(R.id.action_downloaded)?.let { item ->
+			item.isVisible = viewModel.mangaDetails.value?.local != null
+			item.isChecked = viewModel.isDownloadedOnly.value
+		}
+	}
+
+	override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
+		R.id.action_reversed -> {
+			settings.isChaptersReverse = !menuItem.isChecked
+			true
+		}
+
+		R.id.action_grid_view -> {
+			settings.isChaptersGridView = !menuItem.isChecked
+			true
+		}
+
+		R.id.action_downloaded -> {
+			viewModel.isDownloadedOnly.value = !menuItem.isChecked
+			true
+		}
+
+		else -> false
+	}
 
 	override fun handleOnBackPressed() {
 		expandedItemRef?.get()?.collapseActionView()

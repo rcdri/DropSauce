@@ -85,7 +85,7 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 		binding.pager.setCurrentItem(defaultTab, false)
 		binding.tabs.isVisible = adapter.itemCount > 1
 
-		val menuProvider = ChapterPagesMenuProvider(this, binding.pager, settings)
+		val menuProvider = ChapterPagesMenuProvider(this, binding.pager, settings, viewModel)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, menuProvider)
 		binding.toolbar.addMenuProvider(menuProvider)
 		onBackPressedDispatcher.addCallback(viewLifecycleOwner, searchBackCallback)
@@ -136,7 +136,14 @@ class ChaptersPagesSheet : BaseAdaptiveSheet<SheetChaptersPagesBinding>(),
 			return
 		}
 		val isActionModeStarted = actionModeDelegate?.isActionModeStarted == true
-		binding.toolbar.menuView?.isVisible = newState == STATE_EXPANDED && !isActionModeStarted
+		// The list options overflow is available whenever the sheet is on screen as a modal (it opens
+		// at the centre position) or fully expanded — it only hides during selection action mode.
+		val isModalOrExpanded = dialog != null || newState == STATE_EXPANDED
+		binding.toolbar.menuView?.isVisible = isModalOrExpanded && !isActionModeStarted
+		// The drag handle is the grab affordance for the floating/centre state; at full screen the sheet
+		// behaves like a normal top-level screen, so the handle is dropped and the toolbar sits directly
+		// under the status bar like the rest of the app.
+		binding.headerBar.setDragHandleVisible(newState != STATE_EXPANDED)
 		updateSearchVisibility()
 	}
 

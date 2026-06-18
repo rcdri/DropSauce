@@ -90,6 +90,17 @@ class AdaptiveSheetHeaderBar @JvmOverloads constructor(
 		binding.shTextViewTitle.setText(resId)
 	}
 
+	/**
+	 * Shows or hides the bottom-sheet drag handle. Used to drop the handle once a sheet is expanded to
+	 * full screen, where it reads as a normal top-level screen rather than a draggable sheet. No-op on
+	 * side sheets, which never show a drag handle.
+	 */
+	fun setDragHandleVisible(visible: Boolean) {
+		if (sheetBehavior is AdaptiveSheetBehavior.Bottom) {
+			binding.shDragHandle.isVisible = visible
+		}
+	}
+
 	private fun setBottomSheetBehavior(behavior: AdaptiveSheetBehavior?) {
 		binding.shDragHandle.isVisible = behavior is AdaptiveSheetBehavior.Bottom
 		binding.shLayoutSidesheet.isVisible = behavior is AdaptiveSheetBehavior.Side

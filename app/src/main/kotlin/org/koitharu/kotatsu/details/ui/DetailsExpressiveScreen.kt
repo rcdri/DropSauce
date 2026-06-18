@@ -3,6 +3,7 @@
 package org.koitharu.kotatsu.details.ui
 
 import android.os.Build
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,8 +38,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -352,53 +351,97 @@ private fun ReadFab(
 		historyInfo.canContinue -> stringResource(R.string._continue)
 		else -> stringResource(R.string.read)
 	}
-	// Overflow keeps only the reading-related quick actions; chapter-list display options (reverse,
-	// grid, on-device) stay in the chapters sheet's own toolbar menu where they act on the list.
+	// The overflow keeps only the reading-related quick actions; chapter-list display options
+	// (reverse, grid, on-device) live in the chapters sheet's own toolbar menu where they act on
+	// the list.
 	val canIncognito = !historyInfo.isIncognitoMode
 	val canForget = historyInfo.history != null
 	val hasMenu = enabled && (canIncognito || canForget)
+
+	var expanded by rememberSaveable { mutableStateOf(false) }
+	// Fold the menu away if it is no longer available (e.g. state changed while it was open).
+	if (!hasMenu && expanded) {
+		expanded = false
+	}
+	val chevronRotation by animateFloatAsState(
+		targetValue = if (expanded) 180f else 0f,
+		animationSpec = tween(durationMillis = 220),
+		label = "fabChevron",
+	)
 
 	val container = if (enabled) accent else accent.copy(alpha = 0.4f)
 	val baseContent = if (accent.luminanceIsLight()) Color.Black else Color.White
 	val onColor = if (enabled) baseContent else baseContent.copy(alpha = 0.7f)
 
 	Surface(
-		shape = RoundedCornerShape(20.dp),
+		shape = RoundedCornerShape(24.dp),
 		color = container,
 		shadowElevation = 6.dp,
 	) {
-		Row(
-			modifier = Modifier.height(56.dp),
-			verticalAlignment = Alignment.CenterVertically,
+		// The FAB is one continuous surface: tapping the chevron grows it upward to reveal the quick
+		// actions above the read button, animated by animateContentSize, and the chevron flips over.
+		// animateContentSize lives on the wrapper so the IntrinsicSize width resolves cleanly inside.
+		Box(modifier = Modifier.animateContentSize(animationSpec = tween(durationMillis = 220))) {
+		Column(
+			modifier = Modifier.width(IntrinsicSize.Max),
 		) {
-			Row(
-				modifier = Modifier
-					.clickable(enabled = enabled) { actions.onReadClick() }
-					.fillMaxHeight()
-					.padding(start = 22.dp, end = if (hasMenu) 14.dp else 24.dp),
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.spacedBy(10.dp),
-			) {
-				Icon(
-					painter = painterResource(R.drawable.ic_play),
-					contentDescription = null,
-					tint = onColor,
-					modifier = Modifier.size(22.dp),
-				)
-				Text(
-					text = label,
-					style = MaterialTheme.typography.titleMedium,
-					fontWeight = FontWeight.SemiBold,
-					color = onColor,
-					maxLines = 1,
+			if (expanded) {
+				if (canIncognito) {
+					FabMenuRow(iconRes = R.drawable.ic_incognito, label = stringResource(R.string.incognito_mode), color = onColor) {
+						expanded = false
+						actions.onIncognitoClick()
+					}
+				}
+				if (canForget) {
+					FabMenuRow(iconRes = R.drawable.ic_delete, label = stringResource(R.string.remove_from_history), color = onColor) {
+						expanded = false
+						actions.onForgetHistoryClick()
+					}
+				}
+				Box(
+					modifier = Modifier
+						.padding(horizontal = 16.dp)
+						.fillMaxWidth()
+						.height(1.dp)
+						.background(onColor.copy(alpha = 0.22f)),
 				)
 			}
-			if (hasMenu) {
-				var menuExpanded by remember { mutableStateOf(false) }
-				Box {
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(56.dp),
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				Row(
+					modifier = Modifier
+						.clickable(enabled = enabled) {
+							expanded = false
+							actions.onReadClick()
+						}
+						.fillMaxHeight()
+						.weight(1f)
+						.padding(start = 22.dp, end = if (hasMenu) 14.dp else 24.dp),
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.spacedBy(10.dp),
+				) {
+					Icon(
+						painter = painterResource(R.drawable.ic_play),
+						contentDescription = null,
+						tint = onColor,
+						modifier = Modifier.size(22.dp),
+					)
+					Text(
+						text = label,
+						style = MaterialTheme.typography.titleMedium,
+						fontWeight = FontWeight.SemiBold,
+						color = onColor,
+						maxLines = 1,
+					)
+				}
+				if (hasMenu) {
 					Row(
 						modifier = Modifier
-							.clickable { menuExpanded = true }
+							.clickable { expanded = !expanded }
 							.fillMaxHeight()
 							.padding(end = 16.dp),
 						verticalAlignment = Alignment.CenterVertically,
@@ -414,41 +457,45 @@ private fun ReadFab(
 							painter = painterResource(R.drawable.ic_expand_more),
 							contentDescription = stringResource(R.string.show_menu),
 							tint = onColor,
-							modifier = Modifier.size(22.dp),
+							modifier = Modifier
+								.size(22.dp)
+								.rotate(chevronRotation),
 						)
-					}
-					DropdownMenu(
-						expanded = menuExpanded,
-						onDismissRequest = { menuExpanded = false },
-					) {
-						if (canIncognito) {
-							DropdownMenuItem(
-								text = { Text(stringResource(R.string.incognito_mode)) },
-								leadingIcon = {
-									Icon(painterResource(R.drawable.ic_incognito), contentDescription = null)
-								},
-								onClick = {
-									menuExpanded = false
-									actions.onIncognitoClick()
-								},
-							)
-						}
-						if (canForget) {
-							DropdownMenuItem(
-								text = { Text(stringResource(R.string.remove_from_history)) },
-								leadingIcon = {
-									Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
-								},
-								onClick = {
-									menuExpanded = false
-									actions.onForgetHistoryClick()
-								},
-							)
-						}
 					}
 				}
 			}
 		}
+		}
+	}
+}
+
+@Composable
+private fun FabMenuRow(
+	@DrawableRes iconRes: Int,
+	label: String,
+	color: Color,
+	onClick: () -> Unit,
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(horizontal = 20.dp, vertical = 14.dp),
+		verticalAlignment = Alignment.CenterVertically,
+		horizontalArrangement = Arrangement.spacedBy(14.dp),
+	) {
+		Icon(
+			painter = painterResource(iconRes),
+			contentDescription = null,
+			tint = color,
+			modifier = Modifier.size(20.dp),
+		)
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge,
+			color = color,
+			maxLines = 1,
+		)
 	}
 }
 
