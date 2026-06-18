@@ -440,6 +440,27 @@
 		<item name="colorControlNormal">?attr/colorOnSurfaceVariant</item>
 	</style>
 
+	<!-- Toolbar treatment. The framework tints a toolbar's navigation ("back/close") and overflow
+	     ("more") icons with colorControlNormal (= colorOnSurface, a darker colour than the menu
+	     action icons), which made those two icons look darker than the rest. Scope colorControlNormal
+	     to colorOnSurfaceVariant for toolbars — exactly what ThemeOverlay.Kotatsu.ActionMode does for
+	     the contextual bar — so every top-bar icon is the same colour. Applied via materialThemeOverlay
+	     so MaterialToolbar wraps its context (and the menu it inflates) with it. -->
+	<style name="ThemeOverlay.Kotatsu.Toolbar" parent="">
+		<item name="colorControlNormal">?attr/colorOnSurfaceVariant</item>
+		<item name="android:colorControlNormal">?attr/colorOnSurfaceVariant</item>
+	</style>
+
+	<style name="Widget.Kotatsu.Toolbar" parent="Widget.Material3Expressive.Toolbar">
+		<item name="materialThemeOverlay">@style/ThemeOverlay.Kotatsu.Toolbar</item>
+	</style>
+
+	<!-- Overflow ("more") button uses the app's own 3-dot icon to match the other action icons. -->
+	<style name="Widget.Kotatsu.ActionButton.Overflow" parent="Widget.AppCompat.ActionButton.Overflow">
+		<item name="android:src">@drawable/ic_more_vert</item>
+		<item name="srcCompat">@drawable/ic_more_vert</item>
+	</style>
+
 	<!-- Popup theme for the contextual action mode (selection) overflow menu. Empty parent so it
 	     inherits the app's colors instead of the default ThemeOverlay.Material3.Light palette,
 	     matching the regular toolbar overflow menu. -->

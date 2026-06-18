@@ -34,7 +34,6 @@ import org.koitharu.kotatsu.core.util.ext.adjustPopupMenuIcons
 import org.koitharu.kotatsu.core.util.ext.isWebViewUnavailable
 import org.koitharu.kotatsu.core.util.ext.setOptionalIconsVisibleCompat
 import org.koitharu.kotatsu.main.ui.protect.ScreenshotPolicyHelper
-import androidx.appcompat.R as appcompatR
 
 abstract class BaseActivity<B : ViewBinding> :
 	AppCompatActivity(),
@@ -126,7 +125,7 @@ abstract class BaseActivity<B : ViewBinding> :
 		supportActionBar?.run {
 			setDisplayHomeAsUpEnabled(isEnabled)
 			if (showUpAsClose) {
-				setHomeAsUpIndicator(appcompatR.drawable.abc_ic_clear_material)
+				setHomeAsUpIndicator(R.drawable.ic_close)
 			}
 		}
 		(findViewById<View>(R.id.toolbar) as? Toolbar)?.applyTonalTopBarStyle()

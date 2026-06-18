@@ -75,9 +75,15 @@
 		<item name="textAppearanceLabelSmall">@style/TextAppearance.Kotatsu.LabelSmall</item>
 
 		<!-- Drawables (icons) -->
-		<item name="actionModeCloseDrawable">@drawable/abc_ic_clear_material</item>
+		<item name="actionModeCloseDrawable">@drawable/ic_close</item>
 		<item name="actionModeWebSearchDrawable">@drawable/abc_ic_search_api_material</item>
 		<item name="expandCollapseIndicator">@drawable/m3_split_button_chevron_avd</item>
+		<item name="homeAsUpIndicator">@drawable/ic_arrow_back</item>
+		<item name="android:homeAsUpIndicator">@drawable/ic_arrow_back</item>
+
+		<!-- Unified top bar: a single icon colour and the app's own back/close/overflow icons -->
+		<item name="toolbarStyle">@style/Widget.Kotatsu.Toolbar</item>
+		<item name="actionOverflowButtonStyle">@style/Widget.Kotatsu.ActionButton.Overflow</item>
 
 		<!-- Base attributes -->
 		<item name="android:windowLightStatusBar" tools:targetApi="M">@bool/light_status_bar</item>
@@ -187,7 +193,7 @@
 		<item name="materialSearchViewStyle">@style/Widget.Material3Expressive.SearchView.AppBarWithSearch</item>
 		<item name="materialSearchViewToolbarHeight">@dimen/search_bar_min_height</item>
 
-		<item name="toolbarStyle">@style/Widget.Material3Expressive.Toolbar</item>
+		<item name="toolbarStyle">@style/Widget.Kotatsu.Toolbar</item>
 		<item name="toolbarSurfaceStyle">@style/Widget.Material3Expressive.Toolbar.Surface</item>
 
 		<item name="popupMenuStyle">@style/Widget.Kotatsu.PopupMenu</item>
