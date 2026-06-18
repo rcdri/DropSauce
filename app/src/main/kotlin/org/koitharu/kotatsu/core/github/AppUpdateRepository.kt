@@ -10,7 +10,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
-import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.network.BaseHttpClient
 import org.koitharu.kotatsu.core.util.ext.asArrayList
@@ -37,6 +36,10 @@ class AppUpdateRepository @Inject constructor(
 		append(context.getString(R.string.github_updates_repo))
 		append("/releases?page=1&per_page=10")
 	}
+	private val currentVersionName = context.packageManager
+		.getPackageInfo(context.packageName, 0)
+		.versionName
+		.orEmpty()
 
 	val isUpdateAvailable: Boolean
 		get() = availableUpdate.value != null
@@ -68,12 +71,10 @@ class AppUpdateRepository @Inject constructor(
 			return@withContext null
 		}
 		runCatchingCancellable {
-			val currentVersion = VersionId(BuildConfig.VERSION_NAME)
+			val currentVersion = VersionId(currentVersionName)
 			val available = getAvailableVersions().asArrayList()
 			available.sortBy { it.versionId }
-			if (BuildConfig.BUILD_TYPE == "nightly") {
-				available.retainAll { !it.versionId.isStable }
-			} else if (currentVersion.isStable) {
+			if (currentVersion.isStable) {
 				available.retainAll { it.versionId.isStable }
 			}
 			available.maxByOrNull { it.versionId }

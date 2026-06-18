@@ -68,7 +68,7 @@ class AppShortcutManagerTest {
 	private fun getShortcuts(): List<ShortcutInfo> {
 		val context = InstrumentationRegistry.getInstrumentation().targetContext
 		val manager = checkNotNull(context.getSystemService<ShortcutManager>())
-		return manager.dynamicShortcuts.filterNot { it.id == "com.squareup.leakcanary.dynamic_shortcut" }
+		return manager.dynamicShortcuts
 	}
 
 	private suspend fun awaitUpdate() {
