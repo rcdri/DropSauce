@@ -43,11 +43,11 @@ DropSauce is a free and open-source manga reader for Android, built to feel quic
 ## Screenshots
 
 <p align="center">
-  <img src="assets/main_favorites-preview.jpg" alt="DropSauce favorites screen" width="19%" />
-  <img src="assets/manga_details_page-preview.jpg" alt="DropSauce manga details screen" width="19%" />
-  <img src="assets/reading_ui-preview.jpg" alt="DropSauce reading screen" width="19%" />
-  <img src="assets/extension_page-preview.jpg" alt="DropSauce extensions screen" width="19%" />
-  <img src="assets/settings-preview.jpg" alt="DropSauce settings screen" width="19%" />
+  <img src="assets/main_favorites-preview.jpg" alt="DropSauce favorites screen" width="38%" />
+  <img src="assets/manga_details_page-preview.jpg" alt="DropSauce manga details screen" width="38%" />
+  <img src="assets/reading_ui-preview.jpg" alt="DropSauce reading screen" width="38%" />
+  <img src="assets/extension_page-preview.jpg" alt="DropSauce extensions screen" width="38%" />
+  <img src="assets/settings-preview.jpg" alt="DropSauce settings screen" width="38%" />
 </p>
 
 <p align="center">
