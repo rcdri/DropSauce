@@ -38,7 +38,7 @@
 
 DropSauce is a free and open-source manga reader for Android, built to feel quick, clean, and comfortable to use every day. It keeps the reader experience simple, brings in a modern Material 3 Expressive style, and uses Jetpack Compose for newer UI pieces while staying close to the Android ecosystem.
 
-Please give the repo a star if you like the project. It helps more people find it.
+⭐Please give the repo a star if you like the project. It helps more people find it.🌟
 
 ## Screenshots
 
