@@ -1,14 +1,17 @@
 package org.koitharu.kotatsu.explore.ui
 
+import android.content.Context
 import androidx.collection.LongSet
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -35,19 +38,24 @@ import org.koitharu.kotatsu.list.ui.model.ListModel
 import org.koitharu.kotatsu.list.ui.model.LoadingState
 import org.koitharu.kotatsu.list.ui.model.MangaCompactListModel
 import org.koitharu.kotatsu.list.ui.model.TipModel
+import org.koitharu.kotatsu.mihon.MihonExtensionLoader
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
+import org.koitharu.kotatsu.settings.sources.catalog.ExternalExtensionRepoRepository
 import org.koitharu.kotatsu.suggestions.domain.SuggestionRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
+	@ApplicationContext private val appContext: Context,
 	private val settings: AppSettings,
 	private val suggestionRepository: SuggestionRepository,
 	private val exploreRepository: ExploreRepository,
 	private val sourcesRepository: MangaSourcesRepository,
 	private val shortcutManager: AppShortcutManager,
+	private val mihonExtensionLoader: MihonExtensionLoader,
+	private val externalRepoRepository: ExternalExtensionRepoRepository,
 ) : BaseViewModel() {
 
 	val isGrid = settings.observeAsStateFlow(
@@ -66,6 +74,21 @@ class ExploreViewModel @Inject constructor(
 	val onShowSuggestionsTip = MutableEventFlow<Unit>()
 	private val mutableRandomLoading = MutableStateFlow(false)
 	val isRandomLoading = mutableRandomLoading.asStateFlow()
+
+	private val hasExtensionUpdates: StateFlow<Boolean> = flow {
+		emit(false)
+		val url = settings.externalExtensionsRepoUrl?.takeIf { it.isNotBlank() } ?: return@flow
+		try {
+			val available = externalRepoRepository.getExtensions(url)
+			val installedByPkg = mihonExtensionLoader.getInstalledExtensions(appContext).associateBy { it.pkgName }
+			emit(available.any { entry ->
+				val local = installedByPkg[entry.packageName] ?: return@any false
+				entry.versionCode > local.versionCode
+			})
+		} catch (_: Exception) {
+			// Network failure — leave badge hidden
+		}
+	}.stateIn(viewModelScope + Dispatchers.IO, SharingStarted.Eagerly, false)
 
 	val content: StateFlow<List<ListModel>> = isLoading.flatMapLatest { loading ->
 		if (loading) {
@@ -153,6 +176,7 @@ class ExploreViewModel @Inject constructor(
 		isGrid,
 		sourcesRepository.observeHasMultiLanguageSources(),
 		settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_LANGUAGES) },
+		hasExtensionUpdates,
 	) { args ->
 		buildList(
 			sources = args[0] as List<MangaSourceInfo>,
@@ -161,6 +185,7 @@ class ExploreViewModel @Inject constructor(
 			isGrid = args[3] as Boolean,
 			hasMultiLanguageSources = args[4] as Boolean,
 			isLanguageTipEnabled = args[5] as Boolean,
+			hasExtensionUpdates = args[6] as Boolean,
 		)
 	}.withErrorHandling()
 
@@ -171,6 +196,7 @@ class ExploreViewModel @Inject constructor(
 		isGrid: Boolean,
 		hasMultiLanguageSources: Boolean,
 		isLanguageTipEnabled: Boolean,
+		hasExtensionUpdates: Boolean,
 	): List<ListModel> {
 		val result = ArrayList<ListModel>(sources.size + 4)
 		result += ExploreButtons
@@ -182,8 +208,8 @@ class ExploreViewModel @Inject constructor(
 		result += ListHeader(
 			textRes = R.string.remote_sources,
 			buttonTextRes = R.string.manage,
-			// Plain clickable text rather than an outlined pill button.
 			buttonStyle = ListHeader.ButtonStyle.TEXT,
+			badge = if (hasExtensionUpdates) "" else null,
 		)
 		when {
 			sources.isNotEmpty() -> sources.mapTo(result) { MangaSourceItem(it, isGrid) }

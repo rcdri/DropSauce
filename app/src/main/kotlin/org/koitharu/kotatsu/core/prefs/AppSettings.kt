@@ -397,7 +397,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 				return false
 			}
 			val policy =
-				NetworkPolicy.from(prefs.getString(KEY_PREFETCH_CONTENT, null), NetworkPolicy.NEVER)
+				NetworkPolicy.from(prefs.getString(KEY_PREFETCH_CONTENT, null), NetworkPolicy.NON_METERED)
 			return policy.isNetworkAllowed(connectivityManager)
 		}
 
