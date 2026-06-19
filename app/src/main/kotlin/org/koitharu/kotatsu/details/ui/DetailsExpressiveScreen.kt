@@ -18,6 +18,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -1093,6 +1094,8 @@ private fun WavyProgressBar(progress: Float, color: Color, trackColor: Color, mo
 private fun DescriptionCard(description: CharSequence?) {
 	val text = description?.toString()?.trim().orEmpty()
 	var expanded by rememberSaveable { mutableStateOf(false) }
+	var hasOverflow by remember { mutableStateOf(false) }
+	val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
 	SectionCard {
 		Text(
 			text = stringResource(R.string.description),
@@ -1101,17 +1104,38 @@ private fun DescriptionCard(description: CharSequence?) {
 			color = MaterialTheme.colorScheme.onSurface,
 		)
 		Spacer(Modifier.height(10.dp))
-		Text(
-			text = text.ifEmpty { stringResource(R.string.no_description) },
-			style = MaterialTheme.typography.bodyMedium,
-			color = MaterialTheme.colorScheme.onSurfaceVariant,
-			maxLines = if (expanded) Int.MAX_VALUE else 5,
-			overflow = TextOverflow.Ellipsis,
+		Box(
 			modifier = Modifier
 				.fillMaxWidth()
 				.animateContentSize()
-				.clickable(enabled = text.isNotEmpty()) { expanded = !expanded },
-		)
+				.clickable(
+					enabled = text.isNotEmpty(),
+					indication = null,
+					interactionSource = remember { MutableInteractionSource() },
+				) { expanded = !expanded },
+		) {
+			Text(
+				text = text.ifEmpty { stringResource(R.string.no_description) },
+				style = MaterialTheme.typography.bodyMedium,
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+				maxLines = if (expanded) Int.MAX_VALUE else 5,
+				overflow = TextOverflow.Ellipsis,
+				modifier = Modifier.fillMaxWidth(),
+				onTextLayout = { hasOverflow = it.hasVisualOverflow },
+			)
+			if (!expanded && hasOverflow) {
+				Box(
+					modifier = Modifier
+						.matchParentSize()
+						.background(
+							Brush.verticalGradient(
+								0.5f to Color.Transparent,
+								1.0f to cardColor.copy(alpha = 0.82f),
+							)
+						),
+				)
+			}
+		}
 	}
 }
 

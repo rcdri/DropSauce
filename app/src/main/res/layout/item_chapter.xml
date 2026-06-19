@@ -11,6 +11,12 @@
 	android:minHeight="@dimen/chapter_list_item_height"
 	android:orientation="horizontal">
 
+	<View
+		android:id="@+id/viewCurrentIndicator"
+		android:layout_width="4dp"
+		android:layout_height="28dp"
+		android:layout_marginStart="8dp" />
+
 	<LinearLayout
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
