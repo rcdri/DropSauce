@@ -32,13 +32,6 @@ var TextView.drawableEnd: Drawable?
 		setCompoundDrawablesRelativeWithIntrinsicBounds(dr[0], dr[1], value, dr[3])
 	}
 
-var TextView.drawableTop: Drawable?
-	inline get() = compoundDrawablesRelative[1]
-	set(value) {
-		val dr = compoundDrawablesRelative
-		setCompoundDrawablesRelativeWithIntrinsicBounds(dr[0], value, dr[2], dr[3])
-	}
-
 fun TextView.setTextAndVisible(@StringRes textResId: Int) {
 	if (textResId == 0) {
 		text = null
@@ -70,13 +63,3 @@ fun TextView.setThemeTextAppearance(@AttrRes resId: Int, @StyleRes fallback: Int
 		TextViewCompat.setTextAppearance(this, it.getResourceId(0, fallback))
 	}
 }
-
-val TextView.isTextTruncated: Boolean
-	get() {
-		val l = layout ?: return false
-		if (maxLines in 0 until l.lineCount) {
-			return true
-		}
-		val layoutLines = l.lineCount
-		return layoutLines > 0 && l.getEllipsisCount(layoutLines - 1) > 0
-	}

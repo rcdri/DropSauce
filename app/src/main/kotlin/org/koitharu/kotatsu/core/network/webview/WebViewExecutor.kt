@@ -44,27 +44,6 @@ class WebViewExecutor @Inject constructor(
 		}
 	}
 
-	suspend fun evaluateJs(baseUrl: String?, script: String): String? = mutex.withLock {
-		withContext(Dispatchers.Main.immediate) {
-			val webView = obtainWebView()
-			try {
-				if (!baseUrl.isNullOrEmpty()) {
-					suspendCancellableCoroutine { cont ->
-						webView.webViewClient = ContinuationResumeWebViewClient(cont)
-						webView.loadDataWithBaseURL(baseUrl, " ", "text/html", null, null)
-					}
-				}
-				suspendCancellableCoroutine { cont ->
-					webView.evaluateJavascript(script) { result ->
-						cont.resume(result?.takeUnless { it == "null" })
-					}
-				}
-			} finally {
-				webView.reset()
-			}
-		}
-	}
-
 	suspend fun tryResolveCaptcha(exception: CloudFlareException, timeout: Long): Boolean = mutex.withLock {
 		runCatchingCancellable {
 			withContext(Dispatchers.Main.immediate) {

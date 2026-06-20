@@ -16,14 +16,6 @@
         <item quantity="many">%1$d فصل</item>
         <item quantity="other">%1$d فصل</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="zero">٠ دقائق مضت</item>
-        <item quantity="one">منذ دقيقة مضت</item>
-        <item quantity="two">منذ دقيقتان مضت</item>
-        <item quantity="few">%1$dدقائق مضت</item>
-        <item quantity="many">%1$dدقيقة مضت</item>
-        <item quantity="other">%1$dدقيقة مضت</item>
-    </plurals>
     <plurals name="items">
         <item quantity="zero">%1$d عنصر</item>
         <item quantity="one">عنصر واحد</item>
@@ -47,14 +39,6 @@
         <item quantity="few">%1$d أيام مضت</item>
         <item quantity="many">%1$d يوم مضت</item>
         <item quantity="other">%1$d يوم مضت</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="zero">٠ ساعة مضت</item>
-        <item quantity="one">ساعة مضت</item>
-        <item quantity="two">ساعتين مضت</item>
-        <item quantity="few">%1$d ساعات مضت</item>
-        <item quantity="many">%1$d ساعة مضت</item>
-        <item quantity="other">%1$d ساعة مضت</item>
     </plurals>
     <plurals name="minutes">
         <item quantity="zero">%1$d دقيقة</item>

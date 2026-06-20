@@ -4,10 +4,6 @@
         <item quantity="one">%1$d অধ্যায়</item>
         <item quantity="other">%1$d অধ্যাযয়সমূহ</item>
     </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">%1$d ঘণ্টা আগতে</item>
-        <item quantity="other">%1$d ঘণ্টা পূৰ্বে</item>
-    </plurals>
     <plurals name="months_ago">
         <item quantity="one">%1$d মাহ আগতে</item>
         <item quantity="other">%1$d মাহ পূৰ্বে</item>
@@ -27,10 +23,6 @@
     <plurals name="days_ago">
         <item quantity="one">%1$d দিন আগতে</item>
         <item quantity="other">%1$d দিন পূৰ্বে</item>
-    </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">%1$d মিনিট আগতে</item>
-        <item quantity="other">%1$d মিনিট পূৰ্বে</item>
     </plurals>
     <plurals name="new_chapters">
         <item quantity="one">%1$d নতুন অধ্যায়</item>

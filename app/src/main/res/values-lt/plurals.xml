@@ -12,12 +12,6 @@
         <item quantity="many">%1$d pranešimų</item>
         <item quantity="other">%1$d pranešimų</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">prieš %1$d min</item>
-        <item quantity="few">prieš %1$d min</item>
-        <item quantity="many">prieš %1$d min</item>
-        <item quantity="other">prieš %1$d min</item>
-    </plurals>
     <plurals name="chapters">
         <item quantity="one">%1$d skyrius</item>
         <item quantity="few">%1$d skyriai</item>
@@ -35,12 +29,6 @@
         <item quantity="few">%1$d min</item>
         <item quantity="many">%1$d min</item>
         <item quantity="other">%1$d min</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">prieš %1$d val</item>
-        <item quantity="few">prieš %1$d val</item>
-        <item quantity="many">prieš %1$d val</item>
-        <item quantity="other">prieš %1$d val</item>
     </plurals>
     <plurals name="days_ago">
         <item quantity="one">prieš %1$d dieną</item>

@@ -137,14 +137,6 @@
 		<item name="strokeWidth">1dp</item>
 	</style>
 
-	<style name="Widget.Kotatsu.SearchView" parent="@style/Widget.AppCompat.SearchView">
-		<item name="iconifiedByDefault">false</item>
-		<item name="searchIcon">@null</item>
-		<item name="queryBackground">@null</item>
-		<item name="android:textAppearance">@style/TextAppearance.Kotatsu.SearchView</item>
-		<item name="android:textSize">18sp</item>
-	</style>
-
 	<style name="Widget.Kotatsu.CircularProgressIndicator" parent="Widget.Material3Expressive.CircularProgressIndicator">
 		<item name="trackCornerRadius">@dimen/mtrl_progress_indicator_full_rounded_corner_radius</item>
 	</style>
@@ -282,12 +274,6 @@
 		<item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Kotatsu.ReaderSquare</item>
 	</style>
 
-	<style name="Widget.Kotatsu.Slider.Wide" parent="Widget.Material3Expressive.Slider.Xsmall">
-		<item name="thumbHeight">48dp</item>
-		<item name="trackCornerSize">12dp</item>
-		<item name="trackHeight">40dp</item>
-	</style>
-
 	<style name="Widget.Kotatsu.ReaderFloatingToolbar" parent="Widget.Material3.FloatingToolbar">
 		<item name="backgroundTint">?attr/colorSurfaceContainer</item>
 	</style>
@@ -404,18 +390,6 @@
 		<item name="android:textAppearance">?textAppearanceLabelMedium</item>
 	</style>
 
-	<style name="Widget.Kotatsu.TextView.Badge" parent="Widget.MaterialComponents.TextView">
-		<item name="android:background">@drawable/bg_chip</item>
-		<item name="android:gravity">center</item>
-		<item name="android:textAlignment">center</item>
-		<item name="android:paddingStart">4dp</item>
-		<item name="android:paddingEnd">4dp</item>
-		<item name="android:paddingTop">2dp</item>
-		<item name="android:paddingBottom">2dp</item>
-		<item name="android:textAppearance">?textAppearanceLabelMedium</item>
-		<item name="android:textColor">?colorOnBackground</item>
-	</style>
-
 	<style name="Widget.Kotatsu.ImageView.Cover" parent="Widget.MaterialComponents.ShapeableImageView">
 		<item name="aspectRationHeight">18</item>
 		<item name="aspectRationWidth">13</item>
@@ -433,16 +407,6 @@
 		<item name="android:textColor">@color/kotatsu_onSurface</item>
 		<item name="android:textSize">11sp</item>
 		<item name="android:textStyle">bold</item>
-	</style>
-
-	<style name="ThemeOverlay.Kotatsu.MainToolbar" parent="">
-		<item name="colorControlHighlight">@color/selector_overlay</item>
-		<item name="popupMenuStyle">@style/Widget.Kotatsu.PopupMenu</item>
-		<item name="actionOverflowMenuStyle">@style/Widget.Kotatsu.PopupMenu.Overflow</item>
-		<item name="listPopupWindowStyle">@style/Widget.Kotatsu.PopupMenu.ListPopupWindow</item>
-		<item name="dropDownListViewStyle">@style/Widget.Kotatsu.PopupMenu.ListView</item>
-		<item name="android:dropDownListViewStyle">@style/Widget.Kotatsu.PopupMenu.ListView</item>
-		<item name="popupMenuBackground">@drawable/m3_menu_background</item>
 	</style>
 
 	<style name="ThemeOverlay.Kotatsu.ActionMode" parent="">
@@ -484,12 +448,6 @@
 	</style>
 
 	<!-- TextAppearance -->
-
-	<style name="TextAppearance.Kotatsu.SearchView" parent="TextAppearance.Material3.SearchBar">
-		<item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-		<item name="android:fontFamily">@font/gflex_body</item>
-		<item name="fontFamily">@font/gflex_body</item>
-	</style>
 
 	<!-- M3 type scale matched to PixelPlayer's typography (Google Sans Rounded weights & sizes) -->
 
@@ -653,8 +611,6 @@
 		<item name="lineHeight">16sp</item>
 	</style>
 
-	<style name="TextAppearance.Kotatsu.Preference.Secondary" parent="TextAppearance.Material3.BodySmall" />
-
 	<style name="TextAppearance.Kotatsu.GridTitle" parent="TextAppearance.Material3.TitleSmall" />
 
 	<style name="TextAppearance.Kotatsu.GridTitle.Small" parent="TextAppearance.Material3.TitleSmall">
@@ -729,26 +685,9 @@
 		<item name="cornerSize">24dp</item>
 	</style>
 
-	<style name="ShapeAppearanceOverlay.Kotatsu.Chapter.Grid" parent="">
-		<item name="cornerFamily">rounded</item>
-		<item name="cornerSize">18dp</item>
-	</style>
-
-	<style name="ShapeAppearanceOverlay.Kotatsu.Page.Thumb" parent="">
-		<item name="cornerFamily">rounded</item>
-		<item name="cornerSize">16dp</item>
-	</style>
-
 	<style name="ShapeAppearanceOverlay.Kotatsu.ReaderSquare" parent="">
 		<item name="cornerFamily">rounded</item>
 		<item name="cornerSize">28dp</item>
-	</style>
-
-	<style name="ShapeAppearanceOverlay.Material3.Corner.None" parent="">
-		<item name="cornerSizeBottomLeft">0dp</item>
-		<item name="cornerSizeBottomRight">0dp</item>
-		<item name="cornerSizeTopLeft">0dp</item>
-		<item name="cornerSizeTopRight">0dp</item>
 	</style>
 
 	<style name="ShapeAppearanceOverlay.Kotatsu.CarouselItem" parent="">
@@ -770,33 +709,11 @@
 		<item name="singleLineTitle">false</item>
 	</style>
 
-	<style name="Preference.Slider" parent="Preference.SeekBarPreference.Material">
-		<item name="android:layout">@layout/preference_slider</item>
-	</style>
-
-	<style name="Preference.MultiAutoCompleteTextView" parent="Preference.DialogPreference.EditTextPreference.Material">
-		<item name="android:dialogLayout">@layout/preference_dialog_multiautocompletetextview</item>
-	</style>
-
-	<style name="Preference.AutoCompleteTextView" parent="Preference.DialogPreference.EditTextPreference.Material">
-		<item name="android:dialogLayout">@layout/preference_dialog_autocompletetextview</item>
-	</style>
-
 	<style name="Preference.SwitchPreferenceCompat.M3" parent="Preference.SwitchPreferenceCompat.Material">
 		<item name="android:widgetLayout">@layout/preference_widget_material_switch</item>
 	</style>
 
 	<!-- Drawable -->
-
-	<style name="ProgressDrawable">
-		<item name="android:fillAlpha">1</item>
-		<item name="android:fillColor">?attr/colorPrimary</item>
-		<item name="android:strokeColor">?attr/colorSurfaceVariant</item>
-		<item name="android:textColor">?attr/colorOnPrimary</item>
-		<item name="strokeWidth">4dp</item>
-		<item name="android:textSize">9sp</item>
-		<item name="autoFitTextSize">true</item>
-	</style>
 
 	<style name="FaviconDrawable">
 		<item name="backgroundColor">?colorBackgroundFloating</item>
@@ -811,12 +728,6 @@
 	<style name="FaviconDrawable.Large">
 		<item name="strokeWidth">1dp</item>
 		<item name="cornerSize">12dp</item>
-	</style>
-
-	<style name="FaviconDrawable.Chip">
-		<item name="strokeWidth">1px</item>
-		<item name="cornerSize">@dimen/chip_icon_corner</item>
-		<item name="drawableSize">@dimen/m3_chip_icon_size</item>
 	</style>
 
 </resources>

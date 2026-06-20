@@ -15,16 +15,6 @@
         <item quantity="many">%1$d capítols</item>
         <item quantity="other">%1$d capítols</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">Fa %1$d minut</item>
-        <item quantity="many">Fa %1$d minuts</item>
-        <item quantity="other">Fa %1$d minuts</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">Fa %1$d hora</item>
-        <item quantity="many">Fa %1$d hores</item>
-        <item quantity="other">Fa %1$d hores</item>
-    </plurals>
     <plurals name="days_ago">
         <item quantity="one">Fa %1$d dia</item>
         <item quantity="many">Fa %1$d dies</item>

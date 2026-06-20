@@ -12,17 +12,9 @@
         <item quantity="one">%1$d νέο κεφάλαιο</item>
         <item quantity="other">%1$d νέα κεφάλαια</item>
     </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">%1$d ώρα πριν</item>
-        <item quantity="other">%1$d ώρες πριν</item>
-    </plurals>
     <plurals name="chapters">
         <item quantity="one">%1$d κεφάλαιο</item>
         <item quantity="other">%1$d κεφάλαια</item>
-    </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">%1$d λεπτό πριν</item>
-        <item quantity="other">%1$d λεπτά πριν</item>
     </plurals>
     <plurals name="months_ago">
         <item quantity="one">%1$d μήνας πριν</item>

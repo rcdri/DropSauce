@@ -225,30 +225,6 @@ class LocalBackupRepository @Inject constructor(
 		return result
 	}
 
-	suspend fun readIndex(input: ZipInputStream): BackupIndex? {
-		var entry = input.nextEntry
-		while (entry != null) {
-			if (BackupSection.of(entry) == BackupSection.INDEX) {
-				val items = input.readJsonArray<BackupIndex>(serializer()).toList()
-				return items.firstOrNull()
-			}
-			input.closeEntry()
-			entry = input.nextEntry
-		}
-		return null
-	}
-
-	suspend fun readAvailableSections(input: ZipInputStream): Set<BackupSection> {
-		val result = HashSet<BackupSection>()
-		var entry = input.nextEntry
-		while (entry != null) {
-			BackupSection.of(entry)?.let(result::add)
-			input.closeEntry()
-			entry = input.nextEntry
-		}
-		return result
-	}
-
 	private suspend fun <T> ZipOutputStream.writeJsonArray(
 		section: BackupSection,
 		data: Flow<T>,

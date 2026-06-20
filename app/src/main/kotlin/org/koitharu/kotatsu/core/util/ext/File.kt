@@ -13,7 +13,6 @@ import kotlinx.coroutines.runInterruptible
 import org.jetbrains.annotations.Blocking
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.fs.FileSequence
-import org.koitharu.kotatsu.core.util.MimeTypes
 import java.io.BufferedReader
 import java.io.File
 import java.nio.file.attribute.BasicFileAttributes
@@ -107,9 +106,6 @@ fun File.walkCompat(includeDirectories: Boolean): Sequence<File> = if (Build.VER
 	val walk = walk()
 	if (includeDirectories) walk else walk.filter { it.isFile }
 }
-
-val File.normalizedExtension: String?
-	get() = MimeTypes.getNormalizedExtension(name)
 
 fun File.isReadable() = runCatching {
 	canRead()

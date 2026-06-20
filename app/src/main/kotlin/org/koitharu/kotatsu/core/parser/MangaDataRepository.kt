@@ -154,13 +154,6 @@ class MangaDataRepository @Inject constructor(
 		storeMangaLocked(manga, replaceExisting, stripAppliedOverride)
 	}
 
-	suspend fun updateChapters(manga: Manga) {
-		val chapters = manga.chapters
-		if (!chapters.isNullOrEmpty() && manga.id in db.getMangaDao()) {
-			db.getChaptersDao().replaceAll(manga.id, chapters.withIndex().toEntities(manga.id))
-		}
-	}
-
 	suspend fun gcChaptersCache() {
 		db.getChaptersDao().gc()
 	}

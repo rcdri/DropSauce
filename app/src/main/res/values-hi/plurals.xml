@@ -4,14 +4,6 @@
         <item quantity="one">%1$d आइटम</item>
         <item quantity="other">%1$d आइटम्स</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">%1$d कुछ_मिनट_पहले</item>
-        <item quantity="other">%1$d कुछ_मिनेटो_पहले</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">%1$d घंटेभर_पहले</item>
-        <item quantity="other">%1$d घंटोंभर_पहले</item>
-    </plurals>
     <plurals name="new_chapters">
         <item quantity="one">%1$d नया अध्याय</item>
         <item quantity="other">%1$d नए अध्याय</item>

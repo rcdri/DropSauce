@@ -18,18 +18,6 @@
         <item quantity="many">%1$d kapitol</item>
         <item quantity="other">%1$d kapitol</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">před %1$d minutou</item>
-        <item quantity="few">před %1$d minutami</item>
-        <item quantity="many">před %1$d minutami</item>
-        <item quantity="other">před %1$d minutami</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">před %1$d hodinou</item>
-        <item quantity="few">před %1$d hodinami</item>
-        <item quantity="many">před %1$d hodinami</item>
-        <item quantity="other">před %1$d hodinami</item>
-    </plurals>
     <plurals name="days_ago">
         <item quantity="one">před %1$d dnem</item>
         <item quantity="few">před %1$d dny</item>

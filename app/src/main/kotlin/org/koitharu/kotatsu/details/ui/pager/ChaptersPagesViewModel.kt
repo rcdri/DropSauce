@@ -174,14 +174,6 @@ abstract class ChaptersPagesViewModel(
 		}
 	}
 
-	fun setChaptersReversed(newValue: Boolean) {
-		settings.isChaptersReverse = newValue
-	}
-
-	fun setChaptersInGridView(newValue: Boolean) {
-		settings.isChaptersGridView = newValue
-	}
-
 	fun setSelectedBranch(branch: String?) {
 		selectedBranch.value = branch
 	}

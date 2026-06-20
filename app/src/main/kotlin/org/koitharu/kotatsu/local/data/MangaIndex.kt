@@ -145,13 +145,6 @@ class MangaIndex(source: String?) {
 		}
 	}
 
-	fun setFrom(other: MangaIndex) {
-		clear()
-		other.json.keys().forEach { key ->
-			json.putOpt(key, other.json.opt(key))
-		}
-	}
-
 	private fun getChapters(json: JSONObject, source: MangaSource): List<MangaChapter> {
 		val chapters = ArrayList<MangaChapter>(json.length())
 		for (k in json.keys()) {

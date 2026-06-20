@@ -113,10 +113,6 @@ open class CoilImageView @JvmOverloads constructor(
 		list.add(listener)
 	}
 
-	fun removeImageRequestListener(listener: ImageRequest.Listener) {
-		listeners?.remove(listener)
-	}
-
 	fun setImageAsync(@DrawableRes resourceId: Int) = enqueueRequest(
 		newRequestBuilder()
 			.data(resourceId)

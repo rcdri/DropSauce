@@ -27,9 +27,3 @@ fun isSupportedArchive(string: String): Boolean {
 
 val File.isZipArchive: Boolean
 	get() = isFile && isZipExtension(extension)
-
-val File.isPdfFile: Boolean
-	get() = isFile && isPdfExtension(extension)
-
-val File.isSupportedMangaArchive: Boolean
-	get() = isFile && (isZipExtension(extension) || isPdfExtension(extension))

@@ -20,14 +20,6 @@
         <item quantity="one">%1$d পর্ব</item>
         <item quantity="other">%1$d টি পর্ব</item>
     </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">মাত্র %1$d ঘন্টা আগে</item>
-        <item quantity="other">%1$d ঘন্টা আগে</item>
-    </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">মাত্র %1$d মিনিট আগে</item>
-        <item quantity="other">%1$d মিনিট আগে</item>
-    </plurals>
     <plurals name="minutes">
         <item quantity="one">%1$d মিনিট</item>
         <item quantity="other">%1$d টি মিনিট</item>

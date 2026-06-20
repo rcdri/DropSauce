@@ -52,15 +52,6 @@ class MangaSourcesRepository @Inject constructor(
 		return getEnabledSources().take(limit)
 	}
 
-	fun observeEnabledSourcesCount(): Flow<Int> {
-		return observeMihonSources().map { it.size }.distinctUntilChanged()
-	}
-
-	fun observeAvailableSourcesCount(): Flow<Int> {
-		// Available sources are provided by extensions
-		return kotlinx.coroutines.flow.flowOf(0)
-	}
-
 	fun observeEnabledSources(): Flow<List<MangaSourceInfo>> = combine(
 		observeMihonSources(),
 		settings.observeAsFlow(AppSettings.KEY_SOURCES_ORDER) { sourcesSortOrder },

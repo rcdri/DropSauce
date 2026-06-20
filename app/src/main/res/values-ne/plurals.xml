@@ -8,14 +8,6 @@
         <item quantity="one">%1$d अध्याय</item>
         <item quantity="other">%1$d अध्यायहरू</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">%1$d मिनेट पहिले</item>
-        <item quantity="other">%1$d मिनेट पहिले</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">%1$d घण्टा पहिले</item>
-        <item quantity="other">%1$d घण्टा पहिले</item>
-    </plurals>
     <plurals name="items">
         <item quantity="one">%1$d वस्तु</item>
         <item quantity="other">%1$d वस्तुहरू</item>

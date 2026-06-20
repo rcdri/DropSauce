@@ -738,17 +738,9 @@ class AppRouter private constructor(
             Intent(context, SettingsActivity::class.java)
                 .setAction(ACTION_TRACKER)
 
-        fun discordSettingsIntent(context: Context) =
-            Intent(context, SettingsActivity::class.java)
-                .setAction(ACTION_MANAGE_DISCORD)
-
         fun proxySettingsIntent(context: Context) =
             Intent(context, SettingsActivity::class.java)
                 .setAction(ACTION_PROXY)
-
-        fun sourcesSettingsIntent(context: Context) =
-            Intent(context, SettingsActivity::class.java)
-                .setAction(ACTION_SOURCES)
 
         fun downloadsSettingsIntent(context: Context) =
             Intent(context, SettingsActivity::class.java)

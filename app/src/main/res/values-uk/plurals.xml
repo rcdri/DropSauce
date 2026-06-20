@@ -6,18 +6,6 @@
         <item quantity="many">%1$d нових розділів</item>
         <item quantity="other">%1$d нових розділів</item>
     </plurals>
-    <plurals name="minutes_ago">
-        <item quantity="one">%1$d хвилину тому</item>
-        <item quantity="few">%1$d хвилини тому</item>
-        <item quantity="many">%1$d хвилин тому</item>
-        <item quantity="other">%1$d хвилин тому</item>
-    </plurals>
-    <plurals name="hours_ago">
-        <item quantity="one">%1$d годину тому</item>
-        <item quantity="few">%1$d години тому</item>
-        <item quantity="many">%1$d годин тому</item>
-        <item quantity="other">%1$d годин тому</item>
-    </plurals>
     <plurals name="days_ago">
         <item quantity="one">%1$d день тому</item>
         <item quantity="few">%1$d дні тому</item>

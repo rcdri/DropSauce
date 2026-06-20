@@ -67,23 +67,6 @@
 		<attr name="android:button" />
 	</declare-styleable>
 
-	<declare-styleable name="ProgressDrawable">
-		<attr name="strokeWidth" />
-		<attr name="android:strokeColor" />
-		<attr name="android:textSize" />
-		<attr name="android:textColor" />
-		<attr name="android:fillColor" />
-		<attr name="android:fillAlpha" />
-		<attr name="android:width" />
-		<attr name="android:height" />
-		<attr name="outlineColor" format="color" />
-		<attr name="autoFitTextSize" format="boolean" />
-	</declare-styleable>
-
-	<declare-styleable name="ReadingProgressView">
-		<attr name="progressStyle" format="reference" />
-	</declare-styleable>
-
 	<declare-styleable name="FastScrollRecyclerView">
 		<attr name="hideScrollbar" format="boolean" />
 		<attr name="showBubble" format="boolean" />
@@ -101,24 +84,8 @@
 		</attr>
 	</declare-styleable>
 
-	<declare-styleable name="BottomSheetHeaderBar">
-		<attr name="title" />
-		<attr name="menu" />
-		<attr name="fitStatusBar" format="boolean" />
-	</declare-styleable>
-
 	<declare-styleable name="AdaptiveSheetHeaderBar">
 		<attr name="title" />
-	</declare-styleable>
-
-	<declare-styleable name="ShapeView">
-		<attr name="strokeWidth" />
-		<attr name="strokeColor" />
-		<attr name="cornerSize" />
-		<attr name="cornerSizeTopLeft" />
-		<attr name="cornerSizeTopRight" />
-		<attr name="cornerSizeBottomLeft" />
-		<attr name="cornerSizeBottomRight" />
 	</declare-styleable>
 
 	<declare-styleable name="TipView">
@@ -155,34 +122,6 @@
 	<declare-styleable name="ReaderInfoBarView">
 		<attr name="android:textSize" />
 		<attr name="android:strokeWidth" />
-	</declare-styleable>
-
-	<declare-styleable name="ProgressButton">
-		<attr name="titleTextAppearance" />
-		<attr name="subtitleTextAppearance" />
-		<attr name="title" />
-		<attr name="subtitle" />
-		<attr name="android:textColor" />
-		<attr name="android:max" />
-		<attr name="android:progress" />
-		<attr name="baseColor" format="color" />
-		<attr name="progressColor" format="color" />
-	</declare-styleable>
-
-	<declare-styleable name="NonFilteringAutoCompleteTextView">
-		<attr name="readOnly" format="boolean" />
-	</declare-styleable>
-
-	<declare-styleable name="DotsIndicator">
-		<attr name="dotSize" format="dimension">
-			<enum name="fit" value="-1" />
-		</attr>
-		<attr name="dotScale" format="float" />
-		<attr name="dotAlpha" format="float" />
-		<attr name="dotColor" format="color" />
-		<attr name="dotSpacing" format="dimension" />
-		<attr name="android:max" />
-		<attr name="android:progress" />
 	</declare-styleable>
 
 	<declare-styleable name="IconsView">
