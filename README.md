@@ -110,8 +110,7 @@ DropSauce is a free and open-source manga reader for Android, built to feel quic
 1. Open the [latest GitHub release](https://github.com/HuzaifaKhalid1311/DropSauce/releases/latest).
 2. Download the newest `DropSauce` APK.
 3. Install it on a compatible Android device.
-4. Use the in-app updater for future releases, or install newer APKs from GitHub Releases.
-5. Add your preferred source or extension repository, then start reading.
+4. Add your preferred source or extension repository, then start reading.
 
 Android may ask you to allow installs from your browser or file manager. That is normal for APKs downloaded outside the Play Store.
 
