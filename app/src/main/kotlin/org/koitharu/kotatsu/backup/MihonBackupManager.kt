@@ -14,6 +14,9 @@ import okio.buffer
 import okio.gzip
 import okio.source
 import org.koitharu.kotatsu.backup.model.MihonBackup
+import org.koitharu.kotatsu.backup.model.MihonBackupCategory
+import org.koitharu.kotatsu.backup.model.MihonBackupChapter
+import org.koitharu.kotatsu.backup.model.MihonBackupManga
 import org.koitharu.kotatsu.backup.model.MihonBackupFallback
 import org.koitharu.kotatsu.backup.model.MihonBackupExtensionRepo
 import org.koitharu.kotatsu.backup.model.MihonBackupPreference
@@ -98,9 +101,62 @@ class MihonBackupManager @Inject constructor(
     val scrobblings: List<ScrobblingEntity>,
   )
 
-  private data class CategoryRestoreMapping(
-    val defaultCategoryId: Long,
-  )
+  /**
+   * Maps Mihon backup categories onto Kotatsu favourite categories.
+   *
+   * In a Mihon backup each manga references its categories by their [MihonBackupCategory.order]
+   * value (see Mihon's `MangaBackupCreator`), so we key the lookup by order. Categories are reused
+   * by title when one already exists, and favorited manga that belong to no category fall back to a
+   * single [DEFAULT_CATEGORY_TITLE] category.
+   */
+  private inner class CategoryResolver(
+    private val backupCategories: List<MihonBackupCategory>,
+  ) {
+    private val dao = db.getFavouriteCategoriesDao()
+    private val idByOrder = HashMap<Long, Long>()
+    private val idByTitle = HashMap<String, Long>()
+    private var defaultCategoryId: Long? = null
+
+    suspend fun prepare(manga: List<MihonBackupManga>) {
+      dao.findAll().forEach { idByTitle[it.title] = it.categoryId.toLong() }
+      backupCategories.sortedBy { it.order }.forEach { category ->
+        val title = category.name.trim()
+        if (title.isNotEmpty()) {
+          idByOrder[category.order] = categoryIdForTitle(title)
+        }
+      }
+      val anyUncategorized = manga.any { item ->
+        item.favorite && item.categories.none { idByOrder.containsKey(it) }
+      }
+      if (anyUncategorized) {
+        defaultCategoryId = categoryIdForTitle(DEFAULT_CATEGORY_TITLE)
+      }
+    }
+
+    fun resolve(orders: List<Long>): List<Long> {
+      val ids = orders.mapNotNull { idByOrder[it] }.distinct()
+      return ids.ifEmpty { listOfNotNull(defaultCategoryId) }
+    }
+
+    private suspend fun categoryIdForTitle(title: String): Long {
+      idByTitle[title]?.let { return it }
+      val id = dao.insert(
+        FavouriteCategoryEntity(
+          categoryId = 0,
+          createdAt = System.currentTimeMillis(),
+          sortKey = dao.getNextSortKey(),
+          title = title,
+          order = "NEWEST",
+          track = true,
+          downloadNewChapters = false,
+          isVisibleInLibrary = true,
+          deletedAt = 0,
+        ),
+      )
+      idByTitle[title] = id
+      return id
+    }
+  }
 
     private val proto = ProtoBuf
 
@@ -114,13 +170,10 @@ class MihonBackupManager @Inject constructor(
             val backup = decode(uri)
             val diagnostics = buildDiagnostics(backup, options)
             db.withTransaction {
-                val restoredCategories = if (options.libraryEntries) {
-                    restoreCategories()
-                } else {
-                    null
-                }
                 if (options.libraryEntries) {
-                    restoreManga(backup, options, diagnostics, restoredCategories)
+                    val categoryResolver = CategoryResolver(backup.backupCategories)
+                    categoryResolver.prepare(backup.backupManga)
+                    restoreManga(backup, options, diagnostics, categoryResolver)
                 }
                 if (options.appSettings) {
                     restorePreferences(backup.backupPreferences)
@@ -144,13 +197,12 @@ class MihonBackupManager @Inject constructor(
     } else {
       emptyList()
     }
-    val supportedTrackerIds = setOf(1, 2, 3, 4)
     val missingTrackers = if (options.tracking) {
       backup.backupManga
         .asSequence()
         .flatMap { it.tracking.asSequence() }
         .map { it.syncId }
-        .filter { it !in supportedTrackerIds }
+        .filter { mihonTrackerToScrobblerId(it) == null }
         .distinct()
         .toList()
     } else {
@@ -197,34 +249,12 @@ class MihonBackupManager @Inject constructor(
         )
     }
 
-    private suspend fun restoreCategories(): CategoryRestoreMapping {
-        val dao = db.getFavouriteCategoriesDao()
-        val defaultCategoryId = dao.insert(
-            FavouriteCategoryEntity(
-                categoryId = 0,
-                createdAt = System.currentTimeMillis(),
-                sortKey = dao.getNextSortKey(),
-                title = "mihon",
-                order = "NEWEST",
-                track = true,
-                downloadNewChapters = false,
-                isVisibleInLibrary = true,
-                deletedAt = 0,
-            ),
-        )
-        return CategoryRestoreMapping(
-            defaultCategoryId = defaultCategoryId,
-        )
-    }
-
     private suspend fun restoreManga(
         backup: MihonBackup,
         options: Options,
         diagnostics: RestoreAccumulator,
-        categoryMapping: CategoryRestoreMapping?,
+        categoryResolver: CategoryResolver,
     ) {
-        val defaultCategoryId = categoryMapping?.defaultCategoryId
-        val supportedTrackerIds = setOf(1, 2, 3, 4)
         val now = System.currentTimeMillis()
 
         val pending = backup.backupManga.map { item ->
@@ -244,7 +274,13 @@ class MihonBackupManager @Inject constructor(
                     )
                 }
             }
-            val chapters = item.chapters.mapIndexed { index, chapter ->
+            // Mihon assigns sourceOrder 0 to the newest chapter (sources list newest-first), whereas
+            // Kotatsu reads chapters in ascending `index` order (oldest first). Reverse the order so
+            // chapter ordering — and therefore reading progress — comes out right.
+            val orderedBackupChapters = item.chapters.sortedWith(
+                compareByDescending<MihonBackupChapter> { it.sourceOrder }.thenBy { it.chapterNumber },
+            )
+            val chapters = orderedBackupChapters.mapIndexed { index, chapter ->
                 ChapterEntity(
                     chapterId = "$mangaId:${chapter.url}".longHashCode(),
                     mangaId = mangaId,
@@ -256,11 +292,13 @@ class MihonBackupManager @Inject constructor(
                     uploadDate = chapter.dateUpload,
                     branch = null,
                     source = sourceName,
-                    index = chapter.sourceOrder.toInt().takeIf { it >= 0 } ?: index,
+                    index = index,
                 )
             }
+            val chapterByUrl = chapters.associateBy { it.url }
+            val backupChapterByUrl = orderedBackupChapters.associateBy { it.url }
             val categoryIds = if (item.favorite) {
-                listOfNotNull(defaultCategoryId)
+                categoryResolver.resolve(item.categories)
             } else {
                 emptyList()
             }
@@ -274,8 +312,7 @@ class MihonBackupManager @Inject constructor(
                     deletedAt = 0,
                 )
             }
-            val chapterByUrl = chapters.associateBy { it.url }
-            val bookmarks = item.chapters.asSequence()
+            val bookmarks = orderedBackupChapters.asSequence()
                 .filter { it.bookmark }
                 .mapNotNull { chapter ->
                     val chapterEntity = chapterByUrl[chapter.url] ?: return@mapNotNull null
@@ -293,29 +330,30 @@ class MihonBackupManager @Inject constructor(
                 }
                 .toList()
 
-            val historyItem = item.history.maxByOrNull { it.lastRead }
-            val fallbackReadChapter = item.chapters.withIndex().lastOrNull { it.value.read }
-            val historyChapterUrl = historyItem?.url ?: fallbackReadChapter?.value?.url
-            val historyChapter = historyChapterUrl?.let(chapterByUrl::get)
-                ?: fallbackReadChapter?.let { chapters.getOrNull(it.index) }
-            val history = if (historyChapter != null) {
-                val backupChapter = item.chapters.firstOrNull { it.url == historyChapter.url }
+            // The reading position is the most recently opened chapter (history), or — when the
+            // backup carries no history — the newest chapter that has any progress (read or a saved
+            // page). `chapters` is sorted oldest-first, so `lastOrNull` picks the furthest-progressed.
+            val latestHistory = item.history.maxByOrNull { it.lastRead }
+            val currentChapter = latestHistory?.url?.let(chapterByUrl::get)
+                ?: chapters.lastOrNull { chapterEntity ->
+                    backupChapterByUrl[chapterEntity.url]?.let { it.read || it.lastPageRead > 0 } == true
+                }
+            val history = if (currentChapter != null) {
+                val backupChapter = backupChapterByUrl[currentChapter.url]
                 val restoredPage = backupChapter?.lastPageRead?.toInt()?.coerceAtLeast(0) ?: 0
-                val chapterIndex = chapters.indexOfFirst { it.chapterId == historyChapter.chapterId }
-                    .takeIf { it >= 0 }
-                    ?: 0
-                val updatedAt = historyItem?.lastRead?.takeIf { it > 0 }
+                val updatedAt = latestHistory?.lastRead?.takeIf { it > 0 }
+                    ?: item.lastModifiedAt.takeIf { it > 0 }
                     ?: item.dateAdded.takeIf { it > 0 }
                     ?: now
                 HistoryEntity(
                     mangaId = mangaId,
                     createdAt = updatedAt,
                     updatedAt = updatedAt,
-                    chapterId = historyChapter.chapterId,
+                    chapterId = currentChapter.chapterId,
                     page = restoredPage,
                     scroll = 0f,
                     percent = computeHistoryPercent(
-                        chapterIndex = chapterIndex,
+                        chapterIndex = currentChapter.index,
                         chaptersCount = chapters.size,
                     ),
                     deletedAt = 0,
@@ -324,11 +362,11 @@ class MihonBackupManager @Inject constructor(
             } else {
                 null
             }
-            val stats = if ((historyItem?.readDuration ?: 0L) > 0L && history != null) {
+            val stats = if ((latestHistory?.readDuration ?: 0L) > 0L && history != null) {
                 StatsEntity(
                     mangaId = mangaId,
-                    startedAt = (history.updatedAt - historyItem!!.readDuration).coerceAtLeast(0L),
-                    duration = historyItem.readDuration,
+                    startedAt = (history.updatedAt - latestHistory!!.readDuration).coerceAtLeast(0L),
+                    duration = latestHistory.readDuration,
                     pages = (history.page + 1).coerceAtLeast(1),
                 )
             } else {
@@ -336,7 +374,8 @@ class MihonBackupManager @Inject constructor(
             }
             val scrobblings = if (options.tracking) {
                 item.tracking.mapNotNull { tracking ->
-                    if (tracking.syncId !in supportedTrackerIds) {
+                    val scrobblerId = mihonTrackerToScrobblerId(tracking.syncId)
+                    if (scrobblerId == null) {
                         diagnostics.missingTrackers += tracking.syncId
                         return@mapNotNull null
                     }
@@ -347,7 +386,7 @@ class MihonBackupManager @Inject constructor(
                         ?: targetId.toInt().takeIf { it > 0 }
                         ?: return@mapNotNull null
                     ScrobblingEntity(
-                        scrobbler = tracking.syncId,
+                        scrobbler = scrobblerId,
                         id = remoteEntryId,
                         mangaId = mangaId,
                         targetId = targetId,
@@ -471,6 +510,20 @@ class MihonBackupManager @Inject constructor(
             ?: key.removePrefix("source_").substringBefore(':').toLongOrNull()
     }
 
+  /**
+   * Translates a Mihon tracker `syncId` (see Mihon's `TrackerManager`) into the matching Kotatsu
+   * [org.koitharu.kotatsu.scrobbling.common.domain.model.ScrobblerService] id. The two apps number
+   * their services differently, so copying the id verbatim points entries at the wrong service.
+   * Returns `null` for trackers Kotatsu doesn't support (Bangumi, Komga, MangaUpdates, Kavita…).
+   */
+  private fun mihonTrackerToScrobblerId(syncId: Int): Int? = when (syncId) {
+    1 -> 3 // MyAnimeList -> MAL
+    2 -> 2 // AniList
+    3 -> 4 // Kitsu
+    4 -> 1 // Shikimori
+    else -> null
+  }
+
   private fun decodeTrackingStatus(status: Int): String? {
     return when (status) {
       1 -> "planned"
@@ -490,6 +543,10 @@ class MihonBackupManager @Inject constructor(
     if (chaptersCount <= 0) return 0f
     val normalizedIndex = chapterIndex.coerceIn(0, chaptersCount - 1)
     return (normalizedIndex + 1) / chaptersCount.toFloat()
+  }
+
+  private companion object {
+    const val DEFAULT_CATEGORY_TITLE = "Default"
   }
 }
 

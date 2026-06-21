@@ -103,6 +103,7 @@ import org.koitharu.kotatsu.list.ui.model.MangaListModel
 import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaTag
+import org.koitharu.kotatsu.scrobbling.common.domain.model.ScrobblerService
 import org.koitharu.kotatsu.scrobbling.common.domain.model.ScrobblingInfo
 import java.util.Locale
 import kotlin.math.PI
@@ -1305,7 +1306,16 @@ private fun ScrobblingSection(
 									horizontalArrangement = Arrangement.spacedBy(6.dp),
 								) {
 									Icon(
-										painter = painterResource(info.scrobbler.iconResId),
+										// SHIKIMORI's iconResId is a <bitmap> drawable, which Compose's
+										// painterResource cannot load (it accepts only vectors and rasters);
+										// fall back to the raw raster to avoid an IllegalArgumentException.
+										painter = painterResource(
+											if (info.scrobbler == ScrobblerService.SHIKIMORI) {
+												R.drawable.ic_shikimori_raw
+											} else {
+												info.scrobbler.iconResId
+											},
+										),
 										contentDescription = null,
 										tint = Color.Unspecified,
 										modifier = Modifier.size(16.dp),
