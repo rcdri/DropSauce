@@ -1506,7 +1506,10 @@ private fun RelatedSection(
 			.fillMaxWidth()
 			.height(232.dp),
 	) { i ->
-		val item = items[i]
+		// The M3 carousel can momentarily request an index from a stale (larger) item count while
+		// the related list is still settling after an async load — guard against that to avoid an
+		// IndexOutOfBounds crash; the slot fills in on the next recomposition.
+		val item = items.getOrNull(i) ?: return@HorizontalMultiBrowseCarousel
 		Column(
 			modifier = Modifier.clickable { onItemClick(item) },
 		) {

@@ -5,6 +5,7 @@ package org.koitharu.kotatsu.mihon
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
+import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -26,6 +27,7 @@ import org.koitharu.kotatsu.mihon.model.toSManga
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.InternalParsersApi
+import org.koitharu.kotatsu.parsers.exception.NotFoundException
 import org.koitharu.kotatsu.parsers.model.MangaListFilter
 import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
@@ -121,6 +123,22 @@ class MihonMangaRepository(
 	}
 
 	override suspend fun getDetailsImpl(manga: Manga): Manga = withContext(Dispatchers.IO) {
+		try {
+			getDetailsInner(manga)
+		} catch (e: HttpException) {
+			// A 404/410 usually means the stored url is stale — e.g. AsuraScans rotates the random
+			// hash suffix on its slugs, so a url from a (Kotatsu) backup no longer resolves even
+			// though the manga is still on the site. Surface it as NotFoundException so
+			// DetailsLoadUseCase's RecoverMangaUseCase re-resolves by title and repairs the url,
+			// keeping the same manga id (favourites/history/bookmarks stay attached).
+			if (e.code == 404 || e.code == 410) {
+				throw NotFoundException("HTTP ${e.code}", manga.publicUrl.ifBlank { manga.url })
+			}
+			throw e
+		}
+	}
+
+	private suspend fun getDetailsInner(manga: Manga): Manga {
 		val sManga = manga.toSManga()
 
 		val details = try {
@@ -192,7 +210,7 @@ class MihonMangaRepository(
 
 		val publicUrl = httpSource?.getMangaUrl(details).orEmpty()
 
-		details.toManga(
+		return details.toManga(
 			source = source,
 			chapters = chapters,
 			publicUrl = publicUrl,
