@@ -34,6 +34,28 @@ abstract class MangaDao {
 	@Query("SELECT * FROM manga WHERE source = :source")
 	abstract suspend fun findAllBySource(source: String): List<MangaWithTags>
 
+	/**
+	 * Restored Kotatsu library entries on built-in (non-Mihon) sources that still carry user data.
+	 * Used by the Kotatsu→Mihon migration to find what needs re-keying. `MIHON_%` sources are the
+	 * app's own external sources; `LOCAL`/`UNKNOWN` are not migratable.
+	 */
+	@Transaction
+	@Query(
+		"""
+		SELECT * FROM manga
+		WHERE source NOT LIKE 'MIHON\_%' ESCAPE '\'
+			AND source NOT IN ('LOCAL', 'UNKNOWN')
+			AND manga_id IN (
+				SELECT manga_id FROM favourites WHERE deleted_at = 0
+				UNION SELECT manga_id FROM history WHERE deleted_at = 0
+				UNION SELECT manga_id FROM bookmarks
+				UNION SELECT manga_id FROM tracks
+				UNION SELECT manga_id FROM scrobblings
+			)
+		""",
+	)
+	abstract suspend fun findLegacyMangaWithUserData(): List<MangaWithTags>
+
 	@Query("SELECT author FROM manga WHERE author LIKE :query GROUP BY author ORDER BY COUNT(author) DESC LIMIT :limit")
 	abstract suspend fun findAuthors(query: String, limit: Int): List<String>
 

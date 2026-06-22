@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -33,6 +35,9 @@ import org.koitharu.kotatsu.backup.local.ui.restore.RestoreDialogFragment
 import org.koitharu.kotatsu.core.ui.dialog.buildAlertDialog
 import org.koitharu.kotatsu.core.util.ext.checkNotificationPermission
 import org.koitharu.kotatsu.core.util.ext.getDisplayMessage
+import org.koitharu.kotatsu.kotatsumigration.domain.KotatsuMigrationManager
+import org.koitharu.kotatsu.kotatsumigration.domain.MigrationState
+import org.koitharu.kotatsu.kotatsumigration.ui.KotatsuMigrationService
 import org.koitharu.kotatsu.settings.compose.ActionSettingsItem
 import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
@@ -46,6 +51,9 @@ class BackupSettingsFragment : BaseComposeSettingsFragment(R.string.backup_resto
 
 	@Inject
 	lateinit var backupManager: MihonBackupManager
+
+	@Inject
+	lateinit var migrationManager: KotatsuMigrationManager
 
 	private val restoreMihonBackupLauncher = registerForActivityResult(
 		ActivityResultContracts.OpenDocument(),
@@ -79,6 +87,22 @@ class BackupSettingsFragment : BaseComposeSettingsFragment(R.string.backup_resto
 		setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 		setContent {
 			DropSauceTheme {
+				val migrationState by migrationManager.state.collectAsState()
+				val migrationSubtitle = when (val s = migrationState) {
+					is MigrationState.Running -> stringResource(
+						R.string.kotatsu_migration_progress,
+						s.done,
+						s.total,
+					)
+
+					is MigrationState.Finished -> stringResource(
+						R.string.kotatsu_migration_result,
+						s.summary.migrated,
+						s.summary.total,
+					)
+
+					MigrationState.Idle -> stringResource(R.string.migrate_from_kotatsu_summary)
+				}
 				BackupScreen(
 					onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
 					onCreateBackup = {
@@ -101,6 +125,8 @@ class BackupSettingsFragment : BaseComposeSettingsFragment(R.string.backup_resto
 					onRestoreFromTachiyomi = {
 						restoreMihonBackupLauncher.launch(arrayOf("application/*", "*/*"))
 					},
+					migrationSubtitle = migrationSubtitle,
+					onMigrateFromKotatsu = ::confirmAndStartKotatsuMigration,
 				)
 			}
 		}
@@ -108,6 +134,23 @@ class BackupSettingsFragment : BaseComposeSettingsFragment(R.string.backup_resto
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
+	}
+
+	private fun confirmAndStartKotatsuMigration() {
+		if (migrationManager.isRunning) {
+			Toast.makeText(requireContext(), R.string.kotatsu_migration_running, Toast.LENGTH_SHORT).show()
+			return
+		}
+		buildAlertDialog(requireContext()) {
+			setTitle(R.string.migrate_from_kotatsu)
+			setMessage(R.string.migrate_from_kotatsu_confirm)
+			setNegativeButton(android.R.string.cancel, null)
+			setPositiveButton(R.string.migrate_from_kotatsu) { _, _ ->
+				if (KotatsuMigrationService.start(requireContext())) {
+					Toast.makeText(requireContext(), R.string.kotatsu_migration_running, Toast.LENGTH_SHORT).show()
+				}
+			}
+		}.show()
 	}
 
 	private fun runMihonRestoreJob(uri: Uri, options: Options) {
@@ -195,6 +238,8 @@ private fun BackupScreen(
 	onRestoreLocal: () -> Unit,
 	onOpenPeriodic: () -> Unit,
 	onRestoreFromTachiyomi: () -> Unit,
+	migrationSubtitle: String,
+	onMigrateFromKotatsu: () -> Unit,
 ) {
 	SettingsScaffold(title = stringResource(R.string.backup_restore), onBack = onBack) {
 		item {
@@ -239,9 +284,19 @@ private fun BackupScreen(
 						title = stringResource(R.string.restore_from_tachiyomi),
 						subtitle = stringResource(R.string.restore_tachiyomi_summary),
 						icon = R.drawable.ic_revert,
-						
+
 						shape = pos.shape,
 						onClick = onRestoreFromTachiyomi,
+					)
+				}
+				item { pos ->
+					ActionSettingsItem(
+						title = stringResource(R.string.migrate_from_kotatsu),
+						subtitle = migrationSubtitle,
+						icon = R.drawable.ic_backup_restore,
+
+						shape = pos.shape,
+						onClick = onMigrateFromKotatsu,
 					)
 				}
 			}

@@ -287,6 +287,11 @@
 			android:foregroundServiceType="dataSync"
 			android:label="@string/fixing_manga" />
 		<service
+			android:name="org.koitharu.kotatsu.kotatsumigration.ui.KotatsuMigrationService"
+			android:exported="false"
+			android:foregroundServiceType="dataSync"
+			android:label="@string/migrate_from_kotatsu" />
+		<service
 			android:name="org.koitharu.kotatsu.local.ui.LocalIndexUpdateService"
 			android:label="@string/local_manga_processing" />
 		<service
