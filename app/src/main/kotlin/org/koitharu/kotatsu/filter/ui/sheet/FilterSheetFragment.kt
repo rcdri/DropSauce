@@ -125,6 +125,11 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
         binding.buttonDone.setOnClickListener(this)
     }
 
+    override fun onStart() {
+        super.onStart()
+        setHalfExpanded()
+    }
+
     private fun SheetFilterBinding.adjustForEmbeddedLayout() {
         layoutBody.updatePadding(top = layoutBody.paddingBottom)
         scrollView.scrollIndicators = 0

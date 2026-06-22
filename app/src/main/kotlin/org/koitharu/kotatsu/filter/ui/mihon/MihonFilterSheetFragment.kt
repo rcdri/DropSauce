@@ -52,9 +52,11 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>() {
 		viewModel.isEmptyState.observe(viewLifecycleOwner) {
 			binding.textViewHolder.isVisible = it
 		}
-		// Anchor the sheet to full height. A weighted RecyclerView inside a wrap_content sheet otherwise
-		// collapses and the sheet floats with a gap beneath it (no-op when embedded as a side panel).
-		disableFitToContents()
+	}
+
+	override fun onStart() {
+		super.onStart()
+		setHalfExpanded()
 	}
 
 	private fun SheetFilterMihonBinding.adjustForEmbeddedLayout() {

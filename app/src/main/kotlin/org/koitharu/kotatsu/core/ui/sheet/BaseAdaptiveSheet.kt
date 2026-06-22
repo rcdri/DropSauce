@@ -191,6 +191,24 @@ abstract class BaseAdaptiveSheet<B : ViewBinding> : AppCompatDialogFragment(),
 		}
 	}
 
+	protected fun setHalfExpanded() {
+		val sheetDialog = dialog as? BottomSheetDialog ?: return
+		view?.updateLayoutParams {
+			height = LayoutParams.MATCH_PARENT
+		}
+		dialog?.findViewById<View>(materialR.id.design_bottom_sheet)?.updateLayoutParams {
+			height = LayoutParams.MATCH_PARENT
+		}
+		sheetDialog.behavior.apply {
+			isFitToContents = false
+			isHideable = true
+			setDraggableOnNestedScroll(false)
+			skipCollapsed = true
+			halfExpandedRatio = HALF_EXPANDED_RATIO
+			state = BottomSheetBehavior.STATE_HALF_EXPANDED
+		}
+	}
+
 	@CallSuper
 	open fun expandAndLock() {
 		lockCounter++
@@ -312,5 +330,9 @@ abstract class BaseAdaptiveSheet<B : ViewBinding> : AppCompatDialogFragment(),
 			owner.lifecycle.removeObserver(this)
 			behavior.removeCallback(callback)
 		}
+	}
+
+	private companion object {
+		const val HALF_EXPANDED_RATIO = 0.5f
 	}
 }
