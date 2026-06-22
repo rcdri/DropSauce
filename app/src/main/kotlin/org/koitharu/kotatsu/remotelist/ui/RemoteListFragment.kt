@@ -43,6 +43,7 @@ class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.On
         viewModel.isRandomLoading.observe(viewLifecycleOwner, MenuInvalidator(requireActivity()))
         viewModel.onOpenManga.observeEvent(viewLifecycleOwner) { router.openDetails(it) }
         viewModel.onSourceBroken.observeEvent(viewLifecycleOwner) { showSourceBrokenWarning() }
+        viewModel.onBrokenSortFallback.observeEvent(viewLifecycleOwner) { showBrokenSortWarning() }
         filterCoordinator.observe().distinctUntilChangedBy { it.listFilter.isEmpty() }
             .drop(1)
             .observe(viewLifecycleOwner) {
@@ -111,6 +112,14 @@ class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.On
         )
         snackbar.setAction(R.string.got_it, this)
         snackbar.show()
+    }
+
+    private fun showBrokenSortWarning() {
+        Snackbar.make(
+            viewBinding?.recyclerView ?: return,
+            R.string.source_sort_broken_warning,
+            Snackbar.LENGTH_LONG,
+        ).show()
     }
 
     private inner class RemoteListMenuProvider : MenuProvider {

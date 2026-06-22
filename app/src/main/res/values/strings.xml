@@ -174,7 +174,6 @@
     <string name="kotatsu_migration_complete">Migration finished</string>
     <string name="kotatsu_migration_result">Migrated %1$d of %2$d manga</string>
     <string name="kotatsu_migration_missing_extensions">Install these extensions and run again: %1$s</string>
-    <string name="kotatsu_migration_nothing">Nothing to migrate</string>
     <string name="preparing_">Preparing...</string>
     <string name="file_not_found">File not found</string>
     <string name="data_restored_success">All data was restored</string>
@@ -927,6 +926,7 @@
     <string name="data_removal">Data removal</string>
     <string name="privacy">Privacy</string>
     <string name="source_broken_warning">This manga source has been marked as broken. Some features may not work</string>
+    <string name="source_sort_broken_warning">This sorting order is broken. Reverted to the default sorting order</string>
     <string name="download_default_directory">Default directory for downloading manga</string>
     <string name="private_app_directory_warning">This directory with all data will be deleted if you uninstall the application</string>
     <string name="available_pattern">%1$s available</string>

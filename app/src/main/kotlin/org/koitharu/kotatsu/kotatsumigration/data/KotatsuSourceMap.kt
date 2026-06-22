@@ -39,11 +39,6 @@ class KotatsuSourceMap @Inject constructor(
 		return load()[sourceName.trim().uppercase()]
 	}
 
-	/** True when [sourceName] is a legacy (built-in) source we know how to migrate. */
-	suspend fun isKnownLegacySource(sourceName: String): Boolean = resolve(sourceName) != null
-
-	suspend fun size(): Int = load().size
-
 	private suspend fun load(): Map<String, MihonTarget> {
 		entries?.let { return it }
 		return mutex.withLock {
@@ -64,12 +59,7 @@ class KotatsuSourceMap @Inject constructor(
 				val id = entry.id.toLongOrNull() ?: continue
 				put(
 					enumName.uppercase(),
-					MihonTarget(
-						sourceId = id,
-						sourceName = entry.name,
-						language = entry.lang,
-						packageName = entry.pkg,
-					),
+					MihonTarget(sourceId = id, sourceName = entry.name),
 				)
 			}
 		}
@@ -91,8 +81,6 @@ class KotatsuSourceMap @Inject constructor(
 	private class Entry(
 		@SerialName("id") val id: String,
 		@SerialName("name") val name: String = "",
-		@SerialName("lang") val lang: String = "",
-		@SerialName("pkg") val pkg: String = "",
 	)
 }
 
@@ -102,13 +90,4 @@ data class MihonTarget(
 	val sourceId: Long,
 	/** Display name of the Mihon source, for reporting (e.g. "MangaDex"). */
 	val sourceName: String,
-	/** Source language code, e.g. "en", "all". */
-	val language: String,
-	/** Extension package name, so we can tell the user which extension to install. */
-	val packageName: String,
-) {
-
-	/** The DropSauce storage identity for this source (`MIHON_<id>`). */
-	val storageName: String
-		get() = "MIHON_$sourceId"
-}
+)

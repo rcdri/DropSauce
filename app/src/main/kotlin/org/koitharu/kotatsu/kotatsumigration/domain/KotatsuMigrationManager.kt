@@ -45,16 +45,11 @@ sealed interface MigrationState {
 /**
  * Outcome tally of a completed run.
  *
- * @param missingExtensions display names of extensions that need installing (had matches but the
- *        extension wasn't installed), de-duplicated.
+ * @param missingExtensions display names of sources that have a mapping but whose extension isn't
+ *        installed, de-duplicated — shown so the user knows what to install and run again.
  */
 data class MigrationSummary(
 	val total: Int,
 	val migrated: Int,
-	val needsExtension: Int,
-	val noMapping: Int,
-	val failed: Int,
 	val missingExtensions: Set<String>,
-) {
-	val skipped: Int get() = needsExtension + noMapping + failed
-}
+)

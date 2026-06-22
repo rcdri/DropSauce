@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -44,40 +45,31 @@ class KotatsuMigrationService : CoroutineIntentService() {
 		val legacy = useCase.scan()
 		manager.onStart(legacy.size)
 		if (legacy.isEmpty()) {
-			val summary = MigrationSummary(0, 0, 0, 0, 0, emptySet())
+			val summary = MigrationSummary(total = 0, migrated = 0, missingExtensions = emptySet())
 			manager.onFinish(summary)
 			notifyResult(startId, summary)
 			return
 		}
 		useCase.prepare() // load installed extensions once before resolving
 		var migrated = 0
-		var needsExtension = 0
-		var noMapping = 0
-		var failed = 0
 		val missingExtensions = linkedSetOf<String>()
 		powerManager.withPartialWakeLock(TAG) {
 			legacy.forEachIndexed { index, item ->
 				updateForeground(this, done = index, total = legacy.size)
 				manager.onProgress(done = index, total = legacy.size, migrated = migrated)
 				val outcome = runCatchingCancellable { useCase.migrate(item) }
-					.getOrElse { Outcome.Failed(target = null, message = it.message) }
+					.getOrElse { Outcome.Failed(it.message) }
 				when (outcome) {
-					is Outcome.Migrated -> migrated++
-					is Outcome.ExtensionNotInstalled -> {
-						needsExtension++
-						missingExtensions += outcome.target.sourceName
-					}
-					Outcome.NoMapping -> noMapping++
-					is Outcome.Failed -> failed++
+					Outcome.Migrated -> migrated++
+					is Outcome.ExtensionNotInstalled -> missingExtensions += outcome.target.sourceName
+					is Outcome.Failed -> outcome.message?.let { Log.w(TAG, "Migration skipped one entry: $it") }
+					Outcome.NoMapping -> Unit // no Mihon equivalent — reflected in the X/Y count
 				}
 			}
 		}
 		val summary = MigrationSummary(
 			total = legacy.size,
 			migrated = migrated,
-			needsExtension = needsExtension,
-			noMapping = noMapping,
-			failed = failed,
 			missingExtensions = missingExtensions,
 		)
 		manager.onFinish(summary)

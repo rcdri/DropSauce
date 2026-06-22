@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.remotelist.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import eu.kanade.tachiyomi.network.HttpException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,8 +44,11 @@ import org.koitharu.kotatsu.list.ui.model.toErrorFooter
 import org.koitharu.kotatsu.list.ui.model.toErrorState
 import org.koitharu.kotatsu.local.data.LocalStorageChanges
 import org.koitharu.kotatsu.local.domain.model.LocalManga
+import org.koitharu.kotatsu.mihon.MihonFilterMapper
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.util.sizeOrZero
+import org.jsoup.HttpStatusException
+import java.net.HttpURLConnection
 import javax.inject.Inject
 
 private const val FILTER_MIN_INTERVAL = 250L
@@ -66,6 +70,7 @@ open class RemoteListViewModel @Inject constructor(
 	val isRandomLoading = MutableStateFlow(false)
 	val onOpenManga = MutableEventFlow<Manga>()
     val onSourceBroken = MutableEventFlow<Unit>()
+	val onBrokenSortFallback = MutableEventFlow<Unit>()
 
 	protected val repository = mangaRepositoryFactory.create(source)
 	private val mangaList = MutableStateFlow<List<Manga>?>(null)
@@ -162,6 +167,12 @@ open class RemoteListViewModel @Inject constructor(
 				throw e
 			} catch (e: Throwable) {
 				e.printStackTraceDebug()
+				if (filterState.hasSourceSort() && e.isGatewayTimeout()) {
+					filterCoordinator.resetSourceSort()
+					onBrokenSortFallback.call(Unit)
+					hasNextPage.value = false
+					return@launchLoadingJob
+				}
 				listError.value = e
 				if (!mangaList.value.isNullOrEmpty()) {
 					errorEvent.call(e)
@@ -208,5 +219,14 @@ open class RemoteListViewModel @Inject constructor(
 			onOpenManga.call(manga)
 			isRandomLoading.value = false
 		}
+	}
+
+	private fun FilterCoordinator.Snapshot.hasSourceSort(): Boolean =
+		listFilter.tags.any { it.key.startsWith(MihonFilterMapper.SORT_KEY_PREFIX) }
+
+	private fun Throwable.isGatewayTimeout(): Boolean = when (this) {
+		is HttpException -> code == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
+		is HttpStatusException -> statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
+		else -> cause?.isGatewayTimeout() == true
 	}
 }

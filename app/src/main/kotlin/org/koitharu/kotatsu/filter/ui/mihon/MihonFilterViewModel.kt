@@ -128,6 +128,7 @@ class MihonFilterViewModel @AssistedInject constructor(
 		pathMap.clear()
 		val result = ArrayList<MihonFilterItem>()
 		build(working.toList(), prefix = "", depth = 0, out = result)
+		result.removeLeadingSeparators()
 		itemsFlow.value = result
 	}
 
@@ -270,6 +271,12 @@ class MihonFilterViewModel @AssistedInject constructor(
 
 	private fun shouldHideFilter(filter: Filter<*>, path: String): Boolean =
 		filter is Filter.Sort || path == sortPath
+
+	private fun MutableList<MihonFilterItem>.removeLeadingSeparators() {
+		while (firstOrNull() is MihonFilterItem.Separator) {
+			removeAt(0)
+		}
+	}
 
 	@AssistedFactory
 	interface Factory {

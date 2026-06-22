@@ -326,6 +326,14 @@ class FilterCoordinator @Inject constructor(
         currentListFilter.value = MangaListFilter.EMPTY
     }
 
+    fun resetSourceSort() {
+        currentListFilter.update { filter ->
+            filter.copy(
+                tags = filter.tags.filterNot { it.key.startsWith(MihonFilterMapper.SORT_KEY_PREFIX) }.toSet(),
+            )
+        }
+    }
+
     /**
      * Loads the source's filters: [WorkingFilters.defaults] in their default state and
      * [WorkingFilters.working] with the currently-applied filter decoded onto it. Both are fresh,

@@ -29,12 +29,7 @@ class KotatsuMigrationUseCase @Inject constructor(
 	/** Restored manga on a built-in (non-Mihon) source that still carry user data. */
 	suspend fun scan(): List<LegacyManga> {
 		return database.getMangaDao().findLegacyMangaWithUserData().map {
-			LegacyManga(
-				id = it.manga.id,
-				title = it.manga.title,
-				sourceName = it.manga.source,
-				sourceTitle = it.manga.sourceTitle,
-			)
+			LegacyManga(id = it.manga.id, sourceName = it.manga.source)
 		}
 	}
 
@@ -43,25 +38,23 @@ class KotatsuMigrationUseCase @Inject constructor(
 		val mihonSource = mihonExtensionManager.getMihonMangaSourceById(target.sourceId)
 			?: return Outcome.ExtensionNotInstalled(target)
 		val oldManga = mangaDataRepository.findMangaById(legacy.id, withChapters = true)
-			?: return Outcome.Failed(target, "Manga ${legacy.id} not found")
+			?: return Outcome.Failed("Manga ${legacy.id} not found")
 		return try {
 			migrator(oldManga, mihonSource)
-			Outcome.Migrated(target)
+			Outcome.Migrated
 		} catch (e: Exception) {
-			Outcome.Failed(target, e.message)
+			Outcome.Failed(e.message)
 		}
 	}
 
 	data class LegacyManga(
 		val id: Long,
-		val title: String,
 		val sourceName: String,
-		val sourceTitle: String?,
 	)
 
 	sealed interface Outcome {
-		/** Re-keyed successfully onto [target]. */
-		data class Migrated(val target: MihonTarget) : Outcome
+		/** Re-keyed successfully. */
+		data object Migrated : Outcome
 
 		/** A mapping exists but its extension isn't installed. */
 		data class ExtensionNotInstalled(val target: MihonTarget) : Outcome
@@ -70,6 +63,6 @@ class KotatsuMigrationUseCase @Inject constructor(
 		data object NoMapping : Outcome
 
 		/** Re-keying threw. */
-		data class Failed(val target: MihonTarget?, val message: String?) : Outcome
+		data class Failed(val message: String?) : Outcome
 	}
 }

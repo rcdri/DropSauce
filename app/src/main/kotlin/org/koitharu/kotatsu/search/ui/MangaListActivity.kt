@@ -3,12 +3,14 @@ package org.koitharu.kotatsu.search.ui
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePaddingRelative
@@ -60,7 +62,10 @@ import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.remotelist.ui.RemoteListFragment
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 import com.google.android.material.R as materialR
+
+private const val SORT_BUTTON_MAX_WIDTH_FRACTION = 0.45f
 
 @AndroidEntryPoint
 class MangaListActivity :
@@ -103,6 +108,7 @@ class MangaListActivity :
 			viewBinding.appbar.addOnOffsetChangedListener(this)
 		}
 		viewBinding.buttonOrder?.setOnClickListener(this)
+		configureSortButton()
 		applyTitle()
 		initList(source, filter, sortOrder)
 	}
@@ -147,6 +153,18 @@ class MangaListActivity :
 		viewBinding.collapsingToolbarLayout?.let {
 			it.title = titleText
 			it.subtitle = null
+		}
+	}
+
+	private fun configureSortButton() {
+		val button = viewBinding.buttonOrder ?: return
+		button.maxLines = 1
+		button.ellipsize = TextUtils.TruncateAt.END
+		button.doOnLayout {
+			val maxWidth = (viewBinding.root.width * SORT_BUTTON_MAX_WIDTH_FRACTION).roundToInt()
+			button.maxWidth = maxWidth
+			viewBinding.collapsingToolbarLayout?.expandedTitleMarginEnd = maxWidth +
+				resources.getDimensionPixelOffset(R.dimen.toolbar_button_margin) * 2
 		}
 	}
 
