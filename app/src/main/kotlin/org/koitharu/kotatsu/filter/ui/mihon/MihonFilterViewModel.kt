@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.filter.ui.FilterCoordinator
 import org.koitharu.kotatsu.filter.ui.mihon.model.MihonFilterItem
+import org.koitharu.kotatsu.mihon.MihonFilterMapper
 
 @HiltViewModel(assistedFactory = MihonFilterViewModel.Factory::class)
 class MihonFilterViewModel @AssistedInject constructor(
@@ -24,6 +25,7 @@ class MihonFilterViewModel @AssistedInject constructor(
 
 	private var working: FilterList = FilterList()
 	private var defaults: FilterList = FilterList()
+	private var sortPath: String? = null
 	private val pathMap = HashMap<String, Filter<*>>()
 	private val expandedPaths = HashSet<String>()
 
@@ -44,6 +46,7 @@ class MihonFilterViewModel @AssistedInject constructor(
 		val wf = filter.loadWorkingFilters()
 		working = wf.working
 		defaults = wf.defaults
+		sortPath = MihonFilterMapper.findSortFilter(working)?.path
 		if (resetExpanded) {
 			expandedPaths.clear()
 			collectInitiallyExpanded(working.toList(), prefix = "")
@@ -131,6 +134,9 @@ class MihonFilterViewModel @AssistedInject constructor(
 	private fun build(filters: List<Filter<*>>, prefix: String, depth: Int, out: MutableList<MihonFilterItem>) {
 		filters.forEachIndexed { index, f ->
 			val path = if (prefix.isEmpty()) index.toString() else "$prefix.$index"
+			if (shouldHideFilter(f, path)) {
+				return@forEachIndexed
+			}
 			pathMap[path] = f
 			when (f) {
 				is Filter.Header -> if (f.name.isNotEmpty()) {
@@ -170,7 +176,10 @@ class MihonFilterViewModel @AssistedInject constructor(
 
 				is Filter.Group<*> -> {
 					val children = f.state.filterIsInstance<Filter<*>>()
-					val active = activeCount(children)
+					if (!hasVisibleControls(children, path)) {
+						return@forEachIndexed
+					}
+					val active = activeCount(children, path)
 					val expanded = path in expandedPaths
 					out += MihonFilterItem.ExpandableHeader(
 						path = path,
@@ -206,11 +215,14 @@ class MihonFilterViewModel @AssistedInject constructor(
 	private fun collectInitiallyExpanded(filters: List<Filter<*>>, prefix: String) {
 		filters.forEachIndexed { index, f ->
 			val path = if (prefix.isEmpty()) index.toString() else "$prefix.$index"
+			if (shouldHideFilter(f, path)) {
+				return@forEachIndexed
+			}
 			when (f) {
 				is Filter.Sort -> if (f.state != null) expandedPaths.add(path)
 				is Filter.Group<*> -> {
 					val children = f.state.filterIsInstance<Filter<*>>()
-					if (activeCount(children) > 0) {
+					if (activeCount(children, path) > 0) {
 						expandedPaths.add(path)
 					}
 					collectInitiallyExpanded(children, path)
@@ -221,15 +233,43 @@ class MihonFilterViewModel @AssistedInject constructor(
 		}
 	}
 
-	private fun activeCount(filters: List<Filter<*>>): Int = filters.count { f ->
-		when (f) {
-			is Filter.CheckBox -> f.state
-			is Filter.TriState -> f.state != Filter.TriState.STATE_IGNORE
-			is Filter.Text -> f.state.isNotEmpty()
-			is Filter.Select<*> -> f.state != 0
-			else -> false
+	private fun activeCount(filters: List<Filter<*>>, prefix: String): Int = filters.withIndex().count { (index, f) ->
+		val path = "$prefix.$index"
+		if (shouldHideFilter(f, path)) {
+			false
+		} else {
+			when (f) {
+				is Filter.CheckBox -> f.state
+				is Filter.TriState -> f.state != Filter.TriState.STATE_IGNORE
+				is Filter.Text -> f.state.isNotEmpty()
+				is Filter.Select<*> -> f.state != 0
+				else -> false
+			}
 		}
 	}
+
+	private fun hasVisibleControls(filters: List<Filter<*>>, prefix: String): Boolean {
+		filters.forEachIndexed { index, f ->
+			val path = "$prefix.$index"
+			if (shouldHideFilter(f, path)) {
+				return@forEachIndexed
+			}
+			when (f) {
+				is Filter.Header, is Filter.Separator -> Unit
+				is Filter.Group<*> -> {
+					if (hasVisibleControls(f.state.filterIsInstance<Filter<*>>(), path)) {
+						return true
+					}
+				}
+
+				else -> return true
+			}
+		}
+		return false
+	}
+
+	private fun shouldHideFilter(filter: Filter<*>, path: String): Boolean =
+		filter is Filter.Sort || path == sortPath
 
 	@AssistedFactory
 	interface Factory {
