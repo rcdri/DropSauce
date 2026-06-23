@@ -73,7 +73,7 @@ class ScrobblerConfigActivity : BaseActivity<ActivityScrobblerConfigBinding>(),
 		)
 		viewBinding.recyclerView.setPadding(
 			barsInsets.left + basePadding,
-			barsInsets.top + basePadding,
+			basePadding,
 			barsInsets.right + basePadding,
 			barsInsets.bottom + basePadding,
 		)
