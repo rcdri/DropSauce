@@ -64,6 +64,7 @@ import org.koitharu.kotatsu.settings.compose.SliderSettingsItem
 import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
 import org.koitharu.kotatsu.settings.compose.rememberBooleanPref
 import org.koitharu.kotatsu.settings.compose.rememberIntPref
+import org.koitharu.kotatsu.settings.compose.rememberReadingIndicatorPref
 import org.koitharu.kotatsu.settings.compose.rememberStringPref
 import org.koitharu.kotatsu.settings.compose.rememberStringSetPref
 import org.koitharu.kotatsu.settings.nav.NavConfigFragment
@@ -217,6 +218,8 @@ private fun AppearanceScreen(
 	val badgeValues = remember { ctx.resources.getStringArray(R.array.values_list_badges).toList() }
 	val detailsTabEntries = remember { ctx.resources.getStringArray(R.array.details_tabs).toList() }
 	val detailsTabValues = remember { ctx.resources.getStringArray(R.array.details_tabs_values).toList() }
+	val readingIndicatorEntries = remember { ctx.resources.getStringArray(R.array.reading_indicator_modes).toList() }
+	val readingIndicatorValues = remember { ctx.resources.getStringArray(R.array.values_reading_indicator_modes).toList() }
 	val searchSuggestionEntries = remember {
 		SearchSuggestionType.entries.map { ctx.getString(it.titleResId) }
 	}
@@ -248,7 +251,7 @@ private fun AppearanceScreen(
 	var listMode by rememberStringPref(AppSettings.KEY_LIST_MODE, ListMode.GRID.name)
 	var gridSize by rememberIntPref(AppSettings.KEY_GRID_SIZE, 100)
 	var quickFilter by rememberBooleanPref(AppSettings.KEY_QUICK_FILTER, true)
-	var readingIndicator by rememberBooleanPref(AppSettings.KEY_PROGRESS_INDICATORS, true)
+	var readingIndicator by rememberReadingIndicatorPref(AppSettings.KEY_PROGRESS_INDICATORS)
 	var mangaListBadges by rememberStringSetPref(AppSettings.KEY_MANGA_LIST_BADGES, emptySet())
 
 	var descriptionCollapse by rememberBooleanPref(AppSettings.KEY_COLLAPSE_DESCRIPTION, true)
@@ -393,10 +396,12 @@ private fun AppearanceScreen(
 					)
 				}
 				item { pos ->
-					SwitchSettingsItem(
+					ListSettingsItem(
 						title = stringResource(R.string.show_reading_indicators),
-						checked = readingIndicator,
-						onCheckedChange = { readingIndicator = it },
+						entries = readingIndicatorEntries,
+						entryValues = readingIndicatorValues,
+						selectedValue = readingIndicator,
+						onValueChange = { readingIndicator = it },
 						icon = R.drawable.ic_history,
 
 						shape = pos.shape,

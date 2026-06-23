@@ -341,6 +341,9 @@
     <string name="use_fingerprint">Use biometric if available</string>
     <string name="report">Report</string>
     <string name="show_reading_indicators">Show reading progress indicators</string>
+    <string name="reading_indicator_disabled">@string/disabled</string>
+    <string name="reading_indicator_percent">Percentage read (e.g., 60%)</string>
+    <string name="reading_indicator_chapters">Chapters read (e.g., 12/30)</string>
     <string name="clear_cookies_summary">Can help in case of some issues. All authorizations will be invalidated</string>
     <string name="show_all">Show all</string>
     <string name="invalid_domain_message">Invalid domain</string>

@@ -11,9 +11,11 @@ import android.util.TypedValue
 import android.view.View
 import androidx.annotation.AttrRes
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.CHAPTERS_READ
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.NONE
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_READ
 import org.koitharu.kotatsu.list.domain.ReadingProgress
+import kotlin.math.roundToInt
 
 /**
  * A small frosted "pill" badge that shows the read percentage (e.g. "29%") over a cover.
@@ -52,6 +54,12 @@ class ReadingProgressView @JvmOverloads constructor(
 				null, NONE -> ""
 				PERCENT_READ -> if (value.percent in 0f..1f) {
 					percentPattern.format(ReadingProgress.percentToString(value.percent))
+				} else {
+					""
+				}
+				CHAPTERS_READ -> if (value.percent in 0f..1f && value.totalChapters > 0) {
+					val read = (value.percent * value.totalChapters).roundToInt()
+					"${read}/${value.totalChapters}"
 				} else {
 					""
 				}

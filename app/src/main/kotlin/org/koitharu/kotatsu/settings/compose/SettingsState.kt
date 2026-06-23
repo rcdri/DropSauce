@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode
 
 /**
  * Compose state bound to a SharedPreferences key — the same prefs file `AppSettings` reads
@@ -51,6 +52,30 @@ fun rememberStringSetPref(
 	read = { prefs -> prefs.getStringSet(key, defaultValue) ?: defaultValue },
 	write = { prefs, value -> prefs.edit { putStringSet(key, value) } },
 )
+
+@Composable
+fun rememberReadingIndicatorPref(key: String): MutableState<String> =
+	rememberPrefValue(
+		key = key,
+		read = { prefs ->
+			val value = try {
+				prefs.getString(key, null)
+			} catch (e: ClassCastException) {
+				null
+			}
+			if (value == null) {
+				val legacyEnabled = try {
+					prefs.getBoolean(key, true)
+				} catch (e: ClassCastException) {
+					true
+				}
+				if (legacyEnabled) ProgressIndicatorMode.PERCENT_READ.name else ProgressIndicatorMode.NONE.name
+			} else {
+				value
+			}
+		},
+		write = { prefs, value -> prefs.edit { putString(key, value) } },
+	)
 
 /**
  * Generic underlying primitive used by the typed helpers above. Hooks an

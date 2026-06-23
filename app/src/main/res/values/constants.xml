@@ -58,4 +58,9 @@
 		<item>4</item>
 		<item>1</item>
 	</string-array>
+	<string-array name="values_reading_indicator_modes" translatable="false">
+		<item>NONE</item>
+		<item>PERCENT_READ</item>
+		<item>CHAPTERS_READ</item>
+	</string-array>
 </resources>

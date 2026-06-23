@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.list.domain
 
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode
+import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.CHAPTERS_READ
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.NONE
 import org.koitharu.kotatsu.core.prefs.ProgressIndicatorMode.PERCENT_READ
 
@@ -13,6 +14,7 @@ data class ReadingProgress(
 	fun isValid() = when (mode) {
 		NONE -> false
 		PERCENT_READ -> percent in 0f..1f
+		CHAPTERS_READ -> percent in 0f..1f && totalChapters > 0
 	}
 
 	fun isCompleted() = isCompleted(percent)

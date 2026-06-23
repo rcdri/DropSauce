@@ -5,5 +5,5 @@ import androidx.annotation.Keep
 @Keep
 enum class ProgressIndicatorMode {
 
-	NONE, PERCENT_READ;
+	NONE, PERCENT_READ, CHAPTERS_READ;
 }

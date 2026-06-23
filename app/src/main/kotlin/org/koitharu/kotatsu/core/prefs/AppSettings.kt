@@ -290,12 +290,24 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		set(value) = prefs.edit { putBoolean(KEY_UPDATED_GROUPING, value) }
 
 	// A single on/off toggle now: on = show the read-percentage pill, off = no indicator.
-	val progressIndicatorMode: ProgressIndicatorMode
-		get() = if (prefs.getBoolean(KEY_PROGRESS_INDICATORS, true)) {
-			ProgressIndicatorMode.PERCENT_READ
-		} else {
-			ProgressIndicatorMode.NONE
+	var progressIndicatorMode: ProgressIndicatorMode
+		get() {
+			val value = try {
+				prefs.getString(KEY_PROGRESS_INDICATORS, null)
+			} catch (e: ClassCastException) {
+				null
+			}
+			if (value == null) {
+				val legacyEnabled = try {
+					prefs.getBoolean(KEY_PROGRESS_INDICATORS, true)
+				} catch (e: ClassCastException) {
+					true
+				}
+				return if (legacyEnabled) ProgressIndicatorMode.PERCENT_READ else ProgressIndicatorMode.NONE
+			}
+			return prefs.getEnumValue(KEY_PROGRESS_INDICATORS, ProgressIndicatorMode.PERCENT_READ)
 		}
+		set(value) = prefs.edit { putEnumValue(KEY_PROGRESS_INDICATORS, value) }
 
 	var detailsUiMode: DetailsUiMode
 		get() = prefs.getEnumValue(KEY_DETAILS_UI, COMPACT)
