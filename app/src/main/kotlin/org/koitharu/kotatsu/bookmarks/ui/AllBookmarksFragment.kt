@@ -116,7 +116,7 @@ class AllBookmarksFragment :
 		val basePadding = resources.getDimensionPixelOffset(R.dimen.list_spacing_normal)
 		viewBinding?.recyclerView?.setPadding(
 			barsInsets.left + basePadding,
-			barsInsets.top + basePadding,
+			basePadding,
 			barsInsets.right + basePadding,
 			barsInsets.bottom + basePadding,
 		)
