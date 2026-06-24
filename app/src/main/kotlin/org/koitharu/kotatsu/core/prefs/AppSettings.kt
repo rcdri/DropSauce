@@ -155,6 +155,17 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isBackdropEnabled: Boolean
 		get() = prefs.getBoolean(KEY_DETAILS_BACKDROP, true)
 
+	var backdropBlurAmount: Int
+		get() {
+			val raw = prefs.getInt(KEY_DETAILS_BACKDROP_BLUR_AMOUNT, 2)
+			return when {
+				raw <= 0 -> 0
+				raw == 1 -> 1
+				else -> 2
+			}
+		}
+		set(value) = prefs.edit { putInt(KEY_DETAILS_BACKDROP_BLUR_AMOUNT, value) }
+
 	var historyListMode: ListMode
 		get() = prefs.getEnumValue(KEY_LIST_MODE_HISTORY, listMode)
 		set(value) = prefs.edit { putEnumValue(KEY_LIST_MODE_HISTORY, value) }

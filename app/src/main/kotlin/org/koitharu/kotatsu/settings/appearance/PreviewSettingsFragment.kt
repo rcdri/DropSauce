@@ -46,8 +46,10 @@ import org.koitharu.kotatsu.settings.compose.DropSauceTheme
 import org.koitharu.kotatsu.settings.compose.ListSettingsItem
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
+import org.koitharu.kotatsu.settings.compose.SliderSettingsItem
 import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
 import org.koitharu.kotatsu.settings.compose.rememberBooleanPref
+import org.koitharu.kotatsu.settings.compose.rememberDetailsBackdropBlurPref
 import org.koitharu.kotatsu.settings.compose.rememberStringPref
 
 @AndroidEntryPoint
@@ -80,6 +82,7 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 
 	var uiMode by rememberStringPref(AppSettings.KEY_DETAILS_UI, DetailsUiMode.COMPACT.name)
 	var backdrop by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP, true)
+	var backdropBlurAmount by rememberDetailsBackdropBlurPref(AppSettings.KEY_DETAILS_BACKDROP_BLUR_AMOUNT, 2)
 
 	val mode = remember(uiMode) {
 		DetailsUiMode.entries.firstOrNull { it.name == uiMode } ?: DetailsUiMode.COMPACT
@@ -111,6 +114,26 @@ private fun DetailsAppearanceScreen(onBack: () -> Unit) {
 						onCheckedChange = { backdrop = it },
 						icon = R.drawable.ic_images,
 						shape = pos.shape,
+					)
+				}
+				item { pos ->
+					SliderSettingsItem(
+						title = stringResource(R.string.details_backdrop_blur),
+						value = backdropBlurAmount,
+						valueFrom = 0,
+						valueTo = 2,
+						stepSize = 1,
+						onValueChange = { backdropBlurAmount = it },
+						icon = R.drawable.ic_images,
+						shape = pos.shape,
+						enabled = backdrop,
+						valueLabel = { valVal ->
+							when (valVal) {
+								0 -> ctx.getString(R.string.details_backdrop_blur_none)
+								1 -> ctx.getString(R.string.details_backdrop_blur_light)
+								else -> ctx.getString(R.string.details_backdrop_blur_default)
+							}
+						}
 					)
 				}
 			}

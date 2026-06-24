@@ -50,6 +50,7 @@ internal fun InlineSliderSettingsRow(
 	unitSuffix: String,
 	onValueChange: (Int) -> Unit,
 	modifier: Modifier = Modifier,
+	valueLabel: ((Int) -> String)? = null,
 	@DrawableRes icon: Int? = null,
 	iconColors: CategoryIconColors? = null,
 	shape: Shape = MaterialTheme.shapes.medium,
@@ -88,7 +89,7 @@ internal fun InlineSliderSettingsRow(
 				)
 				Spacer(Modifier.width(8.dp))
 				Text(
-					text = "${current.roundToInt()}$unitSuffix",
+					text = valueLabel?.invoke(current.roundToInt()) ?: "${current.roundToInt()}$unitSuffix",
 					style = MaterialTheme.typography.labelLarge,
 					color = if (enabled) MaterialTheme.colorScheme.primary
 					else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),

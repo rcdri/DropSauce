@@ -901,6 +901,10 @@
     <string name="details_ui_compact">Compact</string>
     <string name="details_backdrop">Set large cover as backdrop</string>
     <string name="details_backdrop_summary">Show a large cover image at the top as a backdrop image (like Tachiyomi)</string>
+    <string name="details_backdrop_blur">Backdrop blur</string>
+    <string name="details_backdrop_blur_none">None</string>
+    <string name="details_backdrop_blur_light">Light</string>
+    <string name="details_backdrop_blur_default">Default</string>
     <string name="details_appearance">Details screen appearance</string>
     <string name="details_appearance_summary">Screen style, backdrop image and blur effect</string>
     <string name="creating_backup">Creating backup</string>
