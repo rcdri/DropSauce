@@ -1,17 +1,21 @@
 package org.koitharu.kotatsu.filter.ui.mihon
 
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.core.view.doOnLayout
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.R as materialR
+import com.google.android.material.shape.MaterialShapeDrawable
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.withCreationCallback
 import org.koitharu.kotatsu.R
@@ -21,6 +25,7 @@ import org.koitharu.kotatsu.core.ui.sheet.AdaptiveSheetBehavior.Companion.STATE_
 import org.koitharu.kotatsu.core.ui.sheet.AdaptiveSheetCallback
 import org.koitharu.kotatsu.core.ui.sheet.BaseAdaptiveSheet
 import org.koitharu.kotatsu.core.util.ext.consume
+import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.databinding.SheetFilterMihonBinding
 import org.koitharu.kotatsu.filter.ui.FilterCoordinator
@@ -35,6 +40,8 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 			}
 		},
 	)
+
+	private var systemBarsBottom = 0
 
 	override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): SheetFilterMihonBinding {
 		return SheetFilterMihonBinding.inflate(inflater, container, false)
@@ -58,6 +65,11 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 			binding.textViewHolder.isVisible = it
 		}
 		addSheetCallback(this, viewLifecycleOwner)
+		binding.layoutBottom.doOnLayout {
+			dialog?.findViewById<View>(materialR.id.design_bottom_sheet)?.let { sheet ->
+				updateLayoutForOffset(sheet)
+			}
+		}
 	}
 
 	override fun onStart() {
@@ -66,6 +78,7 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 	}
 
 	override fun onStateChanged(sheet: View, newState: Int) {
+		updateLayoutForOffset(sheet)
 		if (newState == STATE_DRAGGING || newState == STATE_SETTLING) {
 			return
 		}
@@ -74,11 +87,36 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 	}
 
 	override fun onSlide(sheet: View, slideOffset: Float) {
+		updateLayoutForOffset(sheet)
 		// Melt the drag handle away over the top stretch of the drag so reaching full screen is one
 		// seamless motion rather than the handle snapping out once expanded.
 		val binding = viewBinding ?: return
 		val progress = (slideOffset - DRAG_HANDLE_COLLAPSE_START) / (1f - DRAG_HANDLE_COLLAPSE_START)
 		binding.headerBar.setDragHandleCollapseProgress(progress)
+	}
+
+	private fun updateLayoutForOffset(sheet: View) {
+		val binding = viewBinding ?: return
+		val top = sheet.top
+		binding.layoutBottom.translationY = -top.toFloat()
+
+		val surfaceColor = getSheetSurfaceColor(sheet)
+		binding.layoutBottom.setBackgroundColor(surfaceColor)
+
+		val basePadding = resources.getDimensionPixelOffset(R.dimen.margin_small)
+		val buttonsHeight = binding.layoutBottom.height
+		binding.recyclerView.updatePadding(
+			bottom = basePadding + systemBarsBottom + buttonsHeight + top
+		)
+	}
+
+	private fun getSheetSurfaceColor(sheet: View): Int {
+		val color = when (val background = sheet.background) {
+			is MaterialShapeDrawable -> background.fillColor?.defaultColor
+			is ColorDrawable -> background.color
+			else -> null
+		}
+		return color ?: requireContext().getThemeColor(android.R.attr.colorBackground)
 	}
 
 	private fun SheetFilterMihonBinding.adjustForEmbeddedLayout() {
@@ -94,6 +132,7 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 	override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
 		val typeMask = WindowInsetsCompat.Type.systemBars()
 		val barsInsets = insets.getInsets(typeMask)
+		systemBarsBottom = barsInsets.bottom
 		viewBinding?.recyclerView?.updatePadding(
 			left = barsInsets.left,
 			right = barsInsets.right,
@@ -102,6 +141,16 @@ class MihonFilterSheetFragment : BaseAdaptiveSheet<SheetFilterMihonBinding>(), A
 		// Preserve the layout's own vertical breathing room on top of the system inset.
 		val basePadding = resources.getDimensionPixelOffset(R.dimen.margin_small)
 		viewBinding?.layoutBottom?.updatePadding(bottom = basePadding + barsInsets.bottom)
+		dialog?.findViewById<View>(materialR.id.design_bottom_sheet)?.let { sheet ->
+			updateLayoutForOffset(sheet)
+		} ?: run {
+			// Embedded layout fallback
+			viewBinding?.run {
+				val surfaceColor = requireContext().getThemeColor(android.R.attr.colorBackground)
+				layoutBottom.setBackgroundColor(surfaceColor)
+				recyclerView.updatePadding(bottom = basePadding + barsInsets.bottom + layoutBottom.height)
+			}
+		}
 		return insets.consume(v, typeMask, bottom = true)
 	}
 

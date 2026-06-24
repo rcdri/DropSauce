@@ -12,14 +12,18 @@ import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import android.graphics.drawable.ColorDrawable
+import androidx.core.view.doOnLayout
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import com.google.android.material.R as materialR
 import com.google.android.material.chip.Chip
 import com.google.android.material.slider.RangeSlider
 import com.google.android.material.slider.Slider
+import com.google.android.material.shape.MaterialShapeDrawable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -40,6 +44,7 @@ import org.koitharu.kotatsu.core.ui.widgets.ChipsView
 import org.koitharu.kotatsu.core.util.ext.consume
 import org.koitharu.kotatsu.core.util.ext.getDisplayMessage
 import org.koitharu.kotatsu.core.util.ext.getDisplayName
+import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.parentView
 import org.koitharu.kotatsu.core.util.ext.setValueRounded
@@ -67,6 +72,8 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
     ChipsView.OnChipClickListener,
     ChipsView.OnChipLongClickListener,
     ChipsView.OnChipCloseClickListener {
+
+    private var systemBarsBottom = 0
 
     override fun onCreateViewBinding(inflater: LayoutInflater, container: ViewGroup?): SheetFilterBinding {
         return SheetFilterBinding.inflate(inflater, container, false)
@@ -129,6 +136,11 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
         binding.buttonReset.setOnClickListener(this)
         binding.buttonDone.setOnClickListener(this)
         addSheetCallback(this, viewLifecycleOwner)
+        binding.layoutBottom.doOnLayout {
+            dialog?.findViewById<View>(materialR.id.design_bottom_sheet)?.let { sheet ->
+                updateLayoutForOffset(sheet)
+            }
+        }
     }
 
     override fun onStart() {
@@ -137,6 +149,7 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
     }
 
     override fun onStateChanged(sheet: View, newState: Int) {
+        updateLayoutForOffset(sheet)
         if (newState == STATE_DRAGGING || newState == STATE_SETTLING) {
             return
         }
@@ -145,11 +158,36 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
     }
 
     override fun onSlide(sheet: View, slideOffset: Float) {
+        updateLayoutForOffset(sheet)
         // Melt the drag handle away over the top stretch of the drag so reaching full screen is one
         // seamless motion rather than the handle snapping out once expanded.
         val binding = viewBinding ?: return
         val progress = (slideOffset - DRAG_HANDLE_COLLAPSE_START) / (1f - DRAG_HANDLE_COLLAPSE_START)
         binding.headerBar.setDragHandleCollapseProgress(progress)
+    }
+
+    private fun updateLayoutForOffset(sheet: View) {
+        val binding = viewBinding ?: return
+        val top = sheet.top
+        binding.layoutBottom.translationY = -top.toFloat()
+
+        val surfaceColor = getSheetSurfaceColor(sheet)
+        binding.layoutBottom.setBackgroundColor(surfaceColor)
+
+        val basePadding = resources.getDimensionPixelOffset(R.dimen.margin_small)
+        val buttonsHeight = binding.layoutBottom.height
+        binding.scrollView.updatePadding(
+            bottom = basePadding + systemBarsBottom + buttonsHeight + top
+        )
+    }
+
+    private fun getSheetSurfaceColor(sheet: View): Int {
+        val color = when (val background = sheet.background) {
+            is MaterialShapeDrawable -> background.fillColor?.defaultColor
+            is ColorDrawable -> background.color
+            else -> null
+        }
+        return color ?: requireContext().getThemeColor(android.R.attr.colorBackground)
     }
 
     private fun SheetFilterBinding.adjustForEmbeddedLayout() {
@@ -167,10 +205,21 @@ class FilterSheetFragment : BaseAdaptiveSheet<SheetFilterBinding>(),
     override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
         val typeMask = WindowInsetsCompat.Type.systemBars()
         val barsInsets = insets.getInsets(typeMask)
+        systemBarsBottom = barsInsets.bottom
         // The action buttons now sit at the bottom, so the navigation-bar inset must keep them clear.
         // Preserve the layout's own vertical breathing room on top of the system inset.
         val basePadding = resources.getDimensionPixelOffset(R.dimen.margin_small)
         viewBinding?.layoutBottom?.updatePadding(bottom = basePadding + barsInsets.bottom)
+        dialog?.findViewById<View>(materialR.id.design_bottom_sheet)?.let { sheet ->
+            updateLayoutForOffset(sheet)
+        } ?: run {
+            // Embedded layout fallback
+            viewBinding?.run {
+                val surfaceColor = requireContext().getThemeColor(android.R.attr.colorBackground)
+                layoutBottom.setBackgroundColor(surfaceColor)
+                scrollView.updatePadding(bottom = basePadding + barsInsets.bottom + layoutBottom.height)
+            }
+        }
         return insets.consume(v, typeMask, bottom = true)
     }
 
