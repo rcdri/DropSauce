@@ -34,11 +34,14 @@ import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.core.util.ext.toUriOrNull
 import org.koitharu.kotatsu.parsers.util.nullIfEmpty
+import org.koitharu.kotatsu.core.ui.widgets.ChipsView
 import org.koitharu.kotatsu.databinding.ActivityDetailsExpressiveBinding
 import org.koitharu.kotatsu.details.service.MangaPrefetchService
 import org.koitharu.kotatsu.details.ui.model.ChapterListItem
 import org.koitharu.kotatsu.download.ui.worker.DownloadStartedObserver
 import org.koitharu.kotatsu.parsers.model.ContentRating
+import org.koitharu.kotatsu.settings.compose.rememberBooleanPref
+import org.koitharu.kotatsu.settings.compose.rememberDetailsBackdropBlurPref
 import coil3.ImageLoader
 import javax.inject.Inject
 
@@ -168,10 +171,15 @@ class DetailsExpressiveActivity :
 				val srcTitle by viewModel.cachedSourceTitle.collectAsState()
 				val coverUrl by viewModel.coverUrl.collectAsState()
 				val backdropUrl by viewModel.backdropUrl.collectAsState()
+				val tags by viewModel.tags.collectAsState()
 				val favLabel = favs.takeIf { it.isNotEmpty() }?.joinToString { it.title }
+
+				val isBackdropEnabled by rememberBooleanPref(AppSettings.KEY_DETAILS_BACKDROP, true)
+				val backdropBlurAmount by rememberDetailsBackdropBlurPref(AppSettings.KEY_DETAILS_BACKDROP_BLUR_AMOUNT, 2)
 
 				DetailsExpressiveScreen(
 					details = details,
+					tags = tags,
 					historyInfo = history,
 					isLoading = loading,
 					favouriteCount = favs.size,
@@ -183,7 +191,8 @@ class DetailsExpressiveActivity :
 					imageLoader = coil,
 					coverUrl = coverUrl,
 					backdropUrl = backdropUrl,
-					isBackdropEnabled = settings.isBackdropEnabled,
+					isBackdropEnabled = isBackdropEnabled,
+					backdropBlurAmount = backdropBlurAmount,
 					style = settings.detailsUiMode,
 					topInset = with(density) { topInset.intValue.toDp() },
 					bottomContentPadding = with(density) { bottomInset.intValue.toDp() },

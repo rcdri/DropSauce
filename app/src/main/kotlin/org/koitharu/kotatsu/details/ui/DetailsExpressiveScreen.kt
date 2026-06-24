@@ -74,6 +74,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -96,6 +97,7 @@ import org.koitharu.kotatsu.core.model.getTitle
 import org.koitharu.kotatsu.core.model.isLocal
 import org.koitharu.kotatsu.core.model.titleResId
 import org.koitharu.kotatsu.core.prefs.DetailsUiMode
+import org.koitharu.kotatsu.core.ui.widgets.ChipsView
 import org.koitharu.kotatsu.core.parser.favicon.faviconUri
 import org.koitharu.kotatsu.core.util.FileSize
 import org.koitharu.kotatsu.core.util.ext.isRemoteCoverUrl
@@ -152,6 +154,7 @@ private val DETAIL_DOCK_RESERVE = 128.dp
 @Composable
 fun DetailsExpressiveScreen(
 	details: MangaDetails?,
+	tags: List<ChipsView.ChipModel>,
 	historyInfo: HistoryInfo,
 	isLoading: Boolean,
 	favouriteCount: Int,
@@ -164,6 +167,7 @@ fun DetailsExpressiveScreen(
 	coverUrl: String?,
 	backdropUrl: String?,
 	isBackdropEnabled: Boolean,
+	backdropBlurAmount: Int,
 	style: DetailsUiMode,
 	topInset: Dp,
 	bottomContentPadding: Dp,
@@ -195,6 +199,7 @@ fun DetailsExpressiveScreen(
 					manga = manga,
 					imageLoader = imageLoader,
 					surface = scheme.surface,
+					blurAmount = backdropBlurAmount,
 				)
 			}
 
@@ -244,7 +249,7 @@ fun DetailsExpressiveScreen(
 
 				DescriptionCard(description = details.description)
 
-				TagsSection(tags = manga.tags, accent = accentColor, onTagClick = actions.onTagClick)
+				TagsSection(tags = tags, accent = accentColor, onTagClick = actions.onTagClick)
 
 				if (scrobblings.isNotEmpty()) {
 					ScrobblingSection(
@@ -520,6 +525,7 @@ private fun ExpressiveBackdrop(
 	manga: Manga?,
 	imageLoader: ImageLoader,
 	surface: Color,
+	blurAmount: Int,
 ) {
 	val ctx = LocalContext.current
 	val request = remember(url, manga?.source) {
@@ -534,8 +540,13 @@ private fun ExpressiveBackdrop(
 			.fillMaxWidth()
 			.height(480.dp),
 	) {
-		val blurMod = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			Modifier.blur(40.dp)
+		val blurDp = when (blurAmount) {
+			0 -> 0.dp
+			1 -> 20.dp
+			else -> 40.dp
+		}
+		val blurMod = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurDp > 0.dp) {
+			Modifier.blur(blurDp)
 		} else {
 			Modifier
 		}
@@ -1280,7 +1291,7 @@ private fun DescriptionCard(description: CharSequence?) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TagsSection(tags: Set<MangaTag>, accent: Color, onTagClick: (MangaTag) -> Unit) {
+private fun TagsSection(tags: List<ChipsView.ChipModel>, accent: Color, onTagClick: (MangaTag) -> Unit) {
 	if (tags.isEmpty()) return
 	var expanded by rememberSaveable { mutableStateOf(false) }
 	val measurer = rememberTextMeasurer()
@@ -1303,7 +1314,7 @@ private fun TagsSection(tags: Set<MangaTag>, accent: Color, onTagClick: (MangaTa
 				var rows = 1
 				var rowWidth = 0f
 				for (tag in tags) {
-					val chipWidth = measurer.measure(tag.title, chipStyle).size.width + chipHorizontalPadding
+					val chipWidth = measurer.measure(tag.title?.toString().orEmpty(), chipStyle).size.width + chipHorizontalPadding
 					rowWidth = when {
 						rowWidth == 0f -> chipWidth
 						rowWidth + gap + chipWidth <= available -> rowWidth + gap + chipWidth
@@ -1339,15 +1350,17 @@ private fun TagsSection(tags: Set<MangaTag>, accent: Color, onTagClick: (MangaTa
 			// "colors from cover" is on) so they follow the active theme instead of the baseline
 			// secondary container, which renders purple under the default colour scheme.
 			tags.forEach { tag ->
+				val mangaTag = tag.data as? MangaTag
+				val warningColor = if (tag.tint != 0) colorResource(tag.tint) else null
 				Surface(
 					shape = RoundedCornerShape(15.dp),
-					color = accent.copy(alpha = 0.16f),
-					onClick = { onTagClick(tag) },
+					color = (warningColor ?: accent).copy(alpha = 0.16f),
+					onClick = { if (mangaTag != null) onTagClick(mangaTag) },
 				) {
 					Text(
-						text = tag.title,
+						text = tag.title?.toString().orEmpty(),
 						style = MaterialTheme.typography.labelLarge,
-						color = accent,
+						color = warningColor ?: accent,
 						modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
 					)
 				}
