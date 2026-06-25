@@ -108,8 +108,13 @@ class ChaptersFragment :
 				captureScrollForReverse()
 			}
 		}
-		viewModel.chapters
-			.map { it.withVolumeHeaders(requireContext()) }
+		kotlinx.coroutines.flow.combine(
+			viewModel.chapters,
+			viewModel.chaptersQuery,
+			viewModel.isDownloadedOnly
+		) { list, query, downloadedOnly ->
+			list.withVolumeHeaders(requireContext(), showMissingChapters = query.isEmpty() && !downloadedOnly)
+		}
 			.flowOn(Dispatchers.Default)
 			.observe(viewLifecycleOwner, this::onChaptersChanged)
 		viewModel.quickFilter.observe(viewLifecycleOwner, this::onFilterChanged)

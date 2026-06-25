@@ -1551,11 +1551,18 @@ private fun RelatedSection(
 		// the related list is still settling after an async load — guard against that to avoid an
 		// IndexOutOfBounds crash; the slot fills in on the next recomposition.
 		val item = items.getOrNull(i) ?: return@HorizontalMultiBrowseCarousel
+		val context = LocalContext.current
 		Column(
 			modifier = Modifier.clickable { onItemClick(item) },
 		) {
 			AsyncImage(
-				model = item.coverUrl,
+				model = remember(item.coverUrl, item.source) {
+					ImageRequest.Builder(context)
+						.data(item.coverUrl)
+						.crossfade(true)
+						.mangaSourceExtra(item.source)
+						.build()
+				},
 				imageLoader = imageLoader,
 				contentDescription = null,
 				contentScale = ContentScale.Crop,
