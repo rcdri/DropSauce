@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.activityViewModels
+import android.content.res.Configuration
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import dagger.hilt.android.AndroidEntryPoint
@@ -149,9 +150,29 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
     private fun expandToContent() {
         val b = behavior ?: return
         if (b is AdaptiveSheetBehavior.Bottom) {
-            b.isFitToContents = true
+            if (isLandscape()) {
+                b.isFitToContents = false
+                val sheet = dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                if (sheet != null) {
+                    sheet.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+                }
+            } else {
+                b.isFitToContents = true
+            }
+        } else if (b is AdaptiveSheetBehavior.Side) {
+            val sheet = dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                ?: dialog?.findViewById<View>(com.google.android.material.R.id.m3_side_sheet)
+            if (sheet != null) {
+                val displayWidth = resources.displayMetrics.widthPixels
+                sheet.layoutParams.width = (displayWidth * 0.5).toInt()
+                sheet.requestLayout()
+            }
         }
         b.state = AdaptiveSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun isLandscape(): Boolean {
+        return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
 
     override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
@@ -956,11 +977,15 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
             modifier = modifier.height(96.dp),
         ) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
                         painter = painterResource(icon),
@@ -968,12 +993,14 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                         modifier = Modifier.size(28.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
