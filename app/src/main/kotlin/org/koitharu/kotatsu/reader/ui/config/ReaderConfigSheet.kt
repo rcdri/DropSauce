@@ -380,8 +380,8 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val tabs = listOf(
-                            "Read Mode" to (R.drawable.ic_reader_ltr to 0),
-                            "Tools" to (R.drawable.ic_settings to 1)
+                            "Read Mode" to (R.drawable.ic_book_page to 0),
+                            "Tools" to (R.drawable.ic_grid to 1)
                         )
                         tabs.forEach { (title, pair) ->
                             val (iconRes, index) = pair
@@ -485,6 +485,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
             ReaderMode.VERTICAL to (R.string.vertical to R.drawable.ic_reader_vertical),
             ReaderMode.WEBTOON to (R.string.webtoon to R.drawable.ic_script),
         )
+        val selectedIndex = modes.indexOfFirst { it.first == selectedMode }.coerceAtLeast(0)
 
         Column(
             modifier = Modifier
@@ -492,55 +493,81 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Custom segmented row
             Surface(
                 shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(72.dp)
                         .padding(6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    modes.forEach { (mode, pair) ->
-                        val (labelRes, iconRes) = pair
-                        val isSelected = selectedMode == mode
-                        val containerColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            label = "segment_bg",
-                        )
-                        val contentColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            label = "segment_fg",
-                        )
+                    val targetBias = when (selectedIndex) {
+                        0 -> -1f
+                        1 -> -1f / 3f
+                        2 -> 1f / 3f
+                        3 -> 1f
+                        else -> -1f
+                    }
+                    val animatedBias by animateFloatAsState(
+                        targetValue = targetBias,
+                        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                        label = "mode_highlighter",
+                    )
 
-                        Surface(
-                            onClick = { onModeSelected(mode) },
-                            shape = RoundedCornerShape(20.dp),
-                            color = containerColor,
-                            contentColor = contentColor,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.25f)
+                            .align(BiasAlignment(horizontalBias = animatedBias, verticalBias = 0f))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        modes.forEachIndexed { index, (mode, pair) ->
+                            val (labelRes, iconRes) = pair
+                            val isSelected = selectedMode == mode
+                            val contentColor by animateColorAsState(
+                                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                label = "segment_fg_$index",
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable(
+                                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                        indication = null,
+                                    ) { onModeSelected(mode) },
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Icon(
-                                    painter = painterResource(iconRes),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(labelRes),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                ) {
+                                    Icon(
+                                        painter = painterResource(iconRes),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = contentColor,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(labelRes),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        color = contentColor,
+                                    )
+                                }
                             }
                         }
                     }
@@ -714,21 +741,20 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Row 1: Save Page, Rotation (Squares)
+            // Row 1: Save Page, Rotation (Pills)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                ToolGridCard(
+                ToolPillCard(
                     icon = R.drawable.ic_save,
                     label = stringResource(R.string.save_page),
                     onClick = onSaveClick,
                     modifier = Modifier.weight(1f),
                 )
-                ToolGridCard(
+                ToolPillCard(
                     icon = rotationIcon,
                     label = stringResource(rotationTitle),
-                    checked = isRotationChecked,
                     onClick = onOrientationClick,
                     modifier = Modifier.weight(1f),
                 )
@@ -753,7 +779,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                 )
             }
 
-            // Row 3: Settings Card (Wide) | Bookmark Button (Square on the right)
+            // Row 3: Settings Card (Wide) | Bookmark Button (Round)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -770,7 +796,9 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                     label = null,
                     checked = isBookmarkAdded,
                     onClick = onBookmarkClick,
-                    modifier = Modifier.width(96.dp),
+                    modifier = Modifier.size(96.dp),
+                    shape = CircleShape,
+                    iconSize = 36.dp,
                 )
             }
         }
@@ -857,6 +885,8 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
         checked: Boolean = false,
         onClick: () -> Unit,
         modifier: Modifier = Modifier,
+        shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(24.dp),
+        iconSize: androidx.compose.ui.unit.Dp = 28.dp,
     ) {
         val containerColor = if (checked) {
             MaterialTheme.colorScheme.primaryContainer
@@ -878,7 +908,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
 
         Surface(
             onClick = onClick,
-            shape = RoundedCornerShape(24.dp),
+            shape = shape,
             color = containerColor,
             contentColor = contentColor,
             modifier = modifier.height(96.dp),
@@ -893,7 +923,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = label,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(iconSize),
                     tint = iconColor,
                 )
                 if (label != null) {
@@ -905,6 +935,45 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun ToolPillCard(
+        icon: Int,
+        label: String,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(48.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            modifier = modifier.height(96.dp),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = label,
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
                     )
                 }
             }
