@@ -1,10 +1,12 @@
 package org.koitharu.kotatsu.settings.about
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -70,11 +72,29 @@ import org.koitharu.kotatsu.settings.compose.BaseComposeSettingsFragment
 import org.koitharu.kotatsu.settings.compose.DropSauceTheme
 import org.koitharu.kotatsu.settings.compose.SettingsGroup
 import org.koitharu.kotatsu.settings.compose.SettingsScaffold
+import org.koitharu.kotatsu.settings.compose.SwitchSettingsItem
 
 @AndroidEntryPoint
 class AboutSettingsFragment : BaseComposeSettingsFragment(R.string.about) {
 
 	private val viewModel by viewModels<AboutSettingsViewModel>()
+
+	private var pendingLogContent: String? = null
+
+	private val saveLogLauncher = registerForActivityResult(
+		ActivityResultContracts.CreateDocument("text/plain"),
+	) { uri: Uri? ->
+		val content = pendingLogContent ?: return@registerForActivityResult
+		pendingLogContent = null
+		if (uri == null) return@registerForActivityResult
+		try {
+			requireContext().contentResolver.openOutputStream(uri)?.use { output ->
+				output.write(content.toByteArray(Charsets.UTF_8))
+			}
+		} catch (_: Exception) {
+			Snackbar.make(requireView(), R.string.error_occurred, Snackbar.LENGTH_SHORT).show()
+		}
+	}
 
 	override fun onCreateView(
 		inflater: LayoutInflater,
@@ -86,13 +106,16 @@ class AboutSettingsFragment : BaseComposeSettingsFragment(R.string.about) {
 			DropSauceTheme {
 				val isUpdateSupported by viewModel.isUpdateSupported.collectAsState()
 				val isLoading by viewModel.isLoading.collectAsState()
+				val isVerboseLogging by viewModel.isVerboseLogging.collectAsState()
 				AboutScreen(
 					appVersion = BuildConfig.VERSION_NAME,
 					checkUpdatesEnabled = isUpdateSupported && !isLoading,
+					isVerboseLogging = isVerboseLogging,
 					onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
 					onCheckUpdates = viewModel::checkForUpdates,
 					onChangelog = ::openChangelog,
 					onOpenLink = ::openLink,
+					onVerboseLoggingToggle = viewModel::setVerboseLogging,
 				)
 			}
 		}
@@ -101,6 +124,10 @@ class AboutSettingsFragment : BaseComposeSettingsFragment(R.string.about) {
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 		viewModel.onUpdateAvailable.observeEvent(viewLifecycleOwner, ::onUpdateAvailable)
+		viewModel.onExportLog.observeEvent(viewLifecycleOwner) { content ->
+			pendingLogContent = content
+			saveLogLauncher.launch("dropsauce_log_${System.currentTimeMillis()}.txt")
+		}
 	}
 
 	private fun openChangelog() {
@@ -135,10 +162,12 @@ class AboutSettingsFragment : BaseComposeSettingsFragment(R.string.about) {
 private fun AboutScreen(
 	appVersion: String,
 	checkUpdatesEnabled: Boolean,
+	isVerboseLogging: Boolean,
 	onBack: () -> Unit,
 	onCheckUpdates: () -> Unit,
 	onChangelog: () -> Unit,
 	onOpenLink: (urlRes: Int, titleRes: Int) -> Unit,
+	onVerboseLoggingToggle: (Boolean) -> Unit,
 ) {
 	val ctx = LocalContext.current
 	SettingsScaffold(title = stringResource(R.string.about), onBack = onBack) {
@@ -197,6 +226,25 @@ private fun AboutScreen(
 						icon = R.drawable.ic_discord,
 						shape = pos.shape,
 						onClick = { onOpenLink(R.string.url_discord_web, R.string.discord) },
+					)
+				}
+			}
+		}
+		item { Spacer(Modifier.height(8.dp).fillMaxWidth()) }
+		item {
+			SettingsGroup(title = "Diagnostics") {
+				item { pos ->
+					SwitchSettingsItem(
+						title = "Verbose logging",
+						subtitle = if (isVerboseLogging) {
+							"Recording — turn off to save log as .txt"
+						} else {
+							"Off by default to preserve performance"
+						},
+						icon = R.drawable.ic_script,
+						shape = pos.shape,
+						checked = isVerboseLogging,
+						onCheckedChange = onVerboseLoggingToggle,
 					)
 				}
 			}
