@@ -5,6 +5,7 @@ adapterdelegates = "4.3.2"
 appcompat = "1.7.1"
 avifDecoder = "1.1.1.14d8e3c4"
 biometric = "1.4.0-alpha06"
+browser = "1.8.0"
 coil = "3.4.0"
 collections = "1.6.0"
 constraintlayout = "2.2.1"
@@ -64,6 +65,7 @@ adapterdelegates-viewbinding = { module = "com.hannesdorfmann:adapterdelegates4-
 androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 androidx-collection = { module = "androidx.collection:collection-ktx", version.ref = "collections" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
