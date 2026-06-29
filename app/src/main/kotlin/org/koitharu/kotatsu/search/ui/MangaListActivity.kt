@@ -287,7 +287,9 @@ class MangaListActivity :
 					// The real sort lives inside the Mihon FilterList (encoded as a "srt@" tag); show its
 					// value on the button and only count non-sort tags towards the "filter applied" badge.
 					val sortTag = snapshot.listFilter.tags.firstOrNull { it.key.startsWith(MihonFilterMapper.SORT_KEY_PREFIX) }
-					chipSort.text = sortTag?.title?.substringAfter(": ") ?: getString(snapshot.sortOrder.titleRes)
+					chipSort.text = sortTag?.title?.substringAfter(": ")
+						?: snapshot.defaultSortLabel
+						?: getString(snapshot.sortOrder.titleRes)
 					chipSort.isVisible = true
 					filterBadge.counter = if (snapshot.listFilter.tags.any { !it.key.startsWith(MihonFilterMapper.SORT_KEY_PREFIX) }) 1 else 0
 				} else {

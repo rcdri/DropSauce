@@ -27,7 +27,7 @@ class FaviconView @JvmOverloads constructor(
 
 	@StyleRes
 	private var iconStyle: Int = R.style.FaviconDrawable
-	private val defaultBackground: Drawable? by lazy(LazyThreadSafetyMode.NONE) { background }
+	private val defaultBackground: Drawable? = background
 
 	init {
 		context.withStyledAttributes(attrs, R.styleable.FaviconView, defStyleAttr) {
@@ -48,17 +48,15 @@ class FaviconView @JvmOverloads constructor(
 		val fallbackFactory: (ImageRequest) -> Image? = {
 			FaviconDrawable(context, iconStyle, mangaSource.name).asImage()
 		}
-		val placeholderFactory: (ImageRequest) -> Image? = if (context.isAnimationsEnabled) {
-			{ AnimatedFaviconDrawable(context, iconStyle, mangaSource.name).asImage() }
-		} else {
-			fallbackFactory
-		}
+		// Use the current drawable as placeholder so recycled cells don't flash blank, and
+		// fresh cells show nothing (better than the letter-box artifact on fast local loads).
+		val currentImage = drawable?.asImage()
 		return enqueueRequest(
 			newRequestBuilder()
 				.data(mangaSource.faviconUri())
 				.error(fallbackFactory)
 				.fallback(fallbackFactory)
-				.placeholder(placeholderFactory)
+				.apply { if (currentImage != null) placeholder(currentImage) }
 				.mangaSourceExtra(mangaSource)
 				.suppressCaptchaErrors()
 				.build(),

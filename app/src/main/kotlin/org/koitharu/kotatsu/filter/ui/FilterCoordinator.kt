@@ -74,6 +74,7 @@ class FilterCoordinator @Inject constructor(
 
     private val currentListFilter = MutableStateFlow(restoreSortFilter())
     private val currentSortOrder = MutableStateFlow(repository.defaultSortOrder)
+    private val defaultDynamicSortLabel = MutableStateFlow<String?>(null)
 
     private val availableSortOrders = repository.sortOrders
     private val filterOptions = suspendLazy { repository.getFilterOptions() }
@@ -306,6 +307,21 @@ class FilterCoordinator @Inject constructor(
                     sourceSettings.lastSortTagTitle = sortTag?.title
                 }
                 .launchIn(coroutineScope)
+            // Load the source's own default sort option name so the chip can show it instead of the
+            // generic "Popular" fallback when no explicit sort has been chosen yet.
+            coroutineScope.launch {
+                val host = filterHost ?: return@launch
+                val defaults = host.loadDefaultFilterList()
+                defaultDynamicSortLabel.value = when (val ref = MihonFilterMapper.findSortFilter(defaults)) {
+                    is MihonFilterMapper.SortRef.OfSort -> {
+                        val idx = ref.filter.state?.index ?: 0
+                        ref.filter.values.getOrNull(idx)?.toString()
+                    }
+                    is MihonFilterMapper.SortRef.OfSelect ->
+                        ref.filter.values.getOrNull(ref.filter.state)?.toString()
+                    null -> null
+                }
+            }
         }
     }
 
@@ -411,9 +427,12 @@ class FilterCoordinator @Inject constructor(
     fun snapshot() = Snapshot(
         sortOrder = currentSortOrder.value,
         listFilter = currentListFilter.value,
+        defaultSortLabel = defaultDynamicSortLabel.value,
     )
 
-    fun observe(): Flow<Snapshot> = combine(currentSortOrder, currentListFilter, ::Snapshot)
+    fun observe(): Flow<Snapshot> = combine(currentSortOrder, currentListFilter, defaultDynamicSortLabel) { order, filter, label ->
+        Snapshot(order, filter, label)
+    }
 
     fun setSortOrder(newSortOrder: SortOrder) {
         currentSortOrder.value = newSortOrder
@@ -641,6 +660,7 @@ class FilterCoordinator @Inject constructor(
     data class Snapshot(
         val sortOrder: SortOrder,
         val listFilter: MangaListFilter,
+        val defaultSortLabel: String? = null,
     )
 
     /** A fresh pair of Mihon filter lists: the user-editable [working] copy and the [defaults] baseline. */
