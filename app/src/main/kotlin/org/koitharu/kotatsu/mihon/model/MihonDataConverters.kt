@@ -41,9 +41,10 @@ fun SManga.toManga(
 		httpSource?.getMangaUrl(this).orEmpty().ifBlank { resolveUrl(baseUrl, safeUrl) ?: safeUrl }
 	}
 
-	// Determine NSFW status from source flag or genres
+	// An extension's NSFW flag describes its catalogue, not every manga it contains.
+	// Only title-level metadata should determine the manga's content rating.
 	val adultGenres = setOf("adult", "hentai", "18+", "nsfw", "mature", "ecchi")
-	val isContentNsfw = source.isNsfw || safeGenres?.any { it.lowercase() in adultGenres } == true
+	val isContentNsfw = safeGenres?.any { it.trim().lowercase() in adultGenres } == true
 
 	return Manga(
 		id = stableId(source.name, "manga", safeUrl),
