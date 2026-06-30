@@ -109,6 +109,9 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 			}
 		}
 
+	val onboardingInstallTime: Long
+		get() = runCatching { onboardingInstallIdFile.lastModified() }.getOrDefault(0L)
+
 	var mainNavItems: List<NavItem>
 		get() {
 			val raw = prefs.getString(KEY_NAV_MAIN, null)?.split(',')

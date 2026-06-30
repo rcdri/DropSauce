@@ -15,6 +15,7 @@ import org.koitharu.kotatsu.local.data.LocalMangaRepository
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.util.findById
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
+import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.tracker.domain.model.MangaTracking
 import org.koitharu.kotatsu.tracker.domain.model.MangaUpdates
 import java.time.Instant
@@ -27,6 +28,7 @@ class CheckNewChaptersUseCase @Inject constructor(
 	private val historyRepository: HistoryRepository,
 	private val mangaRepositoryFactory: MangaRepository.Factory,
 	private val localMangaRepository: LocalMangaRepository,
+	private val settings: AppSettings,
 ) {
 
 	private val mutex = MultiMutex<Long>()
@@ -117,15 +119,24 @@ class CheckNewChaptersUseCase @Inject constructor(
 		}
 	}
 
-	/**
-	 * The main functionality of tracker: check new chapters in [manga] comparing to the [track]
-	 */
 	private fun compare(track: MangaTracking, manga: Manga, branch: String?): MangaUpdates.Success {
-		if (track.isEmpty()) {
-			// first check or manga was empty on last check
-			return MangaUpdates.Success(manga, branch, emptyList(), isValid = false)
-		}
 		val chapters = requireNotNull(manga.getChapters(branch))
+		val installTime = settings.onboardingInstallTime
+		val lastCheckTime = track.lastCheck?.toEpochMilli() ?: installTime
+
+		if (track.isEmpty()) {
+			val newChapters = if (lastCheckTime > 0L) {
+				chapters.filter { x -> x.uploadDate > lastCheckTime }
+			} else {
+				emptyList()
+			}
+			return MangaUpdates.Success(
+				manga = manga,
+				branch = branch,
+				newChapters = newChapters,
+				isValid = newChapters.isNotEmpty(),
+			)
+		}
 		if (BuildConfig.DEBUG && chapters.findById(track.lastChapterId) == null) {
 			Log.e("Tracker", "Chapter ${track.lastChapterId} not found")
 		}
@@ -141,7 +152,12 @@ class CheckNewChaptersUseCase @Inject constructor(
 			}
 
 			newChapters.size == chapters.size -> {
-				MangaUpdates.Success(manga, branch, emptyList(), isValid = false)
+				val fallbackChapters = if (lastCheckTime > 0L) {
+					chapters.filter { x -> x.uploadDate > lastCheckTime }
+				} else {
+					emptyList()
+				}
+				MangaUpdates.Success(manga, branch, fallbackChapters, isValid = fallbackChapters.isNotEmpty())
 			}
 
 			else -> {

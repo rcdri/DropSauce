@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
+import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
@@ -49,6 +50,7 @@ class FeedViewModel @Inject constructor(
 	private val scheduler: TrackWorker.Scheduler,
 	private val mangaListMapper: MangaListMapper,
 	private val quickFilter: UpdatesListQuickFilter,
+	private val db: MangaDatabase,
 ) : BaseViewModel(), QuickFilterListener by quickFilter {
 
 	private val limit = MutableStateFlow(PAGE_SIZE)
@@ -65,16 +67,27 @@ class FeedViewModel @Inject constructor(
 		combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
 			.flatMapLatest { repository.observeAllTracks(it.first, it.second) }
 			.mapLatest { tracks ->
-				tracks.map { track ->
-					TrackingLogItem(
+				val result = ArrayList<TrackingLogItem>(tracks.size)
+				for (track in tracks) {
+					val date = track.lastChapterDate ?: track.lastCheck ?: java.time.Instant.EPOCH
+					val isToday = calculateTimeAgo(date).let { it == DateTimeAgo.Today || it == DateTimeAgo.JustNow }
+					val showTotal = !isToday && track.newChapters == 0
+					val count = if (showTotal) {
+						db.getChaptersDao().getChaptersCount(track.manga.id)
+					} else {
+						track.newChapters
+					}
+					result += TrackingLogItem(
 						id = -track.manga.id,
 						manga = track.manga,
 						chapters = emptyList(),
-						createdAt = track.lastChapterDate ?: track.lastCheck ?: java.time.Instant.EPOCH,
+						createdAt = date,
 						isNew = track.newChapters > 0,
-						count = track.newChapters,
+						count = count,
+						showTotal = showTotal,
 					)
 				}
+				result
 			},
 	) { filters, list ->
 		val result = ArrayList<ListModel>((list.size * 1.4).toInt().coerceAtLeast(3))
