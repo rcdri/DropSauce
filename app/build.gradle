@@ -76,9 +76,9 @@ android {
 			exclude 'META-INF/NOTICE.md'
 		}
 		jniLibs {
-			// Modern packaging keeps 16 KB-compatible native libraries uncompressed and
-			// page-aligned. Legacy packaging made Android report aligned Mihon decoders
-			// as incompatible and left the old QuickJS binary unusable on 16 KB devices.
+			// GitHub releases are universal APKs, so compress native libraries to avoid
+			// shipping every ABI at its full on-disk size. Android extracts them at install.
+			useLegacyPackaging = true
 			keepDebugSymbols += [
 				'**/libandroidx.graphics.path.so',
 				'**/libavif_android.so',
