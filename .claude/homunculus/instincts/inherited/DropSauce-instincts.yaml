@@ -1,0 +1,340 @@
+# Instincts generated from https://github.com/HuzaifaKhalid1311/DropSauce
+# Generated: 2026-06-30T08:31:24.662Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: DropSauce-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix
+
+## Evidence
+
+- 5 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: implement feed screen view model and date-based grouping for tracked manga updates, fix: preserve feed clear and tracked sources
+
+---
+id: DropSauce-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Commit Length
+
+## Action
+
+Keep commit messages concise (~49 characters)
+
+## Evidence
+
+- Average commit message length: 49 chars
+- Based on 5 commits
+
+---
+id: DropSauce-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: DropSauce-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: DropSauce-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: DropSauce-workflow-feature-development-with-viewmodel-and-domain-layer
+trigger: "when doing feature development with viewmodel and domain layer"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Workflow Feature Development With Viewmodel And Domain Layer
+
+## Action
+
+Follow the feature-development-with-viewmodel-and-domain-layer workflow:
+1. Update or create domain models and use cases
+2. Modify or add DAO/data access classes
+3. Update repository logic
+4. Implement or update ViewModel for UI
+5. Add or update UI adapters and models
+6. Update supporting utility or mapping classes
+7. Modify resource files if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/model/*.kt, app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/*.kt, app/src/main/kotlin/org/koitharu/kotatsu/tracker/data/*.kt
+
+---
+id: DropSauce-workflow-bugfix-across-domain-repository-and-viewmodel
+trigger: "when doing bugfix across domain repository and viewmodel"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/HuzaifaKhalid1311/DropSauce
+---
+
+# DropSauce Workflow Bugfix Across Domain Repository And Viewmodel
+
+## Action
+
+Follow the bugfix-across-domain-repository-and-viewmodel workflow:
+1. Update repository logic to fix bug
+2. Modify DAO/data access classes as needed
+3. Update ViewModel to ensure correct UI state
+4. Adjust settings or preferences if relevant
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/src/main/kotlin/org/koitharu/kotatsu/tracker/data/*.kt, app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/*.kt, app/src/main/kotlin/org/koitharu/kotatsu/tracker/ui/feed/FeedViewModel.kt
+
+---
+id: dropsauce-instinct-kotlin-naming
+trigger: "When creating or renaming files, classes, functions, or constants in Kotlin code"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Kotlin Naming
+
+## Action
+
+Use PascalCase for files and classes, camelCase for functions, and SCREAMING_SNAKE_CASE for constants
+
+## Evidence
+
+- Pattern in naming conventions: files (PascalCase), functions (camelCase), classes (PascalCase), constants (SCREAMING_SNAKE_CASE)
+- Seen in files: app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/model/*.kt
+
+---
+id: dropsauce-instinct-kotlin-imports
+trigger: "When importing modules or classes in Kotlin code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Kotlin Imports
+
+## Action
+
+Use relative imports rather than absolute imports
+
+## Evidence
+
+- Pattern in codeStyle: importStyle is relative
+- Seen in: app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/*.kt
+
+---
+id: dropsauce-instinct-kotlin-exports
+trigger: "When exporting functions or classes in Kotlin code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Kotlin Exports
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle: exportStyle is named
+- Seen in: app/src/main/kotlin/org/koitharu/kotatsu/tracker/domain/*.kt
+
+---
+id: dropsauce-instinct-git-commit-format
+trigger: "When writing a git commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Git Commit Format
+
+## Action
+
+Use the Conventional Commits format with 'feat:' or 'fix:' prefixes for features and bugfixes, followed by a concise description
+
+## Evidence
+
+- Seen in commit: 'feat: implement feed screen view model and date-based grouping for tracked manga updates'
+- Seen in commit: 'fix: preserve feed clear and tracked sources'
+
+---
+id: dropsauce-instinct-git-commit-length
+trigger: "When composing a git commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Git Commit Length
+
+## Action
+
+Keep the commit message around 50 characters on average
+
+## Evidence
+
+- Pattern: average commit message length is 49
+- Seen in commit examples
+
+---
+id: dropsauce-instinct-feature-workflow
+trigger: "When adding a new tracked feature or feed functionality"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Feature Workflow
+
+## Action
+
+Follow the workflow: update/create domain models and use cases, modify/add DAO/data access classes, update repository logic, implement/update ViewModel for UI, add/update UI adapters and models, update supporting utility/mapping classes, and modify resource files if needed
+
+## Evidence
+
+- Workflow 'feature-development-with-viewmodel-and-domain-layer' documented
+- Seen in commit sequences and involved files
+
+---
+id: dropsauce-instinct-bugfix-workflow
+trigger: "When fixing a bug affecting tracked data or feed presentation"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Bugfix Workflow
+
+## Action
+
+Update repository logic to fix the bug, modify DAO/data access classes as needed, update ViewModel to ensure correct UI state, and adjust settings or preferences if relevant
+
+## Evidence
+
+- Workflow 'bugfix-across-domain-repository-and-viewmodel' documented
+- Seen in commit sequences and involved files
+
+---
+id: dropsauce-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Test Location
+
+## Action
+
+Place tests in the same folder as the code they test (mixed location), not in a separate test directory
+
+## Evidence
+
+- Pattern in architecture: testLocation is 'mixed'
+- Seen in folder structure
+
+---
+id: dropsauce-instinct-test-style
+trigger: "When writing tests for Kotlin code"
+confidence: 0.6
+domain: testing
+source: repo-analysis
+source_repo: HuzaifaKhalid1311/DropSauce
+---
+
+# Dropsauce Instinct Test Style
+
+## Action
+
+Follow Kotlin conventions for test naming and structure, matching the naming conventions of the code under test
+
+## Evidence
+
+- Pattern inferred from codeStyle and testLocation
+- No explicit test files given, but consistent naming conventions observed
+
