@@ -54,51 +54,80 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 		if (!shizukuInstaller.awaitReady()) {
 			return@withContext Result.retry()
 		}
-		val repoUrl = settings.externalExtensionsRepoUrl ?: return@withContext Result.success()
 
 		try {
 			val installed = extensionLoader.getInstalledExtensions(applicationContext)
 				.associateBy { it.pkgName }
-			val updates = repoRepository.getExtensions(repoUrl, forceRefresh = true)
-				.filter { entry ->
-					installed[entry.packageName]?.let(entry::isNewerThan) == true
+			if (installed.isEmpty()) return@withContext Result.success()
+
+			// Update each extension from the repo it was installed from, not just the active one, so
+			// extensions from every repo the user has used keep updating. Un-attributed packages
+			// (installed before provenance tracking, or restored from backup) fall back to the active repo.
+			val provenance = settings.getExtensionRepoUrls()
+			val activeRepo = settings.externalExtensionsRepoUrl
+			val pkgsByRepo = installed.values
+				.groupBy { info ->
+					// Attribute by signing fingerprint first (authoritative, survives reinstalls),
+					// then install-time provenance, then the active repo as a last resort.
+					settings.findRepoInfoBySignatures(info.signatures)?.url
+						?: provenance[info.pkgName]
+						?: activeRepo
 				}
-				.sortedBy { it.name.lowercase() }
-			if (updates.isEmpty()) return@withContext Result.success()
+				.filterKeys { !it.isNullOrBlank() }
+				.mapValues { (_, infos) -> infos.map { it.pkgName } }
+			if (pkgsByRepo.isEmpty()) return@withContext Result.success()
 
 			val downloadDir = File(applicationContext.cacheDir, "extension_updates").apply { mkdirs() }
 			var installedAny = false
 			var retryNeeded = false
 			var permanentFailure = false
-			for (entry in updates) {
-				if (isStopped) break
-				val apk = File(downloadDir, "${entry.packageName}-${entry.versionCode}.apk")
-				try {
-					download(repoRepository.resolveApkUrl(repoUrl, entry.apkName), apk)
-					when (val installResult = shizukuInstaller.install(apk, entry.packageName)) {
-						ShizukuExtensionInstaller.InstallResult.Success -> installedAny = true
-						ShizukuExtensionInstaller.InstallResult.Unavailable -> {
-							retryNeeded = true
-							break
+			repoLoop@ for ((repoUrl, pkgNames) in pkgsByRepo) {
+				val nonNullRepoUrl = repoUrl ?: continue@repoLoop
+				val wanted = pkgNames.toHashSet()
+				val updates = try {
+					repoRepository.getExtensions(nonNullRepoUrl, forceRefresh = true)
+						.filter { entry ->
+							entry.packageName in wanted &&
+								installed[entry.packageName]?.let(entry::isNewerThan) == true
 						}
-						ShizukuExtensionInstaller.InstallResult.InvalidPackage -> {
-							permanentFailure = true
-							Log.e(TAG, "Downloaded APK has the wrong package for ${entry.packageName}")
-						}
-						is ShizukuExtensionInstaller.InstallResult.Failure -> {
-							Log.e(TAG, "Failed to update ${entry.packageName}: ${installResult.message}")
-							if (
-								installResult.status == null ||
-								installResult.status == PackageInstaller.STATUS_FAILURE_TIMEOUT
-							) {
+						.sortedBy { it.name.lowercase() }
+				} catch (_: IOException) {
+					// One unreachable repo shouldn't block updates for the others.
+					retryNeeded = true
+					continue@repoLoop
+				}
+				for (entry in updates) {
+					if (isStopped) break@repoLoop
+					val apk = File(downloadDir, "${entry.packageName}-${entry.versionCode}.apk")
+					try {
+						download(repoRepository.resolveApkUrl(nonNullRepoUrl, entry.apkName), apk)
+						when (val installResult = shizukuInstaller.install(apk, entry.packageName)) {
+							ShizukuExtensionInstaller.InstallResult.Success -> installedAny = true
+							ShizukuExtensionInstaller.InstallResult.Unavailable -> {
 								retryNeeded = true
-							} else {
+								break@repoLoop
+							}
+							ShizukuExtensionInstaller.InstallResult.InvalidPackage -> {
 								permanentFailure = true
+								Log.e(TAG, "Downloaded APK has the wrong package for ${entry.packageName}")
+							}
+							is ShizukuExtensionInstaller.InstallResult.Failure -> {
+								Log.e(TAG, "Failed to update ${entry.packageName}: ${installResult.message}")
+								if (
+									installResult.status == null ||
+									installResult.status == PackageInstaller.STATUS_FAILURE_TIMEOUT
+								) {
+									retryNeeded = true
+								} else {
+									permanentFailure = true
+								}
 							}
 						}
+					} catch (_: IOException) {
+						retryNeeded = true
+					} finally {
+						apk.delete()
 					}
-				} finally {
-					apk.delete()
 				}
 			}
 			if (installedAny) extensionManager.loadExtensions()
@@ -108,8 +137,6 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 				permanentFailure && !installedAny -> Result.failure()
 				else -> Result.success()
 			}
-		} catch (_: IOException) {
-			Result.retry()
 		} catch (e: Exception) {
 			Log.e(TAG, "Extension auto-update failed", e)
 			Result.failure()

@@ -42,4 +42,6 @@ data class MihonExtensionInfo(
 	val isNsfw: Boolean,
 	val sourceClassName: String,
 	val apkPath: String,
+	/** SHA-256 of the APK signing certs, matched against a repo's signingKeyFingerprint to attribute it. */
+	val signatures: List<String> = emptyList(),
 )

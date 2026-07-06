@@ -20,6 +20,7 @@ import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.extensions.runtime.getExternalExtensionLanguageDisplayName
+import org.koitharu.kotatsu.extensions.runtime.getExternalExtensionRepoDisplayName
 import org.koitharu.kotatsu.explore.data.MangaSourcesRepository
 import org.koitharu.kotatsu.list.ui.model.ListModel
 import org.koitharu.kotatsu.list.ui.model.LoadingState
@@ -194,6 +195,8 @@ class SourcesCatalogViewModel @Inject constructor(
 						onShowMessage.call(R.string.nothing_found)
 						return@launchJob
 					}
+					// Remember which repo this extension came from so it keeps updating from here.
+					settings.setExtensionRepoUrl(item.packageName, repoUrl)
 					emitInstallRequests(
 						listOf(
 							InstallRequest(
@@ -222,6 +225,7 @@ class SourcesCatalogViewModel @Inject constructor(
 			}
 			emitInstallRequests(
 				updateEntries.map { entry ->
+					settings.setExtensionRepoUrl(entry.packageName, repoUrl)
 					InstallRequest(
 						packageName = entry.packageName,
 						url = externalRepoRepository.resolveApkUrl(repoUrl, entry.apkName),
@@ -256,9 +260,13 @@ class SourcesCatalogViewModel @Inject constructor(
 
 	private suspend fun getUpdatableEntries(repoUrl: String): List<ExternalExtensionRepoEntry> {
 		val installedByPkg = mihonExtensionLoader.getInstalledExtensions(appContext).associateBy { it.pkgName }
+		val activeRepoFingerprint = settings.findRepoInfoByUrl(repoUrl)?.fingerprint
 		return getAvailableEntries(repoUrl, forceRefresh = false)
 			.filter { entry ->
 				val local = installedByPkg[entry.packageName] ?: return@filter false
+				// Only update extensions this repo actually signed — skip same-package extensions
+				// installed from a different repo (different signer, uninstallable update).
+				if (activeRepoFingerprint != null && activeRepoFingerprint !in local.signatures) return@filter false
 				entry.isNewerThan(local)
 			}
 			.sortedBy { it.name.lowercase() }
@@ -287,7 +295,23 @@ class SourcesCatalogViewModel @Inject constructor(
 		val available = availableResult.getOrDefault(emptyList())
 		availableRepoEntries.value = available
 
+		// Pull the active repo's authoritative name + signing fingerprint once (or on refresh) so
+		// installed extensions can be attributed to it by signature. Best-effort — repos without a
+		// repo.json just fall back to URL-derived naming below.
+		if (!repoUrl.isNullOrBlank() && (forceRefresh || settings.externalRepoInfos.none { it.url == repoUrl })) {
+			runCatching { externalRepoRepository.fetchRepoInfo(repoUrl) }.getOrNull()?.let(settings::putExternalRepoInfo)
+		}
+
+		// The active repo's signing fingerprint. An entry from this repo can only update/replace an
+		// installed extension that this repo actually signed — a same-package extension from a different
+		// repo has a different signer, so Android would reject the install. Null = fingerprint unknown
+		// (repo has no repo.json), in which case we fall back to package-name matching as before.
+		val activeRepoFingerprint = repoUrl?.let { settings.findRepoInfoByUrl(it)?.fingerprint }
+
 		val installed = mihonExtensionLoader.getInstalledExtensions(appContext).associateBy { it.pkgName }
+		// Backfill provenance for extensions installed before it was tracked: if the active repo lists
+		// the package, attribute it here — a valid update source (OS enforces same-signer) and a name to show.
+		val availablePkgs = available.mapTo(HashSet(available.size)) { it.packageName }
 		val installedSourcesByPkg = mihonSources.value.groupBy { it.pkgName }
 		val allInstalledSourcesByPkg = allMihonSources.value.groupBy { it.pkgName }
 
@@ -307,12 +331,25 @@ class SourcesCatalogViewModel @Inject constructor(
 
 			val pkgSources = allInstalledSourcesByPkg[local.pkgName] ?: installedSourcesByPkg[local.pkgName]
 			val source = pkgSources?.firstOrNull { it.language == local.lang } ?: pkgSources?.firstOrNull()
+			// Prefer the repo's real name matched by signing fingerprint (works even for extensions
+			// installed before tracking); fall back to install-time provenance / active-repo backfill
+			// with a URL-derived name for repos that don't publish a repo.json.
+			val repoLabel = settings.findRepoInfoBySignatures(local.signatures)?.displayName
+				?: (
+					settings.getExtensionRepoUrl(local.pkgName)
+						?: repoUrl?.takeIf { local.pkgName in availablePkgs }
+							?.also { settings.setExtensionRepoUrl(local.pkgName, it) }
+					)?.let { getExternalExtensionRepoDisplayName(it) }
 			val subtitle = buildString {
 				append(getExternalExtensionLanguageDisplayName(local.lang))
 				append(" • ")
 				append(local.versionName)
 				if (local.isNsfw) {
 					append(" • 18+")
+				}
+				repoLabel?.let {
+					append(" • ")
+					append(it)
 				}
 			}
 			installedItems[local.pkgName] = SourceCatalogItem.Extension(
@@ -367,7 +404,7 @@ class SourcesCatalogViewModel @Inject constructor(
 					append(" • 18+")
 				}
 			}
-			val iconUrl = repoUrl?.let { externalRepoRepository.resolveIconUrl(it, entry.packageName) }
+			val iconUrl = entry.iconUrl ?: repoUrl?.let { externalRepoRepository.resolveIconUrl(it, entry.packageName) }
 			when {
 				local == null -> availableItems += SourceCatalogItem.Extension(
 					packageName = entry.packageName,
@@ -378,6 +415,9 @@ class SourcesCatalogViewModel @Inject constructor(
 					iconUrl = iconUrl,
 					sourceIconName = source?.name,
 				)
+				// Installed, but by a different repo (different signer): this repo can't update or
+				// replace it, so don't offer a phantom update that Android would reject forever.
+				activeRepoFingerprint != null && activeRepoFingerprint !in local.signatures -> Unit
 				entry.isNewerThan(local) -> pending += SourceCatalogItem.Extension(
 					packageName = entry.packageName,
 					title = entry.name.removePrefix("Tachiyomi: ").trim(),

@@ -20,6 +20,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.koitharu.kotatsu.mihon.model.ExternalRepoInfo
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.model.ZoomMode
 import org.koitharu.kotatsu.core.network.DoHProvider
@@ -50,6 +54,7 @@ import javax.inject.Singleton
 class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 	private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+	private val json = Json { ignoreUnknownKeys = true }
 	private val onboardingInstallIdFile = File(context.noBackupFilesDir, "onboarding_install_id")
 	private val connectivityManager = context.connectivityManager
 	private val mangaListBadgesDefault = ArraySet(context.resources.getStringArray(R.array.values_list_badges))
@@ -521,6 +526,46 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 				putString(KEY_EXTERNAL_EXTENSIONS_REPO_URL, value.trim())
 			}
 		}
+
+	// Which repo each installed extension came from, so updates are fetched from that repo even
+	// after the active repo is switched. Stored as "pkg\turl" entries in a StringSet.
+	private var extensionRepoMap: Map<String, String>
+		get() = prefs.getStringSet(KEY_MIHON_EXTENSION_REPOS, emptySet()).orEmpty()
+			.mapNotNull { entry ->
+				val sep = entry.indexOf('\t')
+				if (sep <= 0) null else entry.substring(0, sep) to entry.substring(sep + 1)
+			}.toMap()
+		set(value) = prefs.edit {
+			putStringSet(KEY_MIHON_EXTENSION_REPOS, value.mapTo(HashSet(value.size)) { "${it.key}\t${it.value}" })
+		}
+
+	fun getExtensionRepoUrl(pkgName: String): String? = extensionRepoMap[pkgName]
+
+	fun getExtensionRepoUrls(): Map<String, String> = extensionRepoMap
+
+	fun setExtensionRepoUrl(pkgName: String, repoUrl: String) {
+		if (repoUrl.isBlank()) return
+		extensionRepoMap = extensionRepoMap.toMutableMap().apply { put(pkgName, repoUrl.trim()) }
+	}
+
+	// Authoritative repo metadata (name + signing fingerprint) from each repo's repo.json, so an
+	// installed extension can be attributed to its repo by signature — even ones installed earlier.
+	var externalRepoInfos: List<ExternalRepoInfo>
+		get() = prefs.getString(KEY_MIHON_REPO_INFOS, null)
+			?.let { runCatching { json.decodeFromString<List<ExternalRepoInfo>>(it) }.getOrNull() }
+			?: emptyList()
+		set(value) = prefs.edit { putString(KEY_MIHON_REPO_INFOS, json.encodeToString(value)) }
+
+	fun putExternalRepoInfo(info: ExternalRepoInfo) {
+		externalRepoInfos = externalRepoInfos.filterNot { it.url == info.url } + info
+	}
+
+	// Stored repos (from repo.json) take precedence; built-ins recognise canonical repos out of the box.
+	fun findRepoInfoBySignatures(signatures: Collection<String>): ExternalRepoInfo? =
+		(externalRepoInfos + ExternalRepoInfo.BUILT_IN).firstOrNull { it.fingerprint in signatures }
+
+	fun findRepoInfoByUrl(url: String): ExternalRepoInfo? =
+		(externalRepoInfos + ExternalRepoInfo.BUILT_IN).firstOrNull { it.url == url }
 
 
 	val isPagesNumbersEnabled: Boolean
@@ -1003,6 +1048,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_MIHON_PER_EXT_ACTIVE_LANG = "mihon_per_ext_active_lang"
 		const val KEY_MIHON_HIDDEN_PACKAGES = "mihon_hidden_packages"
 		const val KEY_EXTERNAL_EXTENSIONS_REPO_URL = "external_extensions_repo_url"
+		const val KEY_MIHON_EXTENSION_REPOS = "mihon_extension_repos"
+		const val KEY_MIHON_REPO_INFOS = "mihon_repo_infos"
 		const val KEY_CF_BRIGHTNESS = "cf_brightness"
 		const val KEY_CF_CONTRAST = "cf_contrast"
 		const val KEY_CF_INVERTED = "cf_inverted"

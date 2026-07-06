@@ -42,9 +42,6 @@ class MihonExtensionLoader @Inject constructor(
 		// delayed NoSuchMethodError.
 		const val LIB_VERSION_MIN = 1.4
 		const val LIB_VERSION_MAX = 1.6
-		// Published by Keiyoushi's signed repository metadata (repo.json/index.json).
-		private const val KEIYOUSHI_SIGNING_KEY =
-			"9add655a78e96c4ec7a53ef89dccb557cb5d767489fac5e785d671a5a75d4da2"
 
 		internal fun normalizeSourceClassNames(pkgName: String, sourceClassNames: String): List<String> {
 			return sourceClassNames
@@ -157,6 +154,7 @@ class MihonExtensionLoader @Inject constructor(
 			isNsfw = readNsfwFlag(metaData),
 			sourceClassName = sourceClassName,
 			apkPath = appInfo.sourceDir ?: return null,
+			signatures = getSignatures(pkgInfo),
 		)
 	}
 
@@ -181,18 +179,17 @@ class MihonExtensionLoader @Inject constructor(
 		val appName = runCatching {
 			appInfo.loadLabel(context.packageManager).toString()
 		}.getOrDefault(pkgInfo.packageName)
+		// Trust any signed, OS-installed extension regardless of which repo signed it. These are real
+		// Android packages: the package installer already took the user's consent at install time and
+		// Android enforces same-signer on every update, so pinning one repo's key here only blocks
+		// every other repo without adding protection the OS doesn't already give. We still reject
+		// unsigned APKs — that's the actual trust boundary.
+		// ponytail: signed == trusted. Reintroduce a signing-key allowlist only if private
+		// (non-OS-installed, loaded-from-file) extensions are ever supported, since those bypass the
+		// installer consent this relies on.
 		val signatures = getSignatures(pkgInfo)
 		if (signatures.isEmpty()) {
 			return buildLoggedError(pkgInfo.packageName, "Extension APK is unsigned")
-		}
-		if (KEIYOUSHI_SIGNING_KEY !in signatures) {
-			Log.w(TAG, "${pkgInfo.packageName}: extension signature is not trusted")
-			return MihonLoadResult.Untrusted(
-				pkgName = pkgInfo.packageName,
-				appName = appName,
-				versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo),
-				versionName = versionName,
-			)
 		}
 		val classLoader = runCatching {
 			ChildFirstPathClassLoader(
