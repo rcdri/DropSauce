@@ -59,7 +59,6 @@ class FeedFragment :
 	override fun onViewBindingCreated(binding: FragmentListBinding, savedInstanceState: Bundle?) {
 		super.onViewBindingCreated(binding, savedInstanceState)
 		val feedAdapter = FeedAdapter(this) { item, v ->
-			viewModel.onItemClick(item)
 			router.openDetails(item.toMangaWithOverride())
 		}
 		with(binding.recyclerView) {

@@ -27,14 +27,8 @@ abstract class TrackLogsDao : MangaQueryBuilder.ConditionCallback {
 			.build(),
 	)
 
-	@Query("SELECT COUNT(*) FROM track_logs WHERE unread = 1")
-	abstract fun observeUnreadCount(): Flow<Int>
-
 	@Query("DELETE FROM track_logs")
 	abstract suspend fun clear()
-
-	@Query("UPDATE track_logs SET unread = 0 WHERE id = :id")
-	abstract suspend fun markAsRead(id: Long)
 
 	/** All visible feed rows, used by cloud sync. */
 	@Query("SELECT * FROM track_logs")

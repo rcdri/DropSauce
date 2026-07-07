@@ -19,6 +19,50 @@ import org.koitharu.kotatsu.sync.data.model.SyncTrack
  */
 object SyncMerger {
 
+	/**
+	 * Category ids are per-device autoincrements, so the same id on two devices usually means two
+	 * DIFFERENT categories — merging by raw id would overwrite one with the other and misfile its
+	 * favourites. The normalized title is the only cross-device identity: rewrite remote category
+	 * ids into the local id space (matched by title; unmatched remote categories keep their id or
+	 * get a free one on collision) before any id-keyed merge. Favourites follow their category.
+	 */
+	fun remapRemoteCategories(
+		remoteCategories: List<SyncCategory>,
+		remoteFavourites: List<SyncFavourite>,
+		localCategories: List<SyncCategory>,
+	): Pair<List<SyncCategory>, List<SyncFavourite>> {
+		if (remoteCategories.isEmpty()) {
+			return remoteCategories to remoteFavourites
+		}
+		val localIdByTitle = HashMap<String, Int>(localCategories.size)
+		// Live rows first so a recreated category wins over an old tombstone with the same title.
+		for (c in localCategories.sortedBy { it.deletedAt != 0L }) {
+			localIdByTitle.putIfAbsent(c.titleKey(), c.categoryId)
+		}
+		val usedIds = localCategories.mapTo(HashSet()) { it.categoryId }
+		val remap = HashMap<Int, Int>(remoteCategories.size)
+		for (c in remoteCategories) {
+			val newId = localIdByTitle[c.titleKey()]
+				?: c.categoryId.takeIf(usedIds::add)
+				?: ((usedIds.max() + 1).also(usedIds::add))
+			if (newId != c.categoryId) {
+				remap[c.categoryId] = newId
+			}
+		}
+		if (remap.isEmpty()) {
+			return remoteCategories to remoteFavourites
+		}
+		val categories = remoteCategories.map { c ->
+			remap[c.categoryId]?.let { c.copy(categoryId = it) } ?: c
+		}
+		val favourites = remoteFavourites.map { f ->
+			remap[f.categoryId.toInt()]?.let { f.copy(categoryId = it.toLong()) } ?: f
+		}
+		return categories to favourites
+	}
+
+	private fun SyncCategory.titleKey(): String = title.trim().lowercase()
+
 	fun mergeCategories(
 		local: List<SyncCategory>,
 		remote: List<SyncCategory>,

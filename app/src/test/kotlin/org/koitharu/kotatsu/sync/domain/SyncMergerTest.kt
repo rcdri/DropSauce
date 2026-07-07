@@ -59,6 +59,61 @@ class SyncMergerTest {
 	}
 
 	@Test
+	fun `remote category colliding on id is remapped, not merged into a different category`() {
+		// Phone: "Reading" is id 1. Tablet: "Manhwa" is id 1 with a favourite in it.
+		val localReading = category(deletedAt = 0L).copy(categoryId = 1, title = "Reading")
+		val remoteManhwa = category(deletedAt = 0L).copy(categoryId = 1, title = "Manhwa", createdAt = 999L)
+		val remoteFavourite = favourite(deletedAt = 0L).copy(categoryId = 1L)
+
+		val (categories, favourites) = SyncMerger.remapRemoteCategories(
+			remoteCategories = listOf(remoteManhwa),
+			remoteFavourites = listOf(remoteFavourite),
+			localCategories = listOf(localReading),
+		)
+
+		val manhwa = categories.single()
+		assertEquals("Manhwa", manhwa.title)
+		assertEquals(2, manhwa.categoryId) // moved off the colliding id
+		assertEquals(2L, favourites.single().categoryId) // favourite follows its category
+
+		// And the id-keyed merge now keeps BOTH categories instead of clobbering "Reading".
+		val merged = SyncMerger.mergeCategories(listOf(localReading), categories)
+		assertEquals(setOf("Reading", "Manhwa"), merged.mapTo(HashSet()) { it.title })
+	}
+
+	@Test
+	fun `same-titled category on two devices converges onto the local id`() {
+		val local = category(deletedAt = 0L).copy(categoryId = 3, title = "Reading")
+		val remote = category(deletedAt = 0L).copy(categoryId = 7, title = " reading ")
+		val remoteFavourite = favourite(deletedAt = 0L).copy(categoryId = 7L)
+
+		val (categories, favourites) = SyncMerger.remapRemoteCategories(
+			remoteCategories = listOf(remote),
+			remoteFavourites = listOf(remoteFavourite),
+			localCategories = listOf(local),
+		)
+
+		assertEquals(3, categories.single().categoryId)
+		assertEquals(3L, favourites.single().categoryId)
+	}
+
+	@Test
+	fun `remap is identity when id spaces already agree`() {
+		val local = category(deletedAt = 0L).copy(categoryId = 2, title = "Reading")
+		val remote = category(deletedAt = 0L).copy(categoryId = 2, title = "Reading")
+		val remoteFavourites = listOf(favourite(deletedAt = 0L))
+
+		val (categories, favourites) = SyncMerger.remapRemoteCategories(
+			remoteCategories = listOf(remote),
+			remoteFavourites = remoteFavourites,
+			localCategories = listOf(local),
+		)
+
+		assertSame(remote, categories.single())
+		assertSame(remoteFavourites, favourites)
+	}
+
+	@Test
 	fun `same feed event detected on two devices is merged once`() {
 		val local = feed(chapters = "Chapter 11\nChapter 12", createdAt = 200L, unread = true)
 		val remote = feed(chapters = " chapter 12 \nCHAPTER 11", createdAt = 100L, unread = false)

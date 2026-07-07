@@ -2,8 +2,6 @@ package org.koitharu.kotatsu.tracker.ui.feed
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +34,6 @@ import org.koitharu.kotatsu.list.ui.model.toErrorState
 import org.koitharu.kotatsu.tracker.domain.TrackingRepository
 import org.koitharu.kotatsu.tracker.domain.UpdatesListQuickFilter
 import org.koitharu.kotatsu.tracker.domain.model.TrackingLogItem
-import org.koitharu.kotatsu.tracker.ui.feed.model.FeedItem
 import org.koitharu.kotatsu.tracker.work.TrackWorker
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -140,15 +137,6 @@ class FeedViewModel @Inject constructor(
 
 	fun update() {
 		scheduler.startNow()
-	}
-
-	@OptIn(DelicateCoroutinesApi::class)
-	fun onItemClick(item: FeedItem) {
-		launchJob(Dispatchers.Default, CoroutineStart.ATOMIC) {
-			if (item.id > 0L) {
-				repository.markAsRead(item.id)
-			}
-		}
 	}
 
 	private suspend fun List<TrackingLogItem>.mapListTo(destination: MutableList<ListModel>) {

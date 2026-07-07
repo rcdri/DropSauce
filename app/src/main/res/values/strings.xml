@@ -272,6 +272,8 @@
     <string name="google_drive_sync">Google Drive sync</string>
     <string name="sync_in_progress">Syncing with Google Drive…</string>
     <string name="sync_sign_in">Sign in with Google</string>
+    <string name="sync_sign_in_required">Sync paused — Google sign-in required</string>
+    <string name="sync_sign_in_required_text">Tap to open sync settings and sign in again</string>
     <string name="sync_sign_in_summary">Back up and sync your library across devices</string>
     <string name="sync_sign_out">Sign out</string>
     <string name="sync_account">Signed in</string>

@@ -22,7 +22,7 @@ import org.koitharu.kotatsu.tracker.data.TrackLogEntity
  * unit by [SyncConfig.revision] (last-writer-wins).
  */
 @Serializable
-class SyncSnapshot(
+data class SyncSnapshot(
 	@SerialName("schema") val schemaVersion: Int = SCHEMA_VERSION,
 	@SerialName("device_id") val deviceId: String = "",
 	@SerialName("synced_at") val syncedAt: Long = 0L,
@@ -109,7 +109,7 @@ class SyncTrack(
 }
 
 @Serializable
-class SyncCategory(
+data class SyncCategory(
 	@SerialName("category_id") val categoryId: Int,
 	@SerialName("created_at") val createdAt: Long,
 	@SerialName("sort_key") val sortKey: Int,
@@ -147,7 +147,7 @@ class SyncCategory(
 }
 
 @Serializable
-class SyncFavourite(
+data class SyncFavourite(
 	@SerialName("manga_id") val mangaId: Long,
 	@SerialName("category_id") val categoryId: Long,
 	@SerialName("sort_key") val sortKey: Int,

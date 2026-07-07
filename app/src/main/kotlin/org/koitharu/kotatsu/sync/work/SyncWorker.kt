@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.sync.work
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -23,7 +24,9 @@ import androidx.work.await
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.util.ext.awaitUniqueWorkInfoByName
+import org.koitharu.kotatsu.core.util.ext.checkNotificationPermission
 import org.koitharu.kotatsu.core.util.ext.printStackTraceDebug
 import org.koitharu.kotatsu.core.util.ext.trySetForeground
 import org.koitharu.kotatsu.settings.work.PeriodicWorkScheduler
@@ -38,6 +41,7 @@ class SyncWorker @AssistedInject constructor(
 	@Assisted context: Context,
 	@Assisted workerParams: WorkerParameters,
 	private val repository: GoogleDriveSyncRepository,
+	private val syncSettings: SyncSettings,
 ) : CoroutineWorker(context, workerParams) {
 
 	override suspend fun doWork(): Result {
@@ -45,7 +49,14 @@ class SyncWorker @AssistedInject constructor(
 		return try {
 			when (val result = repository.sync()) {
 				is SyncResult.Success -> Result.success()
-				is SyncResult.SignInRequired -> Result.failure()
+				is SyncResult.SignInRequired -> {
+					// Background sync is dead until the user re-consents — say so instead of
+					// failing silently forever.
+					if (syncSettings.isSignedIn) {
+						showSignInRequiredNotification()
+					}
+					Result.failure()
+				}
 				is SyncResult.Error ->
 					if (result.retryable && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
 			}
@@ -63,6 +74,28 @@ class SyncWorker @AssistedInject constructor(
 		} else {
 			ForegroundInfo(FOREGROUND_NOTIFICATION_ID, notification)
 		}
+	}
+
+	private fun showSignInRequiredNotification() {
+		if (!applicationContext.checkNotificationPermission(CHANNEL_ID)) {
+			return
+		}
+		createNotificationChannel(applicationContext)
+		val intent = PendingIntent.getActivity(
+			applicationContext,
+			0,
+			AppRouter.syncSettingsIntent(applicationContext),
+			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+		)
+		val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+			.setContentTitle(applicationContext.getString(R.string.sync_sign_in_required))
+			.setContentText(applicationContext.getString(R.string.sync_sign_in_required_text))
+			.setSmallIcon(R.drawable.ic_sync)
+			.setContentIntent(intent)
+			.setAutoCancel(true)
+			.setCategory(NotificationCompat.CATEGORY_ERROR)
+			.build()
+		NotificationManagerCompat.from(applicationContext).notify(SIGN_IN_NOTIFICATION_ID, notification)
 	}
 
 	private fun buildNotification(): Notification {
@@ -112,6 +145,7 @@ class SyncWorker @AssistedInject constructor(
 
 		const val CHANNEL_ID = "sync_status"
 		private const val FOREGROUND_NOTIFICATION_ID = 45
+		private const val SIGN_IN_NOTIFICATION_ID = 46
 		private const val TAG_PERIODIC = "gdrive_sync_periodic"
 		private const val TAG_MANUAL = "gdrive_sync_manual"
 		private const val MAX_ATTEMPTS = 3

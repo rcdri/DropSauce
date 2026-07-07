@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.backup.local.data.model.BackupPrimitive
 import org.koitharu.kotatsu.backup.local.data.model.BookmarkBackup
 import org.koitharu.kotatsu.backup.local.data.model.MangaBackup
@@ -118,6 +119,9 @@ class GoogleDriveSyncRepository @Inject constructor(
 			return SyncResult.Success
 		} catch (e: SyncSignInRequiredException) {
 			Log.w(TAG, "sign-in required", e)
+			// Persist the error like any other failure — otherwise a revoked/expired grant kills
+			// background sync forever while settings still claim everything is fine.
+			syncSettings.lastSyncError = context.getString(R.string.sync_sign_in_required)
 			return SyncResult.SignInRequired
 		} catch (e: SyncSchemaException) {
 			// Remote was written by a newer app version — never overwrite it. Don't retry either.
@@ -160,7 +164,12 @@ class GoogleDriveSyncRepository @Inject constructor(
 					decodedIds += file.id
 				}
 			}
-			val remote = SyncMerger.combine(remotes)
+			// Remap BEFORE the merge and the unchanged-check: remote category ids come from another
+			// device's autoincrement sequence, so a raw id match means nothing. Doing it here also
+			// keeps an id-space difference alone from triggering an upload every sync.
+			val remote = SyncMerger.combine(remotes)?.let { snapshot ->
+				if (SyncContent.FAVOURITES in enabled) remapRemoteCategories(snapshot) else snapshot
+			}
 			Log.i(
 				TAG,
 				"remote: files=${files.size} readable=${remotes.size} fav=${remote?.favourites?.size} " +
@@ -332,6 +341,20 @@ class GoogleDriveSyncRepository @Inject constructor(
 	}
 
 	// region snapshot building / merging
+
+	/** See [SyncMerger.remapRemoteCategories] — rewrites remote category ids into the local id space. */
+	private suspend fun remapRemoteCategories(remote: SyncSnapshot): SyncSnapshot {
+		val (categories, favourites) = SyncMerger.remapRemoteCategories(
+			remoteCategories = remote.categories,
+			remoteFavourites = remote.favourites,
+			localCategories = localCategories(),
+		)
+		return if (categories === remote.categories && favourites === remote.favourites) {
+			remote
+		} else {
+			remote.copy(categories = categories, favourites = favourites)
+		}
+	}
 
 	private suspend fun buildMergedSnapshot(
 		remote: SyncSnapshot?,
