@@ -41,7 +41,6 @@ serialization = "1.7.3"
 shizuku = "13.1.5"
 injekt = "4135455a2a"
 jsoup = "1.22.1"
-imageDecoder = "e03b81e18a"
 xmlutil = "0.91.3"
 ssiv = "376930523c"
 swiperefreshlayout = "1.2.0"
@@ -126,7 +125,6 @@ rxjava = { module = "io.reactivex:rxjava", version.ref = "rxjava" }
 unifile = { module = "com.github.tachiyomiorg:unifile", version.ref = "unifile" }
 injekt-core = { module = "com.github.null2264.injekt:injekt-core", version.ref = "injekt" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
-image-decoder = { module = "com.github.mihonapp:image-decoder", version.ref = "imageDecoder" }
 ssiv = { module = "com.github.KotatsuApp:subsampling-scale-image-view", version.ref = "ssiv" }
 androidx-window = { module = "androidx.window:window", version.ref = "window" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
