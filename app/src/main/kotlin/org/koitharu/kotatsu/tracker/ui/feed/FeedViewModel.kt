@@ -9,18 +9,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
-import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
 import org.koitharu.kotatsu.core.ui.BaseViewModel
-import org.koitharu.kotatsu.core.ui.model.DateTimeAgo
 import org.koitharu.kotatsu.core.ui.util.ReversibleAction
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
-import org.koitharu.kotatsu.core.util.ext.calculateTimeAgo
 import org.koitharu.kotatsu.core.util.ext.groupByDateBucket
 import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.list.domain.ListFilterOption
@@ -47,7 +43,6 @@ class FeedViewModel @Inject constructor(
 	private val scheduler: TrackWorker.Scheduler,
 	private val mangaListMapper: MangaListMapper,
 	private val quickFilter: UpdatesListQuickFilter,
-	private val db: MangaDatabase,
 ) : BaseViewModel(), QuickFilterListener by quickFilter {
 
 	private val limit = MutableStateFlow(PAGE_SIZE)
@@ -61,36 +56,8 @@ class FeedViewModel @Inject constructor(
 	@Suppress("USELESS_CAST")
 	val content = combine(
 		quickFilter.appliedOptions,
-		combine(
-			combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
-				.flatMapLatest { repository.observeAllTracks(it.first, it.second) },
-			settings.observeAsFlow(AppSettings.KEY_DISMISSED_FEED_ITEMS) { dismissedFeedItems },
-		) { tracks, dismissedItems ->
-			tracks.filterNot { it.manga.id.toString() in dismissedItems }
-		}
-			.mapLatest { tracks ->
-				val result = ArrayList<TrackingLogItem>(tracks.size)
-				for (track in tracks) {
-					val date = track.lastChapterDate ?: track.lastCheck ?: java.time.Instant.EPOCH
-					val isToday = calculateTimeAgo(date).let { it == DateTimeAgo.Today || it == DateTimeAgo.JustNow }
-					val showTotal = !isToday && track.newChapters == 0
-					val count = if (showTotal) {
-						db.getChaptersDao().getChaptersCount(track.manga.id)
-					} else {
-						track.newChapters
-					}
-					result += TrackingLogItem(
-						id = -track.manga.id,
-						manga = track.manga,
-						chapters = emptyList(),
-						createdAt = date,
-						isNew = track.newChapters > 0,
-						count = count,
-						showTotal = showTotal,
-					)
-				}
-				result
-			},
+		combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
+			.flatMapLatest { repository.observeTrackingLog(it.first, it.second) },
 	) { filters, list ->
 		val result = ArrayList<ListModel>((list.size * 1.4).toInt().coerceAtLeast(3))
 		quickFilter.filterItem(filters)?.let(result::add)
@@ -118,9 +85,6 @@ class FeedViewModel @Inject constructor(
 
 	fun clearFeed(clearCounters: Boolean) {
 		launchLoadingJob(Dispatchers.Default) {
-			settings.dismissFeedItems(
-				repository.getTracks(0, Int.MAX_VALUE).map { it.manga.id },
-			)
 			repository.clearLogs()
 			if (clearCounters) {
 				repository.clearCounters()

@@ -144,9 +144,6 @@ class TrackingRepository @Inject constructor(
 				db.getTrackLogsDao().insert(logEntity)
 			}
 		}
-		if (hasNewChapters) {
-			settings.restoreFeedItem(updates.manga.id)
-		}
 	}
 
 	suspend fun clearUpdates(ids: Collection<Long>) {
