@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -26,14 +27,17 @@ import org.koitharu.kotatsu.backup.local.data.model.BookmarkBackup
 import org.koitharu.kotatsu.backup.local.data.model.CategoryBackup
 import org.koitharu.kotatsu.backup.local.data.model.ChapterBackup
 import org.koitharu.kotatsu.backup.local.data.model.FavouriteBackup
+import org.koitharu.kotatsu.backup.local.data.model.FeedBackup
 import org.koitharu.kotatsu.backup.local.data.model.HistoryBackup
 import org.koitharu.kotatsu.backup.local.data.model.MangaBackup
+import org.koitharu.kotatsu.backup.local.data.model.MangaPrefsBackup
 import org.koitharu.kotatsu.backup.local.data.model.MangaWithChaptersBackup
 import org.koitharu.kotatsu.backup.local.data.model.ScrobblingBackup
 import org.koitharu.kotatsu.backup.local.data.model.SourceBackup
 import org.koitharu.kotatsu.backup.local.data.model.SourceSettingsBackup
 import org.koitharu.kotatsu.backup.local.data.model.StatsBackup
 import org.koitharu.kotatsu.backup.local.domain.BackupSection
+import org.koitharu.kotatsu.backup.local.domain.CustomCoverCodec
 import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.SourceSettings
@@ -41,6 +45,10 @@ import org.koitharu.kotatsu.core.util.CompositeResult
 import org.koitharu.kotatsu.core.util.progress.Progress
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
 import org.koitharu.kotatsu.reader.data.TapGridSettings
+import org.koitharu.kotatsu.sync.data.model.SyncFeedEntry
+import org.koitharu.kotatsu.sync.data.model.SyncMangaPrefs
+import org.koitharu.kotatsu.sync.data.model.SyncTrack
+import org.koitharu.kotatsu.sync.domain.SyncMerger
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipEntry
@@ -54,6 +62,7 @@ class LocalBackupRepository @Inject constructor(
 	private val database: MangaDatabase,
 	private val settings: AppSettings,
 	private val tapGridSettings: TapGridSettings,
+	private val coverCodec: CustomCoverCodec,
 ) {
 
 	private val json = Json {
@@ -147,6 +156,18 @@ class LocalBackupRepository @Inject constructor(
 					data = dumpMangaChapters(),
 					serializer = serializer(),
 				)
+
+				BackupSection.FEED -> output.writeJsonObject(
+					section = BackupSection.FEED,
+					data = dumpFeed(),
+					serializer = serializer(),
+				)
+
+				BackupSection.MANGA_PREFS -> output.writeJsonArray(
+					section = BackupSection.MANGA_PREFS,
+					data = dumpMangaPrefs(),
+					serializer = serializer(),
+				)
 			}
 			progress?.emit(commonProgress)
 			commonProgress++
@@ -213,6 +234,10 @@ class LocalBackupRepository @Inject constructor(
 							getChaptersDao().replaceAll(it.manga.id, it.chapters.map { c -> c.toEntity() })
 						}
 
+					BackupSection.FEED -> restoreFeed(input)
+
+					BackupSection.MANGA_PREFS -> restoreMangaPrefs(input)
+
 					null -> CompositeResult.EMPTY
 				}
 				progress?.emit(commonProgress)
@@ -269,15 +294,7 @@ class LocalBackupRepository @Inject constructor(
 
 	private fun dumpAppSettings(): Map<String, BackupPrimitive> {
 		val map = settings.getAllValues().toMutableMap()
-		map.remove(AppSettings.KEY_APP_PASSWORD)
-		map.remove(AppSettings.KEY_APP_PASSWORD_NUMERIC)
-		map.remove(AppSettings.KEY_PROXY_PASSWORD)
-		map.remove(AppSettings.KEY_PROXY_LOGIN)
-		map.remove(AppSettings.KEY_INCOGNITO_MODE)
-		// Onboarding state is tied to a per-install id; carrying it across devices makes a
-		// restored backup look "not onboarded" and re-shows the welcome screen. Never back it up.
-		map.remove(AppSettings.KEY_ONBOARDING_COMPLETED)
-		map.remove(AppSettings.KEY_ONBOARDING_INSTALL_ID)
+		AppSettings.SENSITIVE_BACKUP_KEYS.forEach { map.remove(it) }
 		return map.mapNotNullToBackupValues()
 	}
 
@@ -322,6 +339,88 @@ class LocalBackupRepository @Inject constructor(
 		}
 	}
 
+	private suspend fun dumpFeed(): FeedBackup {
+		val mangaDao = database.getMangaDao()
+		val mangaCache = HashMap<Long, MangaBackup?>()
+		suspend fun mangaOf(id: Long): MangaBackup? =
+			mangaCache.getOrPut(id) { mangaDao.find(id)?.let(::MangaBackup) }
+		val tracks = database.getTracksDao().findAllForSync().mapNotNull { entity ->
+			mangaOf(entity.mangaId)?.let { SyncTrack(entity, it) }
+		}
+		val logs = database.getTrackLogsDao().findAllForSync().mapNotNull { entity ->
+			mangaOf(entity.mangaId)?.let { SyncFeedEntry(entity, it) }
+		}
+		return FeedBackup(tracks = tracks, logs = logs)
+	}
+
+	private fun dumpMangaPrefs(): Flow<MangaPrefsBackup> = flow {
+		val mangaDao = database.getMangaDao()
+		for (entity in database.getPreferencesDao().getOverrides()) {
+			val manga = mangaDao.find(entity.mangaId) ?: continue
+			val cover = coverCodec.read(entity.coverUrlOverride)
+			emit(
+				MangaPrefsBackup(
+					manga = MangaBackup(manga),
+					prefs = SyncMangaPrefs(
+						entity = entity,
+						coverData = cover?.data,
+						coverFileExtension = cover?.extension,
+					),
+				),
+			)
+		}
+	}
+
+	private suspend fun restoreFeed(input: InputStream): CompositeResult {
+		return runCatchingCancellable {
+			val backup = json.decodeFromString<FeedBackup>(input.readBytes().decodeToString())
+			val logsDao = database.getTrackLogsDao()
+			// Local log ids are per-device autoincrement, so match by the stable cross-device
+			// identity (manga id + chapter titles) to keep repeated restores from duplicating the feed.
+			val existing = logsDao.findAllForSync()
+				.mapTo(HashSet()) { SyncMerger.feedIdentity(it.mangaId, it.chapters) }
+			database.withTransaction {
+				for (track in backup.tracks) {
+					database.upsertMangaBackup(track.manga)
+					database.getTracksDao().upsert(track.toEntity())
+				}
+				for (log in backup.logs) {
+					if (!existing.add(SyncMerger.feedIdentity(log))) {
+						continue
+					}
+					database.upsertMangaBackup(log.manga)
+					logsDao.insert(log.toEntity())
+				}
+			}
+		}.let { CompositeResult.EMPTY + it }
+	}
+
+	private suspend fun restoreMangaPrefs(input: InputStream): CompositeResult {
+		val items = input.readJsonArray<MangaPrefsBackup>(serializer()).toList()
+		return items.fold(CompositeResult.EMPTY) { acc, item ->
+			acc + runCatchingCancellable {
+				val prefs = item.prefs
+				val currentCover = database.getPreferencesDao().find(prefs.mangaId)?.coverUrlOverride
+				val resolvedCover = when {
+					prefs.coverData != null -> coverCodec.materialize(
+						mangaId = prefs.mangaId,
+						coverData = prefs.coverData,
+						coverFileExtension = prefs.coverFileExtension,
+						previousUrl = currentCover,
+					) ?: currentCover
+
+					// A local file path from another device is unusable here — keep what we have.
+					coverCodec.isPortableCoverUrl(prefs.coverUrlOverride) -> prefs.coverUrlOverride
+					else -> currentCover
+				}
+				database.withTransaction {
+					database.upsertMangaBackup(item.manga)
+					database.getPreferencesDao().upsert(prefs.toEntity(resolvedCover))
+				}
+			}
+		}
+	}
+
 	private suspend fun MangaDatabase.upsertMangaBackup(manga: MangaBackup) {
 		val tags = manga.tags.map { it.toEntity() }
 		if (tags.isNotEmpty()) {
@@ -342,10 +441,9 @@ class LocalBackupRepository @Inject constructor(
 		return runCatchingCancellable {
 			val map = json.decodeFromString<Map<String, BackupPrimitive>>(input.readBytes().decodeToString())
 				.toMutableMap()
-			// Older backups may still carry the foreign per-install onboarding state; drop it on
-			// restore so the current install's onboarding status (and thus no welcome screen) is kept.
-			map.remove(AppSettings.KEY_ONBOARDING_COMPLETED)
-			map.remove(AppSettings.KEY_ONBOARDING_INSTALL_ID)
+			// Older backups may still carry app-lock state or per-install onboarding ids; drop them
+			// on restore so a backup never brings an app lock or the welcome screen to this device.
+			AppSettings.SENSITIVE_BACKUP_KEYS.forEach { map.remove(it) }
 			settings.upsertAll(map.toRawMap())
 		}.let { CompositeResult.EMPTY + it }
 	}

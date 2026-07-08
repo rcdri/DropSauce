@@ -1080,6 +1080,23 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
 		const val KEY_ONBOARDING_INSTALL_ID = "onboarding_install_id"
 
+		/**
+		 * Keys that must never leave the device: credentials, app-lock state and per-install ids.
+		 * Stripped from local backups and cloud sync, both when writing and when applying.
+		 */
+		val SENSITIVE_BACKUP_KEYS = setOf(
+			KEY_APP_PASSWORD,
+			KEY_APP_PASSWORD_NUMERIC,
+			KEY_PROTECT_APP,
+			KEY_PROTECT_APP_TIMEOUT,
+			KEY_PROTECT_APP_BIOMETRIC,
+			KEY_PROXY_PASSWORD,
+			KEY_PROXY_LOGIN,
+			KEY_INCOGNITO_MODE,
+			KEY_ONBOARDING_COMPLETED,
+			KEY_ONBOARDING_INSTALL_ID,
+		)
+
 		// keys for non-persistent preferences
 		const val KEY_APP_VERSION = "app_version"
 		const val KEY_HANDLE_LINKS = "handle_links"

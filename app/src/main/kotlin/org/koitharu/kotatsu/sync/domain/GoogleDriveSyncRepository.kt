@@ -1,17 +1,13 @@
 package org.koitharu.kotatsu.sync.domain
 
 import android.content.Context
-import android.util.Base64
 import android.util.Log
-import androidx.core.net.toUri
 import androidx.core.content.edit
 import androidx.room.withTransaction
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -22,13 +18,9 @@ import org.koitharu.kotatsu.backup.local.data.model.MangaBackup
 import org.koitharu.kotatsu.backup.local.data.model.ScrobblingBackup
 import org.koitharu.kotatsu.backup.local.data.model.SourceSettingsBackup
 import org.koitharu.kotatsu.backup.local.data.model.StatsBackup
+import org.koitharu.kotatsu.backup.local.domain.CustomCoverCodec
 import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.core.db.entity.MangaWithTags
-import org.koitharu.kotatsu.core.util.MimeTypes
-import org.koitharu.kotatsu.core.util.ext.isFileUri
-import org.koitharu.kotatsu.core.util.ext.toFileOrNull
-import org.koitharu.kotatsu.core.util.ext.toMimeTypeOrNull
-import org.koitharu.kotatsu.core.util.ext.toUriOrNull
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
 import org.koitharu.kotatsu.sync.data.model.SyncTrack
 import org.koitharu.kotatsu.core.prefs.AppSettings
@@ -45,8 +37,6 @@ import org.koitharu.kotatsu.sync.data.model.SyncFeedEntry
 import org.koitharu.kotatsu.sync.data.model.SyncHistory
 import org.koitharu.kotatsu.sync.data.model.SyncMangaPrefs
 import org.koitharu.kotatsu.sync.data.model.SyncSnapshot
-import java.io.File
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -76,6 +66,7 @@ class GoogleDriveSyncRepository @Inject constructor(
 	private val syncSettings: SyncSettings,
 	private val auth: GoogleDriveAuth,
 	private val api: GoogleDriveApi,
+	private val coverCodec: CustomCoverCodec,
 ) {
 
 	private val json = Json {
@@ -626,8 +617,14 @@ class GoogleDriveSyncRepository @Inject constructor(
 			for (pref in config.mangaPrefs) {
 				val currentCover = database.getPreferencesDao().find(pref.mangaId)?.coverUrlOverride
 				val resolvedCover = when {
-					pref.coverData != null -> materializeCover(pref, currentCover) ?: currentCover
-					pref.coverUrlOverride.isPortableCoverUrl() -> pref.coverUrlOverride
+					pref.coverData != null -> coverCodec.materialize(
+						mangaId = pref.mangaId,
+						coverData = pref.coverData,
+						coverFileExtension = pref.coverFileExtension,
+						previousUrl = currentCover,
+					) ?: currentCover
+
+					coverCodec.isPortableCoverUrl(pref.coverUrlOverride) -> pref.coverUrlOverride
 					// Schema-1 snapshots only contain the source device's local file URI. Do not
 					// replace a working local cover with that unusable path.
 					else -> currentCover
@@ -787,90 +784,13 @@ class GoogleDriveSyncRepository @Inject constructor(
 
 	private suspend fun dumpMangaPrefs(): List<SyncMangaPrefs> =
 		database.getPreferencesDao().getOverrides().sortedBy { it.mangaId }.map { entity ->
-			val cover = readCustomCover(entity.coverUrlOverride)
+			val cover = coverCodec.read(entity.coverUrlOverride)
 			SyncMangaPrefs(
 				entity = entity,
 				coverData = cover?.data,
 				coverFileExtension = cover?.extension,
 			)
 		}
-
-	private class EncodedCover(val data: String, val extension: String?)
-
-	private suspend fun readCustomCover(url: String?): EncodedCover? {
-		val uri = url?.toUriOrNull() ?: return null
-		if (!uri.isFileUri() && uri.scheme != "content") {
-			return null
-		}
-		return withContext(Dispatchers.IO) {
-			runCatching {
-				val bytes = if (uri.isFileUri()) {
-					uri.toFileOrNull()?.takeIf(File::isFile)?.readBytes()
-				} else {
-					context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-				} ?: return@runCatching null
-				val extension = uri.lastPathSegment
-					?.substringAfterLast('.', "")
-					?.takeIf { it.isSafeFileExtension() }
-					?: context.contentResolver.getType(uri)
-						?.toMimeTypeOrNull()
-						?.let(MimeTypes::getExtension)
-				EncodedCover(
-					data = Base64.encodeToString(bytes, Base64.NO_WRAP),
-					extension = extension,
-				)
-			}.onFailure {
-				Log.w(TAG, "sync: failed to read custom cover '$url'", it)
-			}.getOrNull()
-		}
-	}
-
-	private suspend fun materializeCover(pref: SyncMangaPrefs, previousUrl: String?): String? =
-		withContext(Dispatchers.IO) {
-			runCatching {
-				val bytes = Base64.decode(pref.coverData, Base64.DEFAULT)
-				val directory = context.getExternalFilesDir(COVERS_DIR) ?: return@runCatching null
-				if (!directory.exists() && !directory.mkdirs()) {
-					return@runCatching null
-				}
-				val digest = MessageDigest.getInstance("SHA-256")
-					.digest(bytes)
-					.take(12)
-					.joinToString("") { "%02x".format(it) }
-				val extension = pref.coverFileExtension
-					?.takeIf { it.isSafeFileExtension() }
-					?.let { ".$it" }
-					.orEmpty()
-				val destination = File(directory, "sync_${pref.mangaId}_$digest$extension")
-				if (!destination.isFile || !destination.readBytes().contentEquals(bytes)) {
-					destination.writeBytes(bytes)
-				}
-				deleteReplacedSyncedCover(previousUrl, destination)
-				destination.toUri().toString()
-			}.onFailure {
-				Log.w(TAG, "sync: failed to restore custom cover for manga ${pref.mangaId}", it)
-			}.getOrNull()
-		}
-
-	private fun deleteReplacedSyncedCover(previousUrl: String?, replacement: File) {
-		val previous = previousUrl?.toUriOrNull()?.toFileOrNull() ?: return
-		val coverDirectory = replacement.parentFile?.canonicalFile ?: return
-		val oldFile = runCatching { previous.canonicalFile }.getOrNull() ?: return
-		if (oldFile != replacement.canonicalFile &&
-			oldFile.parentFile == coverDirectory &&
-			oldFile.name.startsWith(SYNCED_COVER_PREFIX)
-		) {
-			oldFile.delete()
-		}
-	}
-
-	private fun String?.isPortableCoverUrl(): Boolean {
-		val uri = this?.toUriOrNull() ?: return true
-		return !uri.isFileUri() && uri.scheme != "content"
-	}
-
-	private fun String.isSafeFileExtension(): Boolean =
-		length in 1..10 && all { it.isLetterOrDigit() }
 
 	private fun Map<String, *>.mapNotNullValuesToBackup(): Map<String, BackupPrimitive> {
 		val out = LinkedHashMap<String, BackupPrimitive>(size)
@@ -913,20 +833,6 @@ class GoogleDriveSyncRepository @Inject constructor(
 		/** Max times to re-merge when another device writes the file mid-sync, before a best-effort write. */
 		const val MAX_CONFLICT_RETRIES = 3
 
-		const val COVERS_DIR = "covers"
-		const val SYNCED_COVER_PREFIX = "sync_"
-
-		val EXCLUDED_SETTINGS_KEYS = setOf(
-			AppSettings.KEY_APP_PASSWORD,
-			AppSettings.KEY_APP_PASSWORD_NUMERIC,
-			AppSettings.KEY_PROTECT_APP,
-			AppSettings.KEY_PROTECT_APP_TIMEOUT,
-			AppSettings.KEY_PROTECT_APP_BIOMETRIC,
-			AppSettings.KEY_PROXY_PASSWORD,
-			AppSettings.KEY_PROXY_LOGIN,
-			AppSettings.KEY_INCOGNITO_MODE,
-			AppSettings.KEY_ONBOARDING_COMPLETED,
-			AppSettings.KEY_ONBOARDING_INSTALL_ID,
-		)
+		val EXCLUDED_SETTINGS_KEYS = AppSettings.SENSITIVE_BACKUP_KEYS
 	}
 }

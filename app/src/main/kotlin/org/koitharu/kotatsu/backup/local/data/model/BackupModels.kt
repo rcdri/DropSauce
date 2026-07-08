@@ -16,6 +16,9 @@ import org.koitharu.kotatsu.history.data.HistoryEntity
 import org.koitharu.kotatsu.history.data.HistoryWithManga
 import org.koitharu.kotatsu.scrobbling.common.data.ScrobblingEntity
 import org.koitharu.kotatsu.stats.data.StatsEntity
+import org.koitharu.kotatsu.sync.data.model.SyncFeedEntry
+import org.koitharu.kotatsu.sync.data.model.SyncMangaPrefs
+import org.koitharu.kotatsu.sync.data.model.SyncTrack
 
 @Serializable
 class BackupIndex(
@@ -413,6 +416,23 @@ class SourceBackup(
 		title = title,
 	)
 }
+
+/** New-chapters feed: tracked state per manga plus the visible feed entries. */
+@Serializable
+class FeedBackup(
+	@SerialName("tracks") val tracks: List<SyncTrack> = emptyList(),
+	@SerialName("logs") val logs: List<SyncFeedEntry> = emptyList(),
+)
+
+/**
+ * Per-manga overrides (custom cover/title/reader prefs). Reuses the sync model, which carries the
+ * cover as base64 [SyncMangaPrefs.coverData] so it can be re-materialized on another device.
+ */
+@Serializable
+class MangaPrefsBackup(
+	@SerialName("manga") val manga: MangaBackup,
+	@SerialName("prefs") val prefs: SyncMangaPrefs,
+)
 
 @Serializable
 class SourceSettingsBackup(

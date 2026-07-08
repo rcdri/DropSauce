@@ -22,6 +22,8 @@ enum class BackupSection(
 	SCROBBLING("scrobbling", R.string.tracking),
 	STATS("statistics", R.string.reading_stats),
 	CHAPTERS("chapters", R.string.chapters),
+	FEED("feed", R.string.feed),
+	MANGA_PREFS("manga_prefs", R.string.sync_content_covers),
 	;
 
 	companion object {
