@@ -15,6 +15,7 @@ data class FeedItem(
 	val chapters: List<TrackingLogItem.Chapter>,
 	val isNew: Boolean,
 	val groupPosition: GroupPosition = GroupPosition.SINGLE,
+	val isExpanded: Boolean = false,
 ) : ListModel {
 
 	// Position within a date group, used to shape the segmented list background.
@@ -39,6 +40,7 @@ data class FeedItem(
 	override fun getChangePayload(previousState: ListModel): Any? = when {
 		previousState !is FeedItem -> null
 		isNew != previousState.isNew -> ListModelDiffCallback.PAYLOAD_ANYTHING_CHANGED
+		isExpanded != previousState.isExpanded -> ListModelDiffCallback.PAYLOAD_ANYTHING_CHANGED
 		else -> super.getChangePayload(previousState)
 	}
 }

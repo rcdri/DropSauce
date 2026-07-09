@@ -432,7 +432,7 @@ private fun ReadFab(
 						painter = painterResource(R.drawable.ic_play),
 						contentDescription = null,
 						tint = onColor,
-						modifier = Modifier.size(22.dp),
+						modifier = Modifier.size(28.dp),
 					)
 					Text(
 						text = label,
@@ -477,7 +477,7 @@ private fun ReadFab(
 						.background(onColor.copy(alpha = 0.22f)),
 				)
 				if (canIncognito) {
-					FabMenuRow(iconRes = R.drawable.ic_incognito, label = stringResource(R.string.incognito_mode), color = onColor) {
+					FabMenuRow(iconRes = R.drawable.ic_incognito, iconSize = 26.dp, label = stringResource(R.string.incognito_mode), color = onColor) {
 						expanded = false
 						actions.onIncognitoClick()
 					}
@@ -499,6 +499,7 @@ private fun FabMenuRow(
 	@DrawableRes iconRes: Int,
 	label: String,
 	color: Color,
+	iconSize: Dp = 20.dp,
 	onClick: () -> Unit,
 ) {
 	Row(
@@ -513,7 +514,7 @@ private fun FabMenuRow(
 			painter = painterResource(iconRes),
 			contentDescription = null,
 			tint = color,
-			modifier = Modifier.size(20.dp),
+			modifier = Modifier.size(iconSize),
 		)
 		Text(
 			text = label,
@@ -1191,7 +1192,13 @@ private fun WavyProgressBar(progress: Float, color: Color, trackColor: Color, mo
 		val midY = size.height / 2f
 		val stroke = 4.5.dp.toPx()
 		val activeW = size.width * animatedProgress
-		val amplitude = (size.height / 2f - stroke / 2f) * 0.9f
+		// Flatten the wave near the ends (0-5% and 95-100%) so it reads as a straight bar at the extremes.
+		val edgeFlatten = when {
+			animatedProgress <= 0.05f -> animatedProgress / 0.05f
+			animatedProgress >= 0.95f -> (1f - animatedProgress) / 0.05f
+			else -> 1f
+		}
+		val amplitude = (size.height / 2f - stroke / 2f) * 0.9f * edgeFlatten
 		// Match the Material wavy LinearProgressIndicator used by the download list (its default
 		// active-wave wavelength, m3_comp_progress_indicator_linear_active_indicator_wave_wavelength).
 		val waveLength = 40.dp.toPx()

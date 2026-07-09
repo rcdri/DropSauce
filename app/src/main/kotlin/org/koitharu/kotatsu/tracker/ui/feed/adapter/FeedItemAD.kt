@@ -24,6 +24,7 @@ import com.google.android.material.R as materialR
 fun feedItemAD(
 	clickListener: OnListItemClickListener<FeedItem>,
 	detailsClickListener: MangaDetailsClickListener,
+	onExpandClick: (FeedItem) -> Unit,
 ) = adapterDelegateViewBinding<FeedItem, ListModel, ItemFeedBinding>(
 	{ inflater, parent -> ItemFeedBinding.inflate(inflater, parent, false) },
 ) {
@@ -80,24 +81,35 @@ fun feedItemAD(
 		binding.textViewTitle.text = item.title
 		binding.imageViewIndicatorNew.isVisible = item.isNew
 		val chapters = item.chapters
-		binding.textViewSummary.isVisible = chapters.isEmpty()
-		if (chapters.isEmpty()) {
+		// a single chapter always shows its name; multiple collapse into a "N new chapters" summary
+		// that expands to the full list on click, and re-collapses when the feed screen is left
+		val isCollapsedSummary = chapters.size > 1 && !item.isExpanded
+		binding.textViewSummary.isVisible = chapters.isEmpty() || isCollapsedSummary
+		if (binding.textViewSummary.isVisible) {
 			binding.textViewSummary.text = context.resources.getQuantityStringSafe(
 				R.plurals.new_chapters,
 				item.count,
 				item.count,
 			)
 		}
+		if (isCollapsedSummary) {
+			binding.textViewSummary.setOnClickListener { onExpandClick(item) }
+		} else {
+			binding.textViewSummary.setOnClickListener(null)
+		}
+		binding.layoutChapters.isVisible = chapters.isNotEmpty() && !isCollapsedSummary
 		binding.layoutChapters.removeAllViews()
-		val inflater = LayoutInflater.from(context)
-		for (chapter in chapters) {
-			val textView = inflater.inflate(
-				R.layout.item_feed_chapter,
-				binding.layoutChapters,
-				false,
-			) as TextView
-			textView.text = chapter.name
-			binding.layoutChapters.addView(textView)
+		if (binding.layoutChapters.isVisible) {
+			val inflater = LayoutInflater.from(context)
+			for (chapter in chapters) {
+				val textView = inflater.inflate(
+					R.layout.item_feed_chapter,
+					binding.layoutChapters,
+					false,
+				) as TextView
+				textView.text = chapter.name
+				binding.layoutChapters.addView(textView)
+			}
 		}
 	}
 }

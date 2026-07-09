@@ -22,10 +22,11 @@ class FeedAdapter(
 	listener: MangaListListener,
 	feedClickListener: OnListItemClickListener<FeedItem>,
 	onTipClose: (TipModel) -> Unit,
+	onExpandClick: (FeedItem) -> Unit,
 ) : BaseListAdapter<ListModel>(), FastScroller.SectionIndexer {
 
 	init {
-		addDelegate(ListItemType.FEED, feedItemAD(feedClickListener, listener))
+		addDelegate(ListItemType.FEED, feedItemAD(feedClickListener, listener, onExpandClick))
 		addDelegate(ListItemType.FOOTER_LOADING, loadingFooterAD())
 		addDelegate(ListItemType.STATE_LOADING, loadingStateAD())
 		addDelegate(ListItemType.FOOTER_ERROR, errorFooterAD(listener))

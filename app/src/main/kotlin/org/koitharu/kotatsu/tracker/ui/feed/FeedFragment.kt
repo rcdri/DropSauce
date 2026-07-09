@@ -66,6 +66,7 @@ class FeedFragment :
 				router.openDetails(item.toMangaWithOverride())
 			},
 			onTipClose = { viewModel.dismissGesturesTip() },
+			onExpandClick = { viewModel.toggleExpanded(it) },
 		)
 		with(binding.recyclerView) {
 			val paddingVertical = resources.getDimensionPixelSize(R.dimen.list_spacing_normal)
@@ -99,6 +100,11 @@ class FeedFragment :
 		viewModel.onError.observeEvent(viewLifecycleOwner, SnackbarErrorObserver(binding.recyclerView, this))
 		viewModel.onActionDone.observeEvent(viewLifecycleOwner, ReversibleActionObserver(binding.recyclerView))
 		viewModel.isRunning.observe(viewLifecycleOwner, this::onIsTrackerRunningChanged)
+	}
+
+	override fun onPause() {
+		super.onPause()
+		viewModel.collapseAll()
 	}
 
 	override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {

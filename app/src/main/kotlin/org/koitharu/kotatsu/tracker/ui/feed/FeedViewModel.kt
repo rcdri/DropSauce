@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.plus
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.prefs.AppSettings
@@ -49,6 +50,7 @@ class FeedViewModel @Inject constructor(
 
 	private val limit = MutableStateFlow(PAGE_SIZE)
 	private val isReady = AtomicBoolean(false)
+	private val expandedIds = MutableStateFlow<Set<Long>>(emptySet())
 
 	val isRunning = scheduler.observeIsRunning()
 		.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Lazily, false)
@@ -61,7 +63,8 @@ class FeedViewModel @Inject constructor(
 		combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
 			.flatMapLatest { repository.observeTrackingLog(it.first, it.second) },
 		settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_GESTURES) },
-	) { filters, list, isTipVisible ->
+		expandedIds,
+	) { filters, list, isTipVisible, expanded ->
 		val result = ArrayList<ListModel>((list.size * 1.4).toInt().coerceAtLeast(3))
 		if (list.isNotEmpty() && isTipVisible) {
 			result += gesturesTip
@@ -76,7 +79,7 @@ class FeedViewModel @Inject constructor(
 			)
 		} else {
 			isReady.set(true)
-			list.mapListTo(result)
+			list.mapListTo(result, expanded)
 		}
 		result as List<ListModel>
 	}.catch { e ->
@@ -131,7 +134,19 @@ class FeedViewModel @Inject constructor(
 		settings.closeTip(TIP_GESTURES)
 	}
 
-	private suspend fun List<TrackingLogItem>.mapListTo(destination: MutableList<ListModel>) {
+	fun toggleExpanded(item: FeedItem) {
+		expandedIds.update { current ->
+			if (item.id in current) current - item.id else current + item.id
+		}
+	}
+
+	// Collapses any expanded "N new chapters" entries back to their summary form, called when the
+	// feed screen is left so the expansion never survives a return visit.
+	fun collapseAll() {
+		expandedIds.update { if (it.isEmpty()) it else emptySet() }
+	}
+
+	private suspend fun List<TrackingLogItem>.mapListTo(destination: MutableList<ListModel>, expandedIds: Set<Long>) {
 		val feedItems = map { mangaListMapper.toFeedItem(it) }
 		val bucketedItems = zip(feedItems).groupByDateBucket(instantOf = { it.first.createdAt })
 		for ((date, items) in bucketedItems) {
@@ -148,7 +163,7 @@ class FeedViewModel @Inject constructor(
 					index == lastIndex -> FeedItem.GroupPosition.LAST
 					else -> FeedItem.GroupPosition.MIDDLE
 				}
-				destination += feedItem.copy(groupPosition = position)
+				destination += feedItem.copy(groupPosition = position, isExpanded = feedItem.id in expandedIds)
 			}
 		}
 	}
