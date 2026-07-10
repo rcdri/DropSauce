@@ -181,6 +181,7 @@ private fun ExtensionsScreen(
 	var incognitoNsfw by rememberStringPref(AppSettings.KEY_INCOGNITO_NSFW, "ASK")
 	val shizukuEnabled by rememberBooleanPref(AppSettings.KEY_SHIZUKU_INSTALLER, false)
 	var autoUpdateExtensions by rememberBooleanPref(AppSettings.KEY_AUTO_UPDATE_EXTENSIONS, false)
+	var updateNotifications by rememberBooleanPref(AppSettings.KEY_EXTENSION_UPDATE_NOTIFICATIONS, true)
 
 	SettingsScaffold(title = stringResource(R.string.extensions), onBack = onBack) {
 		item {
@@ -310,6 +311,16 @@ private fun ExtensionsScreen(
 						icon = R.drawable.ic_updated,
 						shape = pos.shape,
 						enabled = shizukuEnabled,
+					)
+				}
+				item { pos ->
+					SwitchSettingsItem(
+						title = stringResource(R.string.ext_update_notifications_title),
+						subtitle = stringResource(R.string.ext_update_notifications_summary),
+						checked = updateNotifications,
+						onCheckedChange = { updateNotifications = it },
+						icon = R.drawable.ic_updated,
+						shape = pos.shape,
 					)
 				}
 			}

@@ -53,8 +53,9 @@ class WorkScheduleManager @Inject constructor(
 			)
 
 			AppSettings.KEY_AUTO_UPDATE_EXTENSIONS,
-			AppSettings.KEY_SHIZUKU_INSTALLER -> {
-				val enabled = settings.isAutoUpdateExtensionsEnabled && settings.isShizukuInstallerEnabled
+			AppSettings.KEY_SHIZUKU_INSTALLER,
+			AppSettings.KEY_EXTENSION_UPDATE_NOTIFICATIONS -> {
+				val enabled = isExtensionUpdateWorkerNeeded()
 				updateWorker(extensionUpdateScheduler, enabled, force = false)
 				if (enabled) {
 					processLifecycleScope.launch(Dispatchers.Default) {
@@ -82,8 +83,7 @@ class WorkScheduleManager @Inject constructor(
 				isEnabled = syncSettings.isSignedIn && syncSettings.intervalMinutes > 0,
 				force = false,
 			)
-			val extensionUpdatesEnabled =
-				settings.isAutoUpdateExtensionsEnabled && settings.isShizukuInstallerEnabled
+			val extensionUpdatesEnabled = isExtensionUpdateWorkerNeeded()
 			updateWorkerImpl(extensionUpdateScheduler, extensionUpdatesEnabled, force = false)
 			if (extensionUpdatesEnabled) {
 				extensionUpdateScheduler.startNow()
@@ -93,6 +93,12 @@ class WorkScheduleManager @Inject constructor(
 			}
 		}
 	}
+
+	// The worker checks for updates when either auto-install (Shizuku) or the update notification
+	// is turned on — either one needs the periodic repo check to run.
+	private fun isExtensionUpdateWorkerNeeded(): Boolean =
+		(settings.isAutoUpdateExtensionsEnabled && settings.isShizukuInstallerEnabled) ||
+			settings.isExtensionUpdateNotificationsEnabled
 
 	private fun updateWorker(scheduler: PeriodicWorkScheduler, isEnabled: Boolean, force: Boolean) {
 		processLifecycleScope.launch(Dispatchers.Default) {

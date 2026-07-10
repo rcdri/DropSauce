@@ -1,8 +1,14 @@
 package org.koitharu.kotatsu.extensions.install
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.util.Log
+import androidx.core.app.NotificationChannelCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.PendingIntentCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -22,12 +28,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.network.BaseHttpClient
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.awaitUniqueWorkInfoByName
+import org.koitharu.kotatsu.core.util.ext.checkNotificationPermission
 import org.koitharu.kotatsu.mihon.MihonExtensionLoader
 import org.koitharu.kotatsu.mihon.MihonExtensionManager
+import org.koitharu.kotatsu.settings.sources.catalog.ExternalExtensionRepoEntry
 import org.koitharu.kotatsu.settings.sources.catalog.ExternalExtensionRepoRepository
+import org.koitharu.kotatsu.settings.sources.catalog.SourcesCatalogActivity
 import org.koitharu.kotatsu.settings.sources.catalog.isNewerThan
 import org.koitharu.kotatsu.settings.work.PeriodicWorkScheduler
 import java.io.File
@@ -48,10 +59,14 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
 	override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-		if (!settings.isAutoUpdateExtensionsEnabled || !settings.isShizukuInstallerEnabled) {
+		// Auto-install requires both Shizuku and the setting; the notification only needs its own
+		// toggle. Either one alone is enough reason to run the periodic repo check below.
+		val autoInstall = settings.isAutoUpdateExtensionsEnabled && settings.isShizukuInstallerEnabled
+		val shouldNotify = settings.isExtensionUpdateNotificationsEnabled
+		if (!autoInstall && !shouldNotify) {
 			return@withContext Result.success()
 		}
-		if (!shizukuInstaller.awaitReady()) {
+		if (autoInstall && !shizukuInstaller.awaitReady()) {
 			return@withContext Result.retry()
 		}
 
@@ -81,6 +96,7 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 			var installedAny = false
 			var retryNeeded = false
 			var permanentFailure = false
+			val pendingUpdates = ArrayList<ExternalExtensionRepoEntry>()
 			repoLoop@ for ((repoUrl, pkgNames) in pkgsByRepo) {
 				val nonNullRepoUrl = repoUrl ?: continue@repoLoop
 				val wanted = pkgNames.toHashSet()
@@ -94,6 +110,12 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 				} catch (_: IOException) {
 					// One unreachable repo shouldn't block updates for the others.
 					retryNeeded = true
+					continue@repoLoop
+				}
+				if (!autoInstall) {
+					// Not auto-installing this run (Shizuku/auto-update off) — just collect what's
+					// available so we can tell the user, instead of silently doing nothing.
+					pendingUpdates += updates
 					continue@repoLoop
 				}
 				for (entry in updates) {
@@ -131,6 +153,12 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 				}
 			}
 			if (installedAny) extensionManager.loadExtensions()
+			if (!autoInstall) {
+				if (pendingUpdates.isNotEmpty()) {
+					notifyUpdatesAvailable(pendingUpdates.size)
+				}
+				return@withContext Result.success()
+			}
 			when {
 				isStopped -> Result.retry()
 				retryNeeded -> Result.retry()
@@ -141,6 +169,41 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 			Log.e(TAG, "Extension auto-update failed", e)
 			Result.failure()
 		}
+	}
+
+	private fun notifyUpdatesAvailable(count: Int) {
+		if (!applicationContext.checkNotificationPermission(CHANNEL_ID)) {
+			return
+		}
+		val notificationManager = NotificationManagerCompat.from(applicationContext)
+		val channel = NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_DEFAULT)
+			.setName(applicationContext.getString(R.string.extension_updates_available))
+			.build()
+		notificationManager.createNotificationChannel(channel)
+
+		val intent = Intent(applicationContext, SourcesCatalogActivity::class.java)
+			.putExtra(AppRouter.KEY_SOURCE_CATALOG_EXTERNAL_ONLY, true)
+		val contentIntent = PendingIntentCompat.getActivity(
+			applicationContext,
+			0,
+			intent,
+			PendingIntent.FLAG_UPDATE_CURRENT,
+			false,
+		)
+		val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+			.setSmallIcon(R.drawable.general_notification)
+			.setContentTitle(applicationContext.getString(R.string.extension_updates_available))
+			.setContentText(
+				applicationContext.resources.getQuantityString(
+					R.plurals.extension_updates_available_message,
+					count,
+					count,
+				),
+			)
+			.setAutoCancel(true)
+			.setContentIntent(contentIntent)
+			.build()
+		notificationManager.notify(TAG, NOTIFICATION_ID, notification)
 	}
 
 	private fun download(url: String, destination: File) {
@@ -216,6 +279,8 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 
 	private companion object {
 		const val TAG = "ExtensionUpdateWorker"
+		const val CHANNEL_ID = "extension_updates"
+		const val NOTIFICATION_ID = 39
 		const val PERIODIC_WORK_NAME = "extension_auto_updates"
 		const val IMMEDIATE_WORK_NAME = "extension_auto_updates_now"
 		const val MAX_APK_BYTES = 100L * 1024L * 1024L

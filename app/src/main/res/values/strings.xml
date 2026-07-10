@@ -881,6 +881,13 @@
     <string name="shizuku_invalid_package">The downloaded extension APK is invalid or has an unexpected package name.</string>
     <string name="ext_auto_update_title">Auto-update extensions (Beta)</string>
     <string name="ext_auto_update_summary">Install extension updates silently as soon as they are detected, with a daily background check.</string>
+    <string name="ext_update_notifications_title">Notify about extension updates</string>
+    <string name="ext_update_notifications_summary">Show a notification when installed extensions have updates available.</string>
+    <string name="extension_updates_available">Extension updates available</string>
+    <plurals name="extension_updates_available_message">
+        <item quantity="one">%d extension update is ready to install</item>
+        <item quantity="other">%d extension updates are ready to install</item>
+    </plurals>
     <string name="email">Email</string>
     <string name="captcha_required_message">This source requires solving a captcha to continue</string>
     <string name="author">Author</string>
