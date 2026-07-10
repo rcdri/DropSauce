@@ -9,41 +9,48 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.util.ext.getItem
-import org.koitharu.kotatsu.core.util.ext.getThemeColor
 import org.koitharu.kotatsu.core.util.ext.hapticFeedback
 import org.koitharu.kotatsu.core.util.ext.HapticEffect
 import org.koitharu.kotatsu.list.ui.adapter.ListItemType
 import org.koitharu.kotatsu.tracker.ui.feed.model.FeedItem
 import kotlin.math.abs
 import kotlin.math.tanh
-import com.google.android.material.R as materialR
 
 /**
  * Swipe right → delete a single feed entry, swipe left → mark it as read.
  * The reveal fills the row's full height and width with a rounded (stadium) pill + centered icon and
  * fires a haptic tick when the action threshold is crossed. An already-read entry can't be marked
  * read: its swipe rubber-bands to a shallow point and greys out, and the action never fires.
+ *
+ * Mark-as-read never "commits" the swipe in ItemTouchHelper's sense (a commit means the row is
+ * going away, and re-inserting it fights the recover animation, leaving the row stuck mid-flight).
+ * Instead the left swipe is undismissable and the action fires on release once the drag has passed
+ * the threshold, so the row always settles back with the standard smooth animation.
  */
 class FeedSwipeCallback(
 	context: Context,
-	private val onAction: (item: FeedItem, isRead: Boolean, position: Int) -> Unit,
+	private val onAction: (item: FeedItem, isRead: Boolean) -> Unit,
 ) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
 	private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
 	private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_delete)?.mutate()
 	private val readIcon = ContextCompat.getDrawable(context, R.drawable.ic_eye_check)?.mutate()
-	private val deleteBg = context.getThemeColor(materialR.attr.colorErrorContainer, Color.RED)
-	private val readBg = context.getThemeColor(materialR.attr.colorPrimaryContainer, Color.BLUE)
-	private val deleteIconTint = context.getThemeColor(materialR.attr.colorOnErrorContainer, Color.WHITE)
-	private val readIconTint = context.getThemeColor(materialR.attr.colorOnPrimaryContainer, Color.WHITE)
-	private val disabledBg = context.getThemeColor(materialR.attr.colorSurfaceVariant, Color.GRAY)
-	private val disabledIconTint = context.getThemeColor(materialR.attr.colorOutline, Color.LTGRAY)
+
+	// fixed colors on purpose: the reveal should look identical in every theme, light or dark
+	private val deleteBg = 0xFFD32F2F.toInt()
+	private val readBg = 0xFF1976D2.toInt()
+	private val deleteIconTint = Color.WHITE
+	private val readIconTint = Color.WHITE
+	private val disabledBg = 0xFF757575.toInt()
+	private val disabledIconTint = 0xFFE0E0E0.toInt()
 
 	private var hapticFired = false
 	private var rejectHapticFired = false
 	private var lastDx = 0f
 	private var isCurrentItemRead = false
+	private var currentItem: FeedItem? = null
+	private var pendingMarkRead = false
 
 	override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
 		// only feed rows are swipeable, not the date headers
@@ -60,31 +67,38 @@ class FeedSwipeCallback(
 	): Boolean = false
 
 	override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
-		// A leftward swipe (mark read) on an already-read entry must never commit.
-		if (lastDx < 0f && viewHolder.getItem(FeedItem::class.java)?.isNew == false) {
-			return 3f
-		}
-		return 0.4f
+		// A leftward swipe (mark read) never commits — the action fires on release instead,
+		// letting the row settle back with the standard recover animation.
+		return if (lastDx < 0f) 3f else 0.4f
 	}
 
 	// a fling can commit a swipe via escape velocity even below the distance threshold,
-	// so also block it for a mark-read swipe on an already-read entry
+	// so block it for leftward (mark read) swipes too
 	override fun getSwipeEscapeVelocity(defaultValue: Float): Float =
-		if (lastDx < 0f && isCurrentItemRead) Float.MAX_VALUE else super.getSwipeEscapeVelocity(defaultValue)
+		if (lastDx < 0f) Float.MAX_VALUE else super.getSwipeEscapeVelocity(defaultValue)
 
 	override fun getSwipeVelocityThreshold(defaultValue: Float): Float =
-		if (lastDx < 0f && isCurrentItemRead) Float.MAX_VALUE else super.getSwipeVelocityThreshold(defaultValue)
+		if (lastDx < 0f) Float.MAX_VALUE else super.getSwipeVelocityThreshold(defaultValue)
 
 	override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
 		super.onSelectedChanged(viewHolder, actionState)
 		if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder != null) {
-			isCurrentItemRead = viewHolder.getItem(FeedItem::class.java)?.isNew == false
+			currentItem = viewHolder.getItem(FeedItem::class.java)
+			isCurrentItemRead = currentItem?.isNew == false
+		} else if (actionState == ItemTouchHelper.ACTION_STATE_IDLE) {
+			// finger lifted: fire mark-as-read if the drag was past the threshold at release
+			if (pendingMarkRead) {
+				currentItem?.let { onAction(it, true) }
+			}
+			pendingMarkRead = false
 		}
 	}
 
 	override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-		val item = viewHolder.getItem(FeedItem::class.java) ?: return
-		onAction(item, direction == ItemTouchHelper.LEFT, viewHolder.bindingAdapterPosition)
+		// only delete can commit; mark-as-read is handled on release in onSelectedChanged
+		if (direction != ItemTouchHelper.LEFT) {
+			viewHolder.getItem(FeedItem::class.java)?.let { onAction(it, false) }
+		}
 	}
 
 	override fun onChildDraw(
@@ -101,7 +115,10 @@ class FeedSwipeCallback(
 		if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX != 0f) {
 			lastDx = dX
 			val isRead = dX < 0f
-			val isAlreadyRead = isRead && viewHolder.getItem(FeedItem::class.java)?.isNew == false
+			// snapshot, not the live item: after a committed mark-read the row rebinds with
+			// isNew=false while this holder is still animating, and re-querying would flip the
+			// visual into the grey "rejected" state mid-flight
+			val isAlreadyRead = isRead && isCurrentItemRead
 			if (isAlreadyRead) {
 				// smooth rubber-band toward a shallow limit (tanh is monotonic with f(0)=0).
 				// Applied both while dragging AND during the settle animation: ItemTouchHelper's
@@ -168,6 +185,9 @@ class FeedSwipeCallback(
 			if (!isAlreadyRead) {
 				val passedThreshold = abs(dX) >= 0.4f * view.width
 				if (isCurrentlyActive) {
+					if (isRead) {
+						pendingMarkRead = passedThreshold
+					}
 					if (passedThreshold && !hapticFired) {
 						view.hapticFeedback(HapticEffect.CONFIRM)
 						hapticFired = true
@@ -186,5 +206,7 @@ class FeedSwipeCallback(
 		rejectHapticFired = false
 		lastDx = 0f
 		isCurrentItemRead = false
+		// currentItem/pendingMarkRead are reset in onSelectedChanged(IDLE) at release; resetting
+		// them here too would clobber a new gesture that starts while this row is still settling
 	}
 }

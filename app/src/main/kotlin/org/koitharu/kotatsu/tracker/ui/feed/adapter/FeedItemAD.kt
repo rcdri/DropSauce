@@ -66,6 +66,10 @@ fun feedItemAD(
 		clickListener.onItemClick(item, it)
 	}
 
+	itemView.setOnLongClickListener {
+		clickListener.onItemLongClick(item, it)
+	}
+
 	binding.buttonRead.setOnClickListener {
 		detailsClickListener.onReadClick(item.toMangaWithOverride(), it)
 	}

@@ -2,8 +2,12 @@ package org.koitharu.kotatsu.tracker.ui.feed
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.view.ActionMode
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -16,6 +20,8 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.exceptions.resolve.SnackbarErrorObserver
 import org.koitharu.kotatsu.core.nav.router
 import org.koitharu.kotatsu.core.ui.BaseFragment
+import org.koitharu.kotatsu.core.ui.list.ListSelectionController
+import org.koitharu.kotatsu.core.ui.list.OnListItemClickListener
 import org.koitharu.kotatsu.core.ui.list.PaginationScrollListener
 import org.koitharu.kotatsu.core.ui.list.RecyclerScrollKeeper
 import org.koitharu.kotatsu.core.ui.util.RecyclerViewOwner
@@ -23,6 +29,7 @@ import org.koitharu.kotatsu.core.ui.util.ReversibleActionObserver
 import org.koitharu.kotatsu.core.ui.widgets.TipView
 import org.koitharu.kotatsu.core.util.ext.addMenuProvider
 import org.koitharu.kotatsu.core.util.ext.consumeAll
+import org.koitharu.kotatsu.core.util.ext.findAppCompatDelegate
 import org.koitharu.kotatsu.core.util.ext.observe
 import org.koitharu.kotatsu.core.util.ext.observeEvent
 import org.koitharu.kotatsu.databinding.FragmentListBinding
@@ -35,6 +42,7 @@ import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.tracker.ui.feed.adapter.FeedAdapter
 import org.koitharu.kotatsu.tracker.ui.feed.adapter.FeedSwipeCallback
+import org.koitharu.kotatsu.tracker.ui.feed.model.FeedItem
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -43,12 +51,16 @@ class FeedFragment :
 	PaginationScrollListener.Callback,
 	RecyclerViewOwner,
 	MangaListListener,
-	SwipeRefreshLayout.OnRefreshListener {
+	SwipeRefreshLayout.OnRefreshListener,
+	ListSelectionController.Callback {
 
 	@Inject
 	lateinit var coil: ImageLoader
 
 	private val viewModel by viewModels<FeedViewModel>()
+	private var selectionController: ListSelectionController? = null
+	private var itemTouchHelper: ItemTouchHelper? = null
+	private var isSwipeEnabled = true
 
 	override val recyclerView: RecyclerView?
 		get() = viewBinding?.recyclerView
@@ -60,28 +72,43 @@ class FeedFragment :
 
 	override fun onViewBindingCreated(binding: FragmentListBinding, savedInstanceState: Bundle?) {
 		super.onViewBindingCreated(binding, savedInstanceState)
+		selectionController = ListSelectionController(
+			appCompatDelegate = checkNotNull(findAppCompatDelegate()),
+			decoration = FeedSelectionDecoration(binding.root.context),
+			registryOwner = this,
+			callback = this,
+		)
 		val feedAdapter = FeedAdapter(
 			listener = this,
-			feedClickListener = { item, _ ->
-				router.openDetails(item.toMangaWithOverride())
+			feedClickListener = object : OnListItemClickListener<FeedItem> {
+				override fun onItemClick(item: FeedItem, view: View) {
+					if (selectionController?.onItemClick(item.id) != true) {
+						router.openDetails(item.toMangaWithOverride())
+					}
+				}
+
+				override fun onItemLongClick(item: FeedItem, view: View): Boolean {
+					return selectionController?.onItemLongClick(view, item.id) == true
+				}
 			},
 			onTipClose = { viewModel.dismissGesturesTip() },
-			onExpandClick = { viewModel.toggleExpanded(it) },
+			onExpandClick = { item ->
+				val controller = selectionController
+				// in selection mode a tap anywhere on the row toggles selection instead of expanding
+				if (controller != null && controller.count > 0) {
+					controller.onItemClick(item.id)
+				} else {
+					viewModel.toggleExpanded(item)
+				}
+			},
 		)
-		val itemTouchHelper = ItemTouchHelper(
-			FeedSwipeCallback(binding.recyclerView.context) { item, isRead, position ->
-				// the list can re-emit mid-swipe (Room invalidation), detaching the holder
-				val hasPosition = position != RecyclerView.NO_POSITION
-				when {
-					// already read: no-op, just restore the row (guards a fast fling past the cap)
-					isRead && !item.isNew -> if (hasPosition) feedAdapter.notifyItemChanged(position)
-					// mark-read keeps the row; snap it back, the dot clears via the content flow
-					isRead -> {
-						if (hasPosition) feedAdapter.notifyItemChanged(position)
-						viewModel.markAsRead(item)
-					}
-
-					else -> viewModel.remove(item)
+		val touchHelper = ItemTouchHelper(
+			FeedSwipeCallback(binding.recyclerView.context) { item, isRead ->
+				if (isRead) {
+					// the row stays in place (the swipe never commits); the dot clears via the content flow
+					viewModel.markAsRead(item)
+				} else {
+					viewModel.remove(item)
 				}
 			},
 		)
@@ -94,9 +121,12 @@ class FeedFragment :
 			addOnScrollListener(PaginationScrollListener(4, this@FeedFragment))
 			addItemDecoration(TypedListSpacingDecoration(context, true))
 			RecyclerScrollKeeper(this).attach()
+			selectionController?.attachToRecyclerView(this)
 		}
+		itemTouchHelper = touchHelper
 		viewModel.isSwipeGesturesEnabled.observe(viewLifecycleOwner) { isEnabled ->
-			itemTouchHelper.attachToRecyclerView(if (isEnabled) viewBinding?.recyclerView else null)
+			isSwipeEnabled = isEnabled
+			updateSwipeAttachment()
 		}
 		binding.swipeRefreshLayout.setOnRefreshListener(this)
 		addMenuProvider(FeedMenuProvider(binding.recyclerView, viewModel, router))
@@ -110,6 +140,58 @@ class FeedFragment :
 	override fun onPause() {
 		super.onPause()
 		viewModel.collapseAll()
+	}
+
+	override fun onDestroyView() {
+		super.onDestroyView()
+		selectionController = null
+		itemTouchHelper = null
+	}
+
+	override fun onSelectionChanged(controller: ListSelectionController, count: Int) {
+		viewBinding?.recyclerView?.invalidateItemDecorations()
+		// swipe rows and multi-select fight over the same touch gesture; suspend swiping while selecting
+		updateSwipeAttachment()
+	}
+
+	override fun onCreateActionMode(
+		controller: ListSelectionController,
+		menuInflater: MenuInflater,
+		menu: Menu,
+	): Boolean {
+		menuInflater.inflate(R.menu.mode_feed, menu)
+		return true
+	}
+
+	override fun onActionItemClicked(
+		controller: ListSelectionController,
+		mode: ActionMode?,
+		item: MenuItem,
+	): Boolean = when (item.itemId) {
+		R.id.action_mark_read -> {
+			viewModel.markAsRead(controller.snapshot())
+			mode?.finish()
+			true
+		}
+
+		R.id.action_remove -> {
+			viewModel.remove(controller.snapshot())
+			mode?.finish()
+			true
+		}
+
+		R.id.action_select_all -> {
+			val ids = viewModel.content.value.mapNotNull { (it as? FeedItem)?.id }
+			controller.addAll(ids)
+			true
+		}
+
+		else -> false
+	}
+
+	private fun updateSwipeAttachment() {
+		val attach = isSwipeEnabled && (selectionController?.count ?: 0) == 0
+		itemTouchHelper?.attachToRecyclerView(if (attach) viewBinding?.recyclerView else null)
 	}
 
 	override fun onApplyWindowInsets(v: View, insets: WindowInsetsCompat): WindowInsetsCompat {
