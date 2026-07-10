@@ -63,12 +63,19 @@ class FeedViewModel @Inject constructor(
 
 	val onActionDone = MutableEventFlow<ReversibleAction>()
 
+	val isSwipeGesturesEnabled = settings.observeAsFlow(AppSettings.KEY_FEED_SWIPE_GESTURES) {
+		isFeedSwipeGesturesEnabled
+	}.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Eagerly, settings.isFeedSwipeGesturesEnabled)
+
 	@Suppress("USELESS_CAST")
 	val content = combine(
 		quickFilter.appliedOptions,
 		combine(limit, quickFilter.appliedOptions.combineWithSettings(), ::Pair)
 			.flatMapLatest { repository.observeTrackingLog(it.first, it.second) },
-		settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_GESTURES) },
+		combine(
+			settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_GESTURES) },
+			isSwipeGesturesEnabled,
+		) { tip, swipe -> tip && swipe },
 		expandedIds,
 		historyRepository.observeAll(),
 	) { filters, list, isTipVisible, expanded, _ ->

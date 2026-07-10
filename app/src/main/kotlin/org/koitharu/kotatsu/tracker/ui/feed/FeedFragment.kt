@@ -68,6 +68,23 @@ class FeedFragment :
 			onTipClose = { viewModel.dismissGesturesTip() },
 			onExpandClick = { viewModel.toggleExpanded(it) },
 		)
+		val itemTouchHelper = ItemTouchHelper(
+			FeedSwipeCallback(binding.recyclerView.context) { item, isRead, position ->
+				// the list can re-emit mid-swipe (Room invalidation), detaching the holder
+				val hasPosition = position != RecyclerView.NO_POSITION
+				when {
+					// already read: no-op, just restore the row (guards a fast fling past the cap)
+					isRead && !item.isNew -> if (hasPosition) feedAdapter.notifyItemChanged(position)
+					// mark-read keeps the row; snap it back, the dot clears via the content flow
+					isRead -> {
+						if (hasPosition) feedAdapter.notifyItemChanged(position)
+						viewModel.markAsRead(item)
+					}
+
+					else -> viewModel.remove(item)
+				}
+			},
+		)
 		with(binding.recyclerView) {
 			val paddingVertical = resources.getDimensionPixelSize(R.dimen.list_spacing_normal)
 			setPadding(0, paddingVertical, 0, paddingVertical)
@@ -77,23 +94,9 @@ class FeedFragment :
 			addOnScrollListener(PaginationScrollListener(4, this@FeedFragment))
 			addItemDecoration(TypedListSpacingDecoration(context, true))
 			RecyclerScrollKeeper(this).attach()
-			ItemTouchHelper(
-				FeedSwipeCallback(context) { item, isRead, position ->
-					// the list can re-emit mid-swipe (Room invalidation), detaching the holder
-					val hasPosition = position != RecyclerView.NO_POSITION
-					when {
-						// already read: no-op, just restore the row (guards a fast fling past the cap)
-						isRead && !item.isNew -> if (hasPosition) feedAdapter.notifyItemChanged(position)
-						// mark-read keeps the row; snap it back, the dot clears via the content flow
-						isRead -> {
-							if (hasPosition) feedAdapter.notifyItemChanged(position)
-							viewModel.markAsRead(item)
-						}
-
-						else -> viewModel.remove(item)
-					}
-				},
-			).attachToRecyclerView(this)
+		}
+		viewModel.isSwipeGesturesEnabled.observe(viewLifecycleOwner) { isEnabled ->
+			itemTouchHelper.attachToRecyclerView(if (isEnabled) viewBinding?.recyclerView else null)
 		}
 		binding.swipeRefreshLayout.setOnRefreshListener(this)
 		addMenuProvider(FeedMenuProvider(binding.recyclerView, viewModel, router))

@@ -130,7 +130,9 @@
     <string name="marked_as_read">Marked as read</string>
     <string name="feed_entry_removed">Removed</string>
     <string name="feed_gestures_tip_title">Swipe gestures</string>
-    <string name="feed_gestures_tip">Swipe an entry right to remove it from the feed, or left to mark it as read.</string>
+    <string name="feed_gestures_tip">Swipe an entry right to remove it from the feed, or left to mark it as read. You can turn these gestures off in Settings › Check for new chapters.</string>
+    <string name="feed_swipe_gestures">Feed swipe gestures</string>
+    <string name="feed_swipe_gestures_summary">Swipe feed entries to mark them as read or remove them</string>
     <string name="update_all">Update all</string>
     <string name="install">Install</string>
     <string name="uninstall">Uninstall</string>
@@ -432,6 +434,7 @@
     <string name="theme_name_mion">Mion</string>
     <string name="theme_name_rikka">Rikka</string>
     <string name="theme_name_sakura">Sakura</string>
+    <string name="theme_name_shana">Shana</string>
     <string name="theme_name_mamimi">Mamimi</string>
     <string name="theme_name_kanade">Kanade</string>
     <string name="nothing_here">There is nothing here</string>

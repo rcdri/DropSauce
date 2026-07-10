@@ -268,6 +268,7 @@ class SettingsSearchHelper @Inject constructor(
 				addItem(AppSettings.KEY_NOTIFICATIONS_SOUND, R.string.notification_sound, breadcrumbs = crumbs + ctx.getString(R.string.notifications), fragmentClass = NotificationSettingsLegacyFragment::class.java)
 				addItem(AppSettings.KEY_NOTIFICATIONS_VIBRATE, R.string.vibration, breadcrumbs = crumbs + ctx.getString(R.string.notifications), fragmentClass = NotificationSettingsLegacyFragment::class.java)
 				addItem(AppSettings.KEY_NOTIFICATIONS_LIGHT, R.string.light_indicator, breadcrumbs = crumbs + ctx.getString(R.string.notifications), fragmentClass = NotificationSettingsLegacyFragment::class.java)
+				addItem(AppSettings.KEY_FEED_SWIPE_GESTURES, R.string.feed_swipe_gestures, R.string.feed_swipe_gestures_summary, crumbs, TrackerSettingsFragment::class.java)
 				addItem(AppSettings.KEY_TRACKER_NO_NSFW, R.string.disable_nsfw_notifications, R.string.disable_nsfw_notifications_summary, crumbs, TrackerSettingsFragment::class.java)
 				addItem(AppSettings.KEY_TRACKER_DOWNLOAD, R.string.download_new_chapters, breadcrumbs = crumbs, fragmentClass = TrackerSettingsFragment::class.java)
 			}

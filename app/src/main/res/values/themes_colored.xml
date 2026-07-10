@@ -442,4 +442,53 @@
 		<item name="colorSurfaceContainerHigh">@color/sakura_surfaceContainerHigh</item>
 		<item name="colorSurfaceContainerHighest">@color/sakura_surfaceContainerHighest</item>
 	</style>
+	<!-- Shana -->
+	<style name="ThemeOverlay.Kotatsu.Shana">
+		<item name="colorPrimary">@color/shana_primary</item>
+		<item name="colorOnPrimary">@color/shana_onPrimary</item>
+		<item name="colorPrimaryContainer">@color/shana_primaryContainer</item>
+		<item name="colorOnPrimaryContainer">@color/shana_onPrimaryContainer</item>
+		<item name="colorSecondary">@color/shana_secondary</item>
+		<item name="colorOnSecondary">@color/shana_onSecondary</item>
+		<item name="colorSecondaryContainer">@color/shana_secondaryContainer</item>
+		<item name="colorOnSecondaryContainer">@color/shana_onSecondaryContainer</item>
+		<item name="colorTertiary">@color/shana_tertiary</item>
+		<item name="colorOnTertiary">@color/shana_onTertiary</item>
+		<item name="colorTertiaryContainer">@color/shana_tertiaryContainer</item>
+		<item name="colorOnTertiaryContainer">@color/shana_onTertiaryContainer</item>
+		<item name="colorError">@color/shana_error</item>
+		<item name="colorOnError">@color/shana_onError</item>
+		<item name="colorErrorContainer">@color/shana_errorContainer</item>
+		<item name="colorOnErrorContainer">@color/shana_onErrorContainer</item>
+		<item name="android:colorBackground">@color/shana_background</item>
+		<item name="colorOnBackground">@color/shana_onBackground</item>
+		<item name="colorSurface">@color/shana_surface</item>
+		<item name="colorOnSurface">@color/shana_onSurface</item>
+		<item name="colorSurfaceVariant">@color/shana_surfaceVariant</item>
+		<item name="colorOnSurfaceVariant">@color/shana_onSurfaceVariant</item>
+		<item name="colorOutline">@color/shana_outline</item>
+		<item name="colorOutlineVariant">@color/shana_outlineVariant</item>
+		<item name="colorSurfaceInverse">@color/shana_inverseSurface</item>
+		<item name="colorOnSurfaceInverse">@color/shana_inverseOnSurface</item>
+		<item name="colorPrimaryInverse">@color/shana_inversePrimary</item>
+		<item name="colorPrimaryFixed">@color/shana_primaryFixed</item>
+		<item name="colorOnPrimaryFixed">@color/shana_onPrimaryFixed</item>
+		<item name="colorPrimaryFixedDim">@color/shana_primaryFixedDim</item>
+		<item name="colorOnPrimaryFixedVariant">@color/shana_onPrimaryFixedVariant</item>
+		<item name="colorSecondaryFixed">@color/shana_secondaryFixed</item>
+		<item name="colorOnSecondaryFixed">@color/shana_onSecondaryFixed</item>
+		<item name="colorSecondaryFixedDim">@color/shana_secondaryFixedDim</item>
+		<item name="colorOnSecondaryFixedVariant">@color/shana_onSecondaryFixedVariant</item>
+		<item name="colorTertiaryFixed">@color/shana_tertiaryFixed</item>
+		<item name="colorOnTertiaryFixed">@color/shana_onTertiaryFixed</item>
+		<item name="colorTertiaryFixedDim">@color/shana_tertiaryFixedDim</item>
+		<item name="colorOnTertiaryFixedVariant">@color/shana_onTertiaryFixedVariant</item>
+		<item name="colorSurfaceDim">@color/shana_surfaceDim</item>
+		<item name="colorSurfaceBright">@color/shana_surfaceBright</item>
+		<item name="colorSurfaceContainerLowest">@color/shana_surfaceContainerLowest</item>
+		<item name="colorSurfaceContainerLow">@color/shana_surfaceContainerLow</item>
+		<item name="colorSurfaceContainer">@color/shana_surfaceContainer</item>
+		<item name="colorSurfaceContainerHigh">@color/shana_surfaceContainerHigh</item>
+		<item name="colorSurfaceContainerHighest">@color/shana_surfaceContainerHighest</item>
+	</style>
 </resources>

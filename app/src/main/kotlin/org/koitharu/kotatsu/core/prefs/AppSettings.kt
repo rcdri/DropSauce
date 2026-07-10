@@ -270,6 +270,9 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isTrackerNsfwDisabled: Boolean
 		get() = prefs.getBoolean(KEY_TRACKER_NO_NSFW, false)
 
+	val isFeedSwipeGesturesEnabled: Boolean
+		get() = prefs.getBoolean(KEY_FEED_SWIPE_GESTURES, true)
+
 	val trackerDownloadStrategy: TrackerDownloadStrategy
 		get() = prefs.getEnumValue(KEY_TRACKER_DOWNLOAD, TrackerDownloadStrategy.DISABLED)
 
@@ -967,6 +970,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_TRACK_SOURCES = "track_sources"
 		const val KEY_TRACKER_NOTIFICATIONS = "tracker_notifications"
 		const val KEY_TRACKER_NO_NSFW = "tracker_no_nsfw"
+		const val KEY_FEED_SWIPE_GESTURES = "feed_swipe_gestures"
 		const val KEY_TRACKER_DOWNLOAD = "tracker_download"
 		const val KEY_NOTIFICATIONS_SOUND = "notifications_sound"
 		const val KEY_NOTIFICATIONS_VIBRATE = "notifications_vibrate"

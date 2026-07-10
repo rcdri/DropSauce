@@ -194,6 +194,7 @@ private fun TrackerScreen(
 	var frequency by rememberStringPref(AppSettings.KEY_TRACKER_FREQUENCY, "1")
 	var trackSources by rememberStringSetPref(AppSettings.KEY_TRACK_SOURCES, setOf(AppSettings.TRACK_FAVOURITES))
 	var trackerNoNsfw by rememberBooleanPref(AppSettings.KEY_TRACKER_NO_NSFW, false)
+	var feedSwipeGestures by rememberBooleanPref(AppSettings.KEY_FEED_SWIPE_GESTURES, true)
 
 	val freqValues = remember { ctx.resources.getStringArray(R.array.values_tracker_frequency).toList() }
 	val freqEntries = remember(freqValues) {
@@ -308,6 +309,17 @@ private fun TrackerScreen(
 						shape = pos.shape,
 						enabled = enabled,
 						onClick = onOpenLegacyNotifications,
+					)
+				}
+				item { pos ->
+					SwitchSettingsItem(
+						title = stringResource(R.string.feed_swipe_gestures),
+						subtitle = stringResource(R.string.feed_swipe_gestures_summary),
+						checked = feedSwipeGestures,
+						onCheckedChange = { feedSwipeGestures = it },
+						icon = R.drawable.ic_gesture_horizontal,
+
+						shape = pos.shape,
 					)
 				}
 				item { pos ->
