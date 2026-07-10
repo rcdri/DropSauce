@@ -6,5 +6,5 @@
 	android:ellipsize="end"
 	android:maxLines="1"
 	android:paddingVertical="4dp"
-	android:textAppearance="?attr/textAppearanceBodySmall"
-	android:textColor="?attr/colorPrimary" />
+	android:drawablePadding="8dp"
+	android:textAppearance="?attr/textAppearanceBodyMedium" />

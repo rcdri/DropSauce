@@ -79,12 +79,15 @@ fun feedItemAD(
 		}
 		binding.imageViewCover.setImageAsync(item.imageUrl, item.manga.source)
 		binding.textViewTitle.text = item.title
-		binding.imageViewIndicatorNew.isVisible = item.isNew
 		val chapters = item.chapters
 		// a single chapter always shows its name; multiple collapse into a "N new chapters" summary
 		// that expands to the full list on click, and re-collapses when the feed screen is left
 		val isCollapsedSummary = chapters.size > 1 && !item.isExpanded
 		binding.textViewSummary.isVisible = chapters.isEmpty() || isCollapsedSummary
+		val indicatorRes = if (item.isNew) R.drawable.ic_new else 0
+		binding.textViewSummary.setCompoundDrawablesRelativeWithIntrinsicBounds(
+			if (binding.textViewSummary.isVisible) indicatorRes else 0, 0, 0, 0,
+		)
 		if (binding.textViewSummary.isVisible) {
 			binding.textViewSummary.text = context.resources.getQuantityStringSafe(
 				R.plurals.new_chapters,
@@ -101,13 +104,16 @@ fun feedItemAD(
 		binding.layoutChapters.removeAllViews()
 		if (binding.layoutChapters.isVisible) {
 			val inflater = LayoutInflater.from(context)
-			for (chapter in chapters) {
+			for ((index, chapter) in chapters.withIndex()) {
 				val textView = inflater.inflate(
 					R.layout.item_feed_chapter,
 					binding.layoutChapters,
 					false,
 				) as TextView
 				textView.text = chapter.name
+				textView.setCompoundDrawablesRelativeWithIntrinsicBounds(
+					if (index == 0) indicatorRes else 0, 0, 0, 0,
+				)
 				binding.layoutChapters.addView(textView)
 			}
 		}

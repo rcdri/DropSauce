@@ -41,7 +41,9 @@ class FeedSwipeCallback(
 	private val disabledIconTint = context.getThemeColor(materialR.attr.colorOutline, Color.LTGRAY)
 
 	private var hapticFired = false
+	private var rejectHapticFired = false
 	private var lastDx = 0f
+	private var isCurrentItemRead = false
 
 	override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
 		// only feed rows are swipeable, not the date headers
@@ -65,6 +67,21 @@ class FeedSwipeCallback(
 		return 0.4f
 	}
 
+	// a fling can commit a swipe via escape velocity even below the distance threshold,
+	// so also block it for a mark-read swipe on an already-read entry
+	override fun getSwipeEscapeVelocity(defaultValue: Float): Float =
+		if (lastDx < 0f && isCurrentItemRead) Float.MAX_VALUE else super.getSwipeEscapeVelocity(defaultValue)
+
+	override fun getSwipeVelocityThreshold(defaultValue: Float): Float =
+		if (lastDx < 0f && isCurrentItemRead) Float.MAX_VALUE else super.getSwipeVelocityThreshold(defaultValue)
+
+	override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+		super.onSelectedChanged(viewHolder, actionState)
+		if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder != null) {
+			isCurrentItemRead = viewHolder.getItem(FeedItem::class.java)?.isNew == false
+		}
+	}
+
 	override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
 		val item = viewHolder.getItem(FeedItem::class.java) ?: return
 		onAction(item, direction == ItemTouchHelper.LEFT, viewHolder.bindingAdapterPosition)
@@ -85,13 +102,22 @@ class FeedSwipeCallback(
 			lastDx = dX
 			val isRead = dX < 0f
 			val isAlreadyRead = isRead && viewHolder.getItem(FeedItem::class.java)?.isNew == false
-			if (isAlreadyRead && isCurrentlyActive) {
-				// smooth rubber-band toward a shallow limit while actively dragging (tanh is monotonic
-				// with f(0)=0). Only while the finger is moving the view: on release, ItemTouchHelper's
-				// own settle animation interpolates dX from the already-clamped translation back to 0,
-				// so re-applying tanh here would clamp an already-clamped value and jump on release.
+			if (isAlreadyRead) {
+				// smooth rubber-band toward a shallow limit (tanh is monotonic with f(0)=0).
+				// Applied both while dragging AND during the settle animation: ItemTouchHelper's
+				// recover animation interpolates from its internal *raw* dX (not the clamped
+				// translation), so leaving the settle path unclamped makes the row jump out to the
+				// raw offset on release and then vanish. Clamping unconditionally keeps the visual
+				// position continuous from drag through settle.
 				val limit = view.width * 0.22f
 				effectiveDx = -(limit * tanh(abs(dX) / limit))
+				if (isCurrentlyActive) {
+					// error buzz once the user pushes clearly past the rubber-band limit
+					if (abs(dX) > limit * 2f && !rejectHapticFired) {
+						view.hapticFeedback(HapticEffect.REJECT)
+						rejectHapticFired = true
+					}
+				}
 			}
 			bgPaint.color = when {
 				isAlreadyRead -> disabledBg
@@ -157,6 +183,8 @@ class FeedSwipeCallback(
 	override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
 		super.clearView(recyclerView, viewHolder)
 		hapticFired = false
+		rejectHapticFired = false
 		lastDx = 0f
+		isCurrentItemRead = false
 	}
 }
