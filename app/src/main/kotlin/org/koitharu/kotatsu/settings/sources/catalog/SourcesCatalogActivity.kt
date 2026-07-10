@@ -216,14 +216,13 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 		}
 		combine(
 			viewModel.appliedFilter,
-			viewModel.hasNewSources,
 			viewModel.contentTypes,
 			viewModel.locales,
 			viewModel.isNsfwDisabled,
-		) { filter, hasNewSources, contentTypes, locales, isNsfwDisabled ->
-			CatalogUiState(filter, hasNewSources, contentTypes, locales, isNsfwDisabled)
+		) { filter, contentTypes, locales, isNsfwDisabled ->
+			CatalogUiState(filter, contentTypes, locales, isNsfwDisabled)
 		}.observe(this) {
-			updateFilers(it.filter, it.hasNewSources, it.contentTypes, it.locales, it.isNsfwDisabled)
+			updateFilers(it.filter, it.contentTypes, it.locales, it.isNsfwDisabled)
 		}
 		addMenuProvider(SourcesCatalogMenuProvider(this, viewModel, this, isExternalOnly))
 		ContextCompat.registerReceiver(
@@ -277,7 +276,6 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 	override fun onChipClick(chip: Chip, data: Any?) {
 		when (data) {
 			is ContentType -> viewModel.setContentType(data, !chip.isChecked)
-			FilterChip.NEW_ONLY -> viewModel.setNewOnly(!chip.isChecked)
 			FilterChip.NSFW_DISABLED -> viewModel.setNsfwDisabled(!chip.isChecked)
 			FilterChip.LOCALE -> showLocalesMenu(chip)
 			else -> Unit
@@ -321,12 +319,11 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 
 	private fun updateFilers(
 		appliedFilter: SourcesCatalogFilter,
-		hasNewSources: Boolean,
 		contentTypes: List<ContentType>,
 		locales: Set<String?>,
 		isNsfwDisabled: Boolean,
 	) {
-		val chips = ArrayList<ChipModel>(contentTypes.size + 3)
+		val chips = ArrayList<ChipModel>(contentTypes.size + 2)
 		if (locales.size > 1) {
 			chips += ChipModel(
 				title = appliedFilter.locale?.toLocale().getDisplayName(this),
@@ -341,14 +338,6 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 			isChecked = isNsfwDisabled,
 			data = FilterChip.NSFW_DISABLED,
 		)
-		if (hasNewSources) {
-			chips += ChipModel(
-				title = getString(R.string._new),
-				icon = R.drawable.ic_updated,
-				isChecked = appliedFilter.isNewOnly,
-				data = FilterChip.NEW_ONLY,
-			)
-		}
 		contentTypes.mapTo(chips) { type ->
 			ChipModel(
 				title = getString(type.titleResId),
@@ -441,14 +430,12 @@ class SourcesCatalogActivity : BaseActivity<ActivitySourcesCatalogBinding>(),
 
 	private data class CatalogUiState(
 		val filter: SourcesCatalogFilter,
-		val hasNewSources: Boolean,
 		val contentTypes: List<ContentType>,
 		val locales: Set<String?>,
 		val isNsfwDisabled: Boolean,
 	)
 
 	private enum class FilterChip {
-		NEW_ONLY,
 		LOCALE,
 		NSFW_DISABLED,
 	}

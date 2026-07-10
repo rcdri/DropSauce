@@ -28,8 +28,44 @@ class FavoritesWidget : AppWidgetProvider() {
 		appWidgetManager: AppWidgetManager,
 		appWidgetIds: IntArray,
 	) {
-		for (widgetId in appWidgetIds) {
-			renderWidget(context, appWidgetManager, widgetId)
+		// A single onReceive dispatch may only call goAsync() once: renderWidget() used to call it
+		// per widget id, so 2+ pinned Favorites widgets crashed on the second call. Render the
+		// synchronous placeholder pass for every id first, then do the async cover-loading pass for
+		// all of them inside one runAsync() block (mirrors StatsWidget/ContinueReadingWidget).
+		val pinnedByWidget = appWidgetIds.associateWith { widgetId ->
+			val pinnedIds = FavoritesWidgetPrefs.load(context, widgetId)
+			appWidgetManager.updateAppWidget(widgetId, buildViews(context, widgetId, pinnedIds, emptyMap()))
+			pinnedIds
+		}
+		val widgetsWithPins = pinnedByWidget.filterValues { it.isNotEmpty() }
+		if (widgetsWithPins.isEmpty()) return
+
+		runAsync(context, TAG) { appContext ->
+			val entryPoint = appContext.widgetEntryPoint()
+			val mangaDao = entryPoint.database.getMangaDao()
+			val cornerRadius = WidgetCoverLoader.dpToPx(appContext, 12).toFloat()
+			val mgr = AppWidgetManager.getInstance(appContext)
+			for ((widgetId, pinnedIds) in widgetsWithPins) {
+				val slotSize = computeSlotSizePx(appContext, mgr, widgetId, pinnedIds.size)
+				val mangaById = HashMap<Long, Manga>(pinnedIds.size)
+				val coversById = HashMap<Long, Bitmap>(pinnedIds.size)
+				for (id in pinnedIds) {
+					val manga = runCatching { mangaDao.find(id)?.toManga() }.getOrNull() ?: continue
+					mangaById[id] = manga
+					val cover = WidgetCoverLoader.load(
+						context = appContext,
+						loader = entryPoint.imageLoader,
+						manga = manga,
+						targetWidth = slotSize.first,
+						targetHeight = slotSize.second,
+						cornerRadiusPx = cornerRadius,
+					)
+					if (cover != null) {
+						coversById[id] = cover
+					}
+				}
+				mgr.updateAppWidget(widgetId, buildViews(appContext, widgetId, pinnedIds, coversById, mangaById))
+			}
 		}
 	}
 

@@ -62,19 +62,11 @@ class SourcesCatalogViewModel @Inject constructor(
 		SourcesCatalogFilter(
 			types = emptySet(),
 			locale = null,
-			isNewOnly = false,
 		),
 	)
 	val onOpenPackageInstaller = MutableEventFlow<List<InstallRequest>>()
 	val onOpenUninstall = MutableEventFlow<String>()
 	val onShowMessage = MutableEventFlow<Int>()
-
-	val hasNewSources = combine(
-		appliedFilter,
-		repository.observeHasNewSources(),
-	) { _, hasNewSources ->
-		hasNewSources
-	}.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Lazily, false)
 
 	val locales: StateFlow<Set<String?>> = combine(
 		appliedFilter,
@@ -116,10 +108,6 @@ class SourcesCatalogViewModel @Inject constructor(
 		items.any { it is SourceCatalogItem.Extension && it.action == SourceCatalogItem.Extension.Action.UPDATE }
 	}.stateIn(viewModelScope + Dispatchers.Default, SharingStarted.Eagerly, false)
 
-	init {
-		repository.clearNewSourcesBadge()
-	}
-
 	fun performSearch(query: String?) {
 		searchQuery.value = query?.trim()
 	}
@@ -154,10 +142,6 @@ class SourcesCatalogViewModel @Inject constructor(
 			types.remove(value)
 		}
 		appliedFilter.value = filter.copy(types = types)
-	}
-
-	fun setNewOnly(value: Boolean) {
-		appliedFilter.value = appliedFilter.value.copy(isNewOnly = value)
 	}
 
 	fun hasExternalRepoConfigured(): Boolean = !externalRepoUrl.value.isNullOrBlank()

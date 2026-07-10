@@ -29,7 +29,7 @@ import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.search.domain.SearchKind
 
 @AndroidEntryPoint
-class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.OnClickListener {
+class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner {
 
     override val viewModel by viewModels<RemoteListViewModel>()
 
@@ -42,7 +42,6 @@ class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.On
         addMenuProvider(MangaSearchMenuProvider(filterCoordinator, viewModel))
         viewModel.isRandomLoading.observe(viewLifecycleOwner, MenuInvalidator(requireActivity()))
         viewModel.onOpenManga.observeEvent(viewLifecycleOwner) { router.openDetails(it) }
-        viewModel.onSourceBroken.observeEvent(viewLifecycleOwner) { showSourceBrokenWarning() }
         viewModel.onBrokenSortFallback.observeEvent(viewLifecycleOwner) { showBrokenSortWarning() }
         filterCoordinator.observe().distinctUntilChangedBy { it.listFilter.isEmpty() }
             .drop(1)
@@ -89,8 +88,6 @@ class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.On
         openInBrowser(error.getCauseUrl())
     }
 
-    override fun onClick(v: View?) = Unit // from Snackbar, do nothing
-
     private fun openInBrowser(url: String?) {
         if (url?.isHttpUrl() == true) {
             router.openBrowser(
@@ -102,16 +99,6 @@ class RemoteListFragment : MangaListFragment(), FilterCoordinator.Owner, View.On
             Snackbar.make(requireViewBinding().recyclerView, R.string.operation_not_supported, Snackbar.LENGTH_SHORT)
                 .show()
         }
-    }
-
-    private fun showSourceBrokenWarning() {
-        val snackbar = Snackbar.make(
-            viewBinding?.recyclerView ?: return,
-            R.string.source_broken_warning,
-            Snackbar.LENGTH_INDEFINITE,
-        )
-        snackbar.setAction(R.string.got_it, this)
-        snackbar.show()
     }
 
     private fun showBrokenSortWarning() {

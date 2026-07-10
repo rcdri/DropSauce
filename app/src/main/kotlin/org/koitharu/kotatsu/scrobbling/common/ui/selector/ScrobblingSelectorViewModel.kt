@@ -150,6 +150,7 @@ class ScrobblingSelectorViewModel @Inject constructor(
 		val targetId = selectedItemId.value
 		if (targetId == NO_ID) {
 			onClose.call(Unit)
+			return
 		}
 		doneJob = launchLoadingJob(Dispatchers.Default) {
 			val prevInfo = currentScrobbler.getScrobblingInfoOrNull(manga.id)

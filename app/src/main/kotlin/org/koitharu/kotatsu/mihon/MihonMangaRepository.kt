@@ -60,10 +60,22 @@ class MihonMangaRepository(
 	}
 
 	val mihonSource = source.catalogueSource
-	private var lastOffset = -1
-	private var currentPage = 1
-	private val paginationLock = Any()
-	@Volatile private var hasMorePages = true
+
+	// Keyed by (order, query/tags) so a search fired while a plain browse listing is still paging
+	// doesn't corrupt the browse listing's page counter, and vice versa — each distinct listing gets
+	// its own page/offset tracking instead of sharing one mutable counter on the repository instance.
+	// ponytail: entries are never evicted; bounded in practice by the handful of distinct
+	// query/filter combos a session touches per source, add an LRU cap if that stops holding.
+	private class PaginationState {
+		var currentPage = 1
+		var lastOffset = -1
+		@Volatile var hasMorePages = true
+	}
+
+	private val paginationStates = java.util.concurrent.ConcurrentHashMap<String, PaginationState>()
+
+	private fun paginationKey(order: SortOrder?, filter: MangaListFilter?): String =
+		"$order|${filter?.query}|${filter?.tags}|${filter?.tagsExclude}"
 
 	override val sortOrders: Set<SortOrder> = buildSet {
 		add(SortOrder.POPULARITY)
@@ -85,20 +97,21 @@ class MihonMangaRepository(
 		)
 
 	override suspend fun getList(offset: Int, order: SortOrder?, filter: MangaListFilter?): List<Manga> = withContext(Dispatchers.IO) {
-		val page = synchronized(paginationLock) {
+		val state = paginationStates.getOrPut(paginationKey(order, filter)) { PaginationState() }
+		val page = synchronized(state) {
 			if (offset == 0) {
-				currentPage = 1
-				lastOffset = 0
-				hasMorePages = true
-			} else if (offset > lastOffset) {
-				lastOffset = offset
-				currentPage += 1
+				state.currentPage = 1
+				state.lastOffset = 0
+				state.hasMorePages = true
+			} else if (offset > state.lastOffset) {
+				state.lastOffset = offset
+				state.currentPage += 1
 			}
-			currentPage
+			state.currentPage
 		}
 
 		// Source told us on the last page that there are no more results — skip the request.
-		if (offset > 0 && !hasMorePages) return@withContext emptyList()
+		if (offset > 0 && !state.hasMorePages) return@withContext emptyList()
 
 		val query = filter?.query?.trim().orEmpty()
 
@@ -116,8 +129,8 @@ class MihonMangaRepository(
 			throw translateExtensionException(e)
 		}
 
-		// Remember whether the source has more pages for the next getList() call.
-		hasMorePages = mangasPage.hasNextPage
+		// Remember whether the source has more pages for the next getList() call with this key.
+		state.hasMorePages = mangasPage.hasNextPage
 
 		val httpSource = mihonSource as? HttpSource
 		mangasPage.mangas.map { sManga ->

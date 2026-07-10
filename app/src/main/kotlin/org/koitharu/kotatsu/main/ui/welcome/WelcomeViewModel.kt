@@ -11,7 +11,6 @@ import org.koitharu.kotatsu.core.prefs.ColorScheme
 import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.call
-import org.koitharu.kotatsu.explore.data.MangaSourcesRepository
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.local.data.LocalStorageManager
 import org.koitharu.kotatsu.sync.data.GoogleDriveAuth
@@ -26,7 +25,6 @@ data class RestoreBackupResult(
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
-	repository: MangaSourcesRepository,
 	private val settings: AppSettings,
 	private val storageManager: LocalStorageManager,
 	private val backupManager: MihonBackupManager,
@@ -45,7 +43,6 @@ class WelcomeViewModel @Inject constructor(
 
 	init {
 		launchJob(Dispatchers.Default) {
-			repository.clearNewSourcesBadge()
 			refreshStorageSummary()
 		}
 	}

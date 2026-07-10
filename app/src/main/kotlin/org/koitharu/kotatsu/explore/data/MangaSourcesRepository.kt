@@ -65,12 +65,6 @@ class MangaSourcesRepository @Inject constructor(
 		mihon.map { it to true }
 	}
 
-	fun observeHasNewSources(): Flow<Boolean> = kotlinx.coroutines.flow.flowOf(false)
-
-	fun clearNewSourcesBadge() {
-		settings.sourcesVersion = org.koitharu.kotatsu.BuildConfig.VERSION_CODE
-	}
-
 	fun setIsPinned(sources: Collection<MangaSource>, isPinned: Boolean): ReversibleHandle {
 		val before = getPinnedSourceKeys()
 		val updated = before.toMutableList()

@@ -77,12 +77,12 @@ class LazyMihonMangaRepository(
 	override suspend fun getPageUrl(page: MangaPage): String = resolve().getPageUrl(page)
 
 	override suspend fun getImageRequestHeaders(imageUrl: String, page: MangaPage): Headers? =
-		delegate?.getImageRequestHeaders(imageUrl, page)
+		resolve().getImageRequestHeaders(imageUrl, page)
 
 	override suspend fun getImageStream(pageUrl: String, page: MangaPage): Response? =
-		delegate?.getImageStream(pageUrl, page)
+		resolve().getImageStream(pageUrl, page)
 
-	override suspend fun getCoverStream(url: String): Response? = delegate?.getCoverStream(url)
+	override suspend fun getCoverStream(url: String): Response? = resolve().getCoverStream(url)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions = resolve().getFilterOptions()
 

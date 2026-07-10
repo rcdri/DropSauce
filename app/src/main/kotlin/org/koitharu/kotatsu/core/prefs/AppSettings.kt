@@ -455,10 +455,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_SOURCES_GRID, true)
 		set(value) = prefs.edit { putBoolean(KEY_SOURCES_GRID, value) }
 
-	var sourcesVersion: Int
-		get() = prefs.getInt(KEY_SOURCES_VERSION, 0)
-		set(value) = prefs.edit { putInt(KEY_SOURCES_VERSION, value) }
-
 	/**
 	 * The active language chosen per logical source (a package + source-name pair) for
 	 * multi-language extensions. Each entry is encoded as "lang\npkgName\nsourceName" (newline
@@ -1060,7 +1056,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_PAGES_SAVE_ASK = "pages_dir_ask"
 		const val KEY_STATS_ENABLED = "stats_on"
 		const val KEY_SEARCH_SUGGESTION_TYPES = "search_suggest_types"
-		const val KEY_SOURCES_VERSION = "sources_version"
 		const val KEY_QUICK_FILTER = "quick_filter"
 		const val KEY_COLLAPSE_DESCRIPTION = "description_collapse"
 		const val KEY_MANGA_LIST_BADGES = "manga_list_badges"

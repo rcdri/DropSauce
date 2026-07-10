@@ -66,8 +66,11 @@ class AutoFixService : CoroutineIntentService() {
 					autoFixUseCase.invoke(mangaId)
 				}
 				if (checkNotificationPermission(CHANNEL_ID)) {
-					val notification = buildNotification(startId, result)
-					notificationManager.notify(TAG, startId, notification)
+					// One notification id per manga — startId is shared by every item in this batch,
+					// so notifying with it would let each result overwrite the previous one.
+					val notificationId = mangaId.toInt()
+					val notification = buildNotification(notificationId, result)
+					notificationManager.notify(TAG, notificationId, notification)
 				}
 			}
 		}
@@ -116,7 +119,7 @@ class AutoFixService : CoroutineIntentService() {
 		)
 	}
 
-	private suspend fun buildNotification(startId: Int, result: Result<Pair<Manga, Manga?>>): Notification {
+	private suspend fun buildNotification(notificationId: Int, result: Result<Pair<Manga, Manga?>>): Notification {
 		val notification = NotificationCompat.Builder(this, CHANNEL_ID)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setDefaults(0)
@@ -180,7 +183,7 @@ class AutoFixService : CoroutineIntentService() {
 			ErrorReporterReceiver.getNotificationAction(
 				context = this,
 				e = error,
-				notificationId = startId,
+				notificationId = notificationId,
 				notificationTag = TAG,
 			)?.let { action ->
 				notification.addAction(action)

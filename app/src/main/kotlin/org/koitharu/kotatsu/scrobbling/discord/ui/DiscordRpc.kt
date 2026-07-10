@@ -161,6 +161,13 @@ class DiscordRpc @Inject constructor(
 	}
 
 	private fun getRpc(): KizzyRPC? {
+		if (!settings.isDiscordRpcEnabled) {
+			// Setting may have been turned off mid-session (e.g. while a reader/RPC session is
+			// still alive) — tear down any RPC we already created instead of keeping it running
+			// until the reader closes.
+			clearRpc()
+			return null
+		}
 		rpc?.let {
 			return it
 		}
@@ -168,11 +175,7 @@ class DiscordRpc @Inject constructor(
 			rpc?.let {
 				return@synchronized it
 			}
-			if (settings.isDiscordRpcEnabled) {
-				settings.discordToken?.let { KizzyRPC(it) }
-			} else {
-				null
-			}.also {
+			settings.discordToken?.let { KizzyRPC(it) }.also {
 				rpc = it
 			}
 		}

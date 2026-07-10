@@ -69,7 +69,6 @@ open class RemoteListViewModel @Inject constructor(
 	val source = MangaSource(savedStateHandle[RemoteListFragment.ARG_SOURCE])
 	val isRandomLoading = MutableStateFlow(false)
 	val onOpenManga = MutableEventFlow<Manga>()
-    val onSourceBroken = MutableEventFlow<Unit>()
 	val onBrokenSortFallback = MutableEventFlow<Unit>()
 
 	protected val repository = mangaRepositoryFactory.create(source)

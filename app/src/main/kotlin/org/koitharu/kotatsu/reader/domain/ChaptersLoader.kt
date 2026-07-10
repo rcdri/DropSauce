@@ -72,23 +72,27 @@ class ChaptersLoader @Inject constructor(
 
 	fun peekChapter(chapterId: Long): MangaChapter? = chapters[chapterId]
 
-	fun hasPages(chapterId: Long): Boolean {
-		return chapterId in chapterPages
+	// All reads below go through synchronized(chapterPages) — the same monitor ChapterPages' own
+	// @Synchronized mutators lock on — so a concurrent add/remove can't be observed mid-mutation
+	// (e.g. a ConcurrentModificationException from toList()/first()/last() reading the deque while
+	// another coroutine is still shifting indices).
+	fun hasPages(chapterId: Long): Boolean = synchronized(chapterPages) {
+		chapterId in chapterPages
 	}
 
 	fun getPages(chapterId: Long): List<MangaPage> = synchronized(chapterPages) {
-		return chapterPages.subList(chapterId).map { it.toMangaPage() }
+		chapterPages.subList(chapterId).map { it.toMangaPage() }
 	}
 
-	fun getPagesCount(chapterId: Long): Int {
-		return chapterPages.size(chapterId)
+	fun getPagesCount(chapterId: Long): Int = synchronized(chapterPages) {
+		chapterPages.size(chapterId)
 	}
 
-	fun last() = chapterPages.last()
+	fun last() = synchronized(chapterPages) { chapterPages.last() }
 
-	fun first() = chapterPages.first()
+	fun first() = synchronized(chapterPages) { chapterPages.first() }
 
-	fun snapshot() = chapterPages.toList()
+	fun snapshot() = synchronized(chapterPages) { chapterPages.toList() }
 
 	private suspend fun loadChapter(chapterId: Long): List<ReaderPage> {
 		val chapter = checkNotNull(chapters[chapterId]) { "Requested chapter not found" }
