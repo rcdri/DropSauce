@@ -132,6 +132,23 @@ class HistoryRepository @Inject constructor(
 					deletedAt = 0L,
 				),
 			)
+			val unreadLogs = db.getTrackLogsDao().findUnreadByManga(manga.id)
+			if (unreadLogs.isNotEmpty()) {
+				val allChapters = db.getChaptersDao().findAll(manga.id)
+				val lastReadChapterIndex = allChapters.indexOfFirst { it.chapterId == chapterId }
+				if (lastReadChapterIndex != -1) {
+					for (log in unreadLogs) {
+						val logChapterIds = log.chapterIds.split('\n').mapNotNull { it.toLongOrNull() }
+						val allLogChaptersRead = logChapterIds.all { chId ->
+							val chIndex = allChapters.indexOfFirst { it.chapterId == chId }
+							chIndex != -1 && chIndex <= lastReadChapterIndex
+						}
+						if (allLogChaptersRead) {
+							db.getTrackLogsDao().markLogAsRead(log.id)
+						}
+					}
+				}
+			}
 			newChaptersUseCaseProvider.get()(manga, chapterId)
 			scrobblers.forEach { it.tryScrobble(manga, chapterId) }
 		}

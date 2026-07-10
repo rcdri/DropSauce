@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.plus
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.db.MangaDatabase
+import org.koitharu.kotatsu.core.db.entity.toMangaChapters
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
 import org.koitharu.kotatsu.core.ui.BaseViewModel
@@ -20,6 +22,7 @@ import org.koitharu.kotatsu.core.ui.util.ReversibleAction
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.groupByDateBucket
 import org.koitharu.kotatsu.core.util.ext.call
+import org.koitharu.kotatsu.history.data.HistoryRepository
 import org.koitharu.kotatsu.list.domain.ListFilterOption
 import org.koitharu.kotatsu.list.domain.MangaListMapper
 import org.koitharu.kotatsu.list.domain.QuickFilterListener
@@ -46,6 +49,8 @@ class FeedViewModel @Inject constructor(
 	private val scheduler: TrackWorker.Scheduler,
 	private val mangaListMapper: MangaListMapper,
 	private val quickFilter: UpdatesListQuickFilter,
+	private val historyRepository: HistoryRepository,
+	private val db: MangaDatabase,
 ) : BaseViewModel(), QuickFilterListener by quickFilter {
 
 	private val limit = MutableStateFlow(PAGE_SIZE)
@@ -64,7 +69,8 @@ class FeedViewModel @Inject constructor(
 			.flatMapLatest { repository.observeTrackingLog(it.first, it.second) },
 		settings.observeAsFlow(AppSettings.KEY_TIPS_CLOSED) { isTipEnabled(TIP_GESTURES) },
 		expandedIds,
-	) { filters, list, isTipVisible, expanded ->
+		historyRepository.observeAll(),
+	) { filters, list, isTipVisible, expanded, _ ->
 		val result = ArrayList<ListModel>((list.size * 1.4).toInt().coerceAtLeast(3))
 		if (list.isNotEmpty() && isTipVisible) {
 			result += gesturesTip
@@ -120,6 +126,28 @@ class FeedViewModel @Inject constructor(
 
 	fun markAsRead(item: FeedItem) {
 		launchJob(Dispatchers.Default) {
+			val allChapters = db.getChaptersDao().findAll(item.manga.id)
+			val latestFeedChapterEntity = item.chapters
+				.mapNotNull { ch -> allChapters.find { it.chapterId == ch.id } }
+				.maxByOrNull { it.index }
+
+			if (latestFeedChapterEntity != null) {
+				val chapterIndex = allChapters.indexOfFirst { it.chapterId == latestFeedChapterEntity.chapterId }
+				val percent = (chapterIndex + 1) / allChapters.size.toFloat()
+				
+				val mangaChapters = allChapters.toMangaChapters()
+				val mangaWithChapters = item.manga.copy(chapters = mangaChapters)
+
+				historyRepository.addOrUpdate(
+					manga = mangaWithChapters,
+					chapterId = latestFeedChapterEntity.chapterId,
+					page = 0,
+					scroll = 0,
+					percent = percent,
+					force = true,
+				)
+			}
+
 			val handle = repository.markLogsRead(item.manga.id)
 			onActionDone.call(ReversibleAction(R.string.marked_as_read, handle))
 		}

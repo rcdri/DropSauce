@@ -52,6 +52,12 @@ abstract class TrackLogsDao : MangaQueryBuilder.ConditionCallback {
 	@Query("SELECT id FROM track_logs WHERE manga_id = :mangaId AND unread = 1")
 	abstract suspend fun findUnreadIds(mangaId: Long): LongArray
 
+	@Query("SELECT * FROM track_logs WHERE manga_id = :mangaId AND unread = 1")
+	abstract suspend fun findUnreadByManga(mangaId: Long): List<TrackLogEntity>
+
+	@Query("UPDATE track_logs SET unread = 0 WHERE id = :id")
+	abstract suspend fun markLogAsRead(id: Long)
+
 	@Query("UPDATE track_logs SET unread = 1 WHERE id IN (:ids)")
 	abstract suspend fun markUnread(ids: Collection<Long>)
 

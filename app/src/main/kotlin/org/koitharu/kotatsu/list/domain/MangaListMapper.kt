@@ -9,6 +9,7 @@ import androidx.collection.ScatterSet
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.koitharu.kotatsu.R
+import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.core.parser.MangaDataRepository
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.ListMode
@@ -37,6 +38,7 @@ class MangaListMapper @Inject constructor(
 	private val favouritesRepository: FavouritesRepository,
 	private val localMangaIndex: LocalMangaIndex,
 	private val dataRepository: MangaDataRepository,
+	private val db: MangaDatabase,
 ) {
 
 	private val dict by lazy { readTagsDict(context) }
@@ -78,13 +80,35 @@ class MangaListMapper @Inject constructor(
 		override = dataRepository.getOverride(manga.id),
 	)
 
-	suspend fun toFeedItem(logItem: TrackingLogItem) = FeedItem(
-		id = logItem.id,
-		override = dataRepository.getOverride(logItem.manga.id),
-		chapters = logItem.chapters,
-		manga = logItem.manga,
-		isNew = logItem.isNew,
-	)
+	suspend fun toFeedItem(logItem: TrackingLogItem): FeedItem {
+		val override = dataRepository.getOverride(logItem.manga.id)
+		val history = db.getHistoryDao().find(logItem.manga.id)
+		val chapters = if (history != null) {
+			val allChapters = db.getChaptersDao().findAll(logItem.manga.id)
+			val lastReadChapterIndex = allChapters.indexOfFirst { it.chapterId == history.chapterId }
+			if (lastReadChapterIndex != -1) {
+				logItem.chapters.map { chapter ->
+					val chapterIndex = allChapters.indexOfFirst { it.chapterId == chapter.id }
+					val isNew = chapterIndex == -1 || chapterIndex > lastReadChapterIndex
+					chapter.copy(isNew = isNew)
+				}
+			} else {
+				logItem.chapters
+			}
+		} else {
+			logItem.chapters
+		}
+
+		val isNew = logItem.isNew && chapters.any { it.isNew }
+
+		return FeedItem(
+			id = logItem.id,
+			override = override,
+			chapters = chapters,
+			manga = logItem.manga,
+			isNew = isNew,
+		)
+	}
 
 	fun mapTags(tags: Collection<MangaTag>) = tags.map {
 		ChipsView.ChipModel(

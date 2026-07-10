@@ -6,6 +6,7 @@ import android.graphics.drawable.RippleDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.shape.MaterialShapeDrawable
@@ -104,15 +105,27 @@ fun feedItemAD(
 		binding.layoutChapters.removeAllViews()
 		if (binding.layoutChapters.isVisible) {
 			val inflater = LayoutInflater.from(context)
-			for ((index, chapter) in chapters.withIndex()) {
+			val transparentIndicator = if (item.isNew) {
+				ContextCompat.getDrawable(context, R.drawable.ic_new)?.mutate()?.apply {
+					setTint(Color.TRANSPARENT)
+				}
+			} else {
+				null
+			}
+			for (chapter in chapters) {
 				val textView = inflater.inflate(
 					R.layout.item_feed_chapter,
 					binding.layoutChapters,
 					false,
 				) as TextView
 				textView.text = chapter.name
+				val drawable = if (item.isNew && chapter.isNew) {
+					ContextCompat.getDrawable(context, R.drawable.ic_new)
+				} else {
+					transparentIndicator
+				}
 				textView.setCompoundDrawablesRelativeWithIntrinsicBounds(
-					if (index == 0) indicatorRes else 0, 0, 0, 0,
+					drawable, null, null, null
 				)
 				binding.layoutChapters.addView(textView)
 			}

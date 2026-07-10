@@ -14,5 +14,6 @@ data class TrackingLogItem(
 	data class Chapter(
 		val id: Long?, // null for legacy log rows written before ids were stored
 		val name: String,
+		val isNew: Boolean = true,
 	)
 }
