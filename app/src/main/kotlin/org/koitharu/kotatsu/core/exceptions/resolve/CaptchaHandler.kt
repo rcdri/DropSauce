@@ -121,12 +121,14 @@ class CaptchaHandler @Inject constructor(
 			dao.setCfState(source.name, exception?.state ?: CloudFlareHelper.PROTECTION_NOT_DETECTED)
 
 			if (notify && context.checkNotificationPermission(CHANNEL_ID)) {
-				val exceptions = dao.findAllCaptchaRequired().mapNotNull {
-					it.source.toMangaSourceOrNull()
-				}.filterNot {
-					SourceSettings(context, it).isCaptchaNotificationsDisabled
-				}.mapNotNull {
-					exceptionMap[it]
+				// Build the list from the in-memory map, not the sources table: external (Mihon)
+				// sources have no row there, so a DB-driven list silently drops their notifications.
+				val exceptions = buildList {
+					exceptionMap.forEach { src, ex ->
+						if (!SourceSettings(context, src).isCaptchaNotificationsDisabled) {
+							add(ex)
+						}
+					}
 				}
 				if (removedException != null) {
 					NotificationManagerCompat.from(context).cancel(TAG, removedException.source.hashCode())
@@ -240,8 +242,6 @@ class CaptchaHandler @Inject constructor(
 		}
 		return notification.build()
 	}
-
-	private fun String.toMangaSourceOrNull() = MangaSource(this).takeUnless { it == UnknownMangaSource }
 
 	private suspend fun getFavicon(source: MangaSource) = runCatchingCancellable {
 		coilProvider.get().execute(

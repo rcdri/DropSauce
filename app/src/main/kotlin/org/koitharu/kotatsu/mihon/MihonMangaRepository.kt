@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.Headers
 import okhttp3.Request
 import okhttp3.Response
+import org.koitharu.kotatsu.core.exceptions.CloudFlareProtectedException
 import org.koitharu.kotatsu.core.exceptions.InteractiveActionRequiredException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -367,9 +368,21 @@ class MihonMangaRepository(
 	private fun translateExtensionException(e: Exception): Exception {
 		val msg = e.message ?: return e
 		val httpSource = mihonSource as? HttpSource ?: return e
+		val msgLower = msg.lowercase()
+		// The vendored CloudflareInterceptor already tried a silent WebView bypass; when it gives
+		// up it throws IOException("Cloudflare bypass failed"). Map it onto the app's CloudFlare
+		// pipeline so TrackWorker/CaptchaHandler can post the "captcha required" notification and
+		// offer the resolver WebView (the solved cf_clearance cookie is shared with the extension
+		// through the system CookieManager).
+		if ("cloudflare bypass failed" in msgLower) {
+			return CloudFlareProtectedException(
+				url = httpSource.baseUrl,
+				source = source,
+				headers = httpSource.headers,
+			)
+		}
 		// Cloudflare (or another WAF) returned an HTML challenge/block page instead of JSON.
 		// The kotlinx.serialization JsonDecodingException embeds the raw input in its message.
-		val msgLower = msg.lowercase()
 		if ("<!doctype html>" in msgLower || "json input: <" in msgLower) {
 			// successCookieName = null → BrowserActivity.finish() always returns RESULT_OK,
 			// so we don't need Cloudflare's specific cookie name. The embedded WebView shares
