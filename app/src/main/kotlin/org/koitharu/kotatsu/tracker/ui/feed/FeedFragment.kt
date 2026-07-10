@@ -79,12 +79,14 @@ class FeedFragment :
 			RecyclerScrollKeeper(this).attach()
 			ItemTouchHelper(
 				FeedSwipeCallback(context) { item, isRead, position ->
+					// the list can re-emit mid-swipe (Room invalidation), detaching the holder
+					val hasPosition = position != RecyclerView.NO_POSITION
 					when {
 						// already read: no-op, just restore the row (guards a fast fling past the cap)
-						isRead && !item.isNew -> feedAdapter.notifyItemChanged(position)
+						isRead && !item.isNew -> if (hasPosition) feedAdapter.notifyItemChanged(position)
 						// mark-read keeps the row; snap it back, the dot clears via the content flow
 						isRead -> {
-							feedAdapter.notifyItemChanged(position)
+							if (hasPosition) feedAdapter.notifyItemChanged(position)
 							viewModel.markAsRead(item)
 						}
 

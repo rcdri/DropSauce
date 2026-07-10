@@ -19,6 +19,7 @@ import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
 import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.core.ui.util.ReversibleAction
+import org.koitharu.kotatsu.core.ui.util.ReversibleHandle
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.groupByDateBucket
 import org.koitharu.kotatsu.core.util.ext.call
@@ -126,6 +127,11 @@ class FeedViewModel @Inject constructor(
 
 	fun markAsRead(item: FeedItem) {
 		launchJob(Dispatchers.Default) {
+			// Snapshot undo state before anything mutates: the history jump below re-computes the
+			// new-chapters counter to zero, so markLogsRead must capture it first.
+			val priorHistory = db.getHistoryDao().find(item.manga.id)
+			val logsHandle = repository.markLogsRead(item.manga.id)
+
 			val allChapters = db.getChaptersDao().findAll(item.manga.id)
 			val latestFeedChapterEntity = item.chapters
 				.mapNotNull { ch -> allChapters.find { it.chapterId == ch.id } }
@@ -134,7 +140,7 @@ class FeedViewModel @Inject constructor(
 			if (latestFeedChapterEntity != null) {
 				val chapterIndex = allChapters.indexOfFirst { it.chapterId == latestFeedChapterEntity.chapterId }
 				val percent = (chapterIndex + 1) / allChapters.size.toFloat()
-				
+
 				val mangaChapters = allChapters.toMangaChapters()
 				val mangaWithChapters = item.manga.copy(chapters = mangaChapters)
 
@@ -148,7 +154,16 @@ class FeedViewModel @Inject constructor(
 				)
 			}
 
-			val handle = repository.markLogsRead(item.manga.id)
+			val handle = ReversibleHandle {
+				// Restore the reading position first: the feed dot derives per-chapter "new" state
+				// from history, so restoring the unread flags alone leaves the row looking read.
+				if (priorHistory != null) {
+					db.getHistoryDao().upsert(priorHistory)
+				} else {
+					db.getHistoryDao().delete(item.manga.id)
+				}
+				logsHandle.reverse()
+			}
 			onActionDone.call(ReversibleAction(R.string.marked_as_read, handle))
 		}
 	}

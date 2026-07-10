@@ -102,6 +102,13 @@ fun feedItemAD(
 			binding.textViewSummary.setOnClickListener(null)
 		}
 		binding.layoutChapters.isVisible = chapters.isNotEmpty() && !isCollapsedSummary
+		// an expanded multi-chapter entry collapses back on tap; single-chapter lists stay inert
+		if (chapters.size > 1 && item.isExpanded) {
+			binding.layoutChapters.setOnClickListener { onExpandClick(item) }
+		} else {
+			binding.layoutChapters.setOnClickListener(null)
+			binding.layoutChapters.isClickable = false
+		}
 		binding.layoutChapters.removeAllViews()
 		if (binding.layoutChapters.isVisible) {
 			val inflater = LayoutInflater.from(context)
