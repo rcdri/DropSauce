@@ -405,6 +405,10 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_EXTENSION_UPDATE_NOTIFICATIONS, true)
 		set(value) = prefs.edit { putBoolean(KEY_EXTENSION_UPDATE_NOTIFICATIONS, value) }
 
+	var lastExtensionUpdateNotificationTime: Long
+		get() = prefs.getLong(KEY_LAST_EXTENSION_UPDATE_NOTIFICATION_TIME, 0L)
+		set(value) = prefs.edit { putLong(KEY_LAST_EXTENSION_UPDATE_NOTIFICATION_TIME, value) }
+
 	val searchSuggestionTypes: Set<SearchSuggestionType>
 		get() = prefs.getStringSet(KEY_SEARCH_SUGGESTION_TYPES, null)?.let { stringSet ->
 			stringSet.mapNotNullTo(EnumSet.noneOf(SearchSuggestionType::class.java)) { x ->
@@ -1067,6 +1071,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_SHIZUKU_INSTALLER = "shizuku_installer"
 		const val KEY_AUTO_UPDATE_EXTENSIONS = "auto_update_extensions"
 		const val KEY_EXTENSION_UPDATE_NOTIFICATIONS = "extension_update_notifications"
+		const val KEY_LAST_EXTENSION_UPDATE_NOTIFICATION_TIME = "last_extension_update_notification_time"
 		const val KEY_TAGS_WARNINGS = "tags_warnings"
 		const val KEY_DISCORD_RPC = "discord_rpc"
 		const val KEY_DISCORD_RPC_SKIP_NSFW = "discord_rpc_skip_nsfw"

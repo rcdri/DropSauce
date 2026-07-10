@@ -155,7 +155,11 @@ class ExtensionUpdateWorker @AssistedInject constructor(
 			if (installedAny) extensionManager.loadExtensions()
 			if (!autoInstall) {
 				if (pendingUpdates.isNotEmpty()) {
-					notifyUpdatesAvailable(pendingUpdates.size)
+					val now = System.currentTimeMillis()
+					if (now - settings.lastExtensionUpdateNotificationTime >= TimeUnit.DAYS.toMillis(1)) {
+						notifyUpdatesAvailable(pendingUpdates.size)
+						settings.lastExtensionUpdateNotificationTime = now
+					}
 				}
 				return@withContext Result.success()
 			}
