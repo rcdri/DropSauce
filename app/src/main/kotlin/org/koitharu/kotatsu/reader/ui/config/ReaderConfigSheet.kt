@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -35,8 +36,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -556,8 +559,8 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
-                        .padding(6.dp),
+						.height(112.dp)
+						.padding(8.dp),
                 ) {
                     val targetBias = when (selectedIndex) {
                         0 -> -1f
@@ -577,7 +580,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                             .fillMaxHeight()
                             .fillMaxWidth(0.25f)
                             .align(BiasAlignment(horizontalBias = animatedBias, verticalBias = 0f))
-                            .clip(RoundedCornerShape(20.dp))
+							.clip(RoundedCornerShape(22.dp))
                             .background(MaterialTheme.colorScheme.primary),
                     )
 
@@ -610,13 +613,13 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                                     Icon(
                                         painter = painterResource(iconRes),
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp),
+										modifier = Modifier.size(34.dp),
                                         tint = contentColor,
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
+									Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = stringResource(labelRes),
-                                        style = MaterialTheme.typography.labelMedium,
+										style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -793,23 +796,23 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
         ) {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxWidth().height(if (isLandscape()) 420.dp else 600.dp),
+                modifier = Modifier.fillMaxWidth().height(if (isLandscape()) 420.dp else 560.dp),
                 verticalAlignment = Alignment.Top,
             ) { page ->
                 Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 12.dp, bottom = 84.dp),
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 12.dp, bottom = 68.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     if (page == 0) {
                         EpubTextSizeSection(enabled = editable)
-                        EpubSliderSection(R.drawable.ic_reader_vertical, stringResource(R.string.epub_line_height), settings.epubLineHeight, 100..240, "%", step = 10, enabled = editable) { settings.epubLineHeight = it }
-                        EpubSliderSection(R.drawable.ic_move_horizontal, stringResource(R.string.epub_horizontal_margin), settings.epubHorizontalPadding, 0..64, " dp", step = 4, enabled = editable) { settings.epubHorizontalPadding = it }
+                        EpubSliderSection(R.drawable.ic_reader_vertical, stringResource(R.string.epub_line_height), settings.epubLineHeight, 100..240, "%", defaultValue = 160, enabled = editable) { settings.epubLineHeight = it }
+                        EpubSliderSection(R.drawable.ic_move_horizontal, stringResource(R.string.epub_horizontal_margin), settings.epubHorizontalPadding, 0..64, " dp", defaultValue = 20, enabled = editable) { settings.epubHorizontalPadding = it }
                         EpubToggleSection(R.drawable.ic_auto_fix, stringResource(R.string.epub_publisher_style), settings.isEpubPublisherStyleEnabled) {
                             settings.isEpubPublisherStyleEnabled = it
                             publisherStyle = it
                         }
                     } else {
-                        EpubReadModeSection(enabled = editable)
+						EpubReadModeSection()
                         EpubChoiceSection(
                             R.drawable.ic_title,
                             stringResource(R.string.epub_font_family),
@@ -857,27 +860,67 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
         value: Int,
         range: IntRange,
         suffix: String,
-        step: Int,
+        defaultValue: Int,
         enabled: Boolean = true,
         onChange: (Int) -> Unit,
     ) {
-        var current by remember { mutableIntStateOf(value) }
-        // stops between the endpoints so the slider snaps to sensible increments
-        val stops = ((range.last - range.first) / step - 1).coerceAtLeast(0)
+        var current by remember { mutableIntStateOf(value.coerceIn(range)) }
         EpubSettingCard(icon, title, "$current$suffix", enabled = enabled) {
-            Slider(
+			EpubContinuousSlider(
                 value = current.toFloat(),
-                onValueChange = {
-                    val stepped = (it / step).roundToInt() * step
-                    if (stepped != current) current = stepped.also(onChange)
+				onValueChange = { value ->
+					val rounded = value.roundToInt()
+					if (rounded != current) current = rounded.also(onChange)
                 },
                 valueRange = range.first.toFloat()..range.last.toFloat(),
-                steps = stops,
+				defaultValue = defaultValue.toFloat(),
                 enabled = enabled,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
+
+	@OptIn(ExperimentalMaterial3Api::class)
+	@Composable
+	private fun EpubContinuousSlider(
+		value: Float,
+		onValueChange: (Float) -> Unit,
+		valueRange: ClosedFloatingPointRange<Float>,
+		defaultValue: Float,
+		enabled: Boolean,
+	) {
+		val colors = SliderDefaults.colors()
+		val fraction = ((defaultValue - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+		val valueFraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+		val markerColor = when {
+			!enabled && valueFraction >= fraction -> colors.disabledActiveTickColor
+			!enabled -> colors.disabledInactiveTickColor
+			valueFraction >= fraction -> colors.activeTickColor
+			else -> colors.inactiveTickColor
+		}
+		Box(modifier = Modifier.fillMaxWidth()) {
+			Slider(
+				value = value,
+				onValueChange = onValueChange,
+				valueRange = valueRange,
+				steps = 0,
+				enabled = enabled,
+				modifier = Modifier.fillMaxWidth(),
+			)
+			Canvas(
+				modifier = Modifier
+					.align(Alignment.Center)
+					.fillMaxWidth()
+					.padding(horizontal = 10.dp)
+					.height(SliderDefaults.TickSize),
+			) {
+				drawCircle(
+					color = markerColor,
+					radius = SliderDefaults.TickSize.toPx() / 2f,
+					center = androidx.compose.ui.geometry.Offset(size.width * fraction, size.height / 2f),
+				)
+			}
+		}
+	}
 
     @Composable
     private fun EpubChoiceSection(
@@ -939,8 +982,8 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
-                        .padding(6.dp),
+						.height(114.dp)
+						.padding(8.dp),
                 ) {
                     val animatedBias by animateFloatAsState(
                         targetValue = if (selectedIndex == 0) -1f else 1f,
@@ -953,7 +996,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                             .fillMaxHeight()
                             .fillMaxWidth(0.5f)
                             .align(BiasAlignment(horizontalBias = animatedBias, verticalBias = 0f))
-                            .clip(RoundedCornerShape(20.dp))
+							.clip(RoundedCornerShape(22.dp))
                             .background(MaterialTheme.colorScheme.primary),
                     )
 
@@ -987,13 +1030,13 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                                     Icon(
                                         painter = painterResource(iconRes),
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp),
+										modifier = Modifier.size(34.dp),
                                         tint = contentColor,
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
+									Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = stringResource(labelRes),
-                                        style = MaterialTheme.typography.labelMedium,
+										style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -1085,7 +1128,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
 
     @Composable
     private fun EpubTextSizeSection(enabled: Boolean = true) {
-        var textSize by remember { mutableIntStateOf(settings.epubFontSize) }
+        var textSize by remember { mutableIntStateOf(settings.epubFontSize.coerceIn(50, 200)) }
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -1128,19 +1171,18 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Slider(
+				EpubContinuousSlider(
                     value = textSize.toFloat(),
                     onValueChange = { value ->
-                        val stepped = (value / 10f).roundToInt() * 10
-                        if (stepped != textSize) {
-                            textSize = stepped
-                            settings.epubFontSize = stepped
+						val rounded = value.roundToInt()
+						if (rounded != textSize) {
+							textSize = rounded
+							settings.epubFontSize = rounded
                         }
                     },
-                    valueRange = 50f..200f,
-                    steps = 14,
+					valueRange = 50f..200f,
+					defaultValue = 100f,
                     enabled = enabled,
-                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
