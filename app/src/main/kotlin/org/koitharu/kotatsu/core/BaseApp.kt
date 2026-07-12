@@ -21,6 +21,7 @@ import org.acra.ktx.initAcra
 import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.db.MangaDatabase
+import org.koitharu.kotatsu.core.logs.AppLogger
 import org.koitharu.kotatsu.core.os.AppValidator
 import org.koitharu.kotatsu.core.os.RomCompat
 import org.koitharu.kotatsu.core.prefs.AppSettings
@@ -47,6 +48,9 @@ open class BaseApp : Application(), Configuration.Provider {
 
 	@Inject
 	lateinit var settings: AppSettings
+
+	@Inject
+	lateinit var appLogger: AppLogger
 
 	@Inject
 	lateinit var workerFactory: HiltWorkerFactory
@@ -76,6 +80,7 @@ open class BaseApp : Application(), Configuration.Provider {
 			return
 		}
 		AppCompatDelegate.setDefaultNightMode(settings.theme)
+		appLogger.setEnabled(settings.isVerboseLoggingEnabled)
 		// Keep default platform security provider.
 		setupActivityLifecycleCallbacks()
 		cleanupDownloadedExtensionApks()

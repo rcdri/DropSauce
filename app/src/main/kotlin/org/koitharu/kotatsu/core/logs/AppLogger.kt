@@ -15,7 +15,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val MAX_ENTRIES = 4000
+private const val MAX_ENTRIES = 10_000
 
 @Singleton
 class AppLogger @Inject constructor() {
@@ -67,9 +67,8 @@ class AppLogger @Inject constructor() {
 		val job = scope.launch(start = CoroutineStart.LAZY) {
 			var process: Process? = null
 			try {
-				Runtime.getRuntime().exec(arrayOf("logcat", "-c")).waitFor()
 				val pid = android.os.Process.myPid().toString()
-				val startedProcess = Runtime.getRuntime().exec(arrayOf("logcat", "-v", "time", "--pid", pid))
+				val startedProcess = Runtime.getRuntime().exec(arrayOf("logcat", "-v", "threadtime", "--pid", pid))
 				process = startedProcess
 				synchronized(stateLock) {
 					if (!isEnabled || generation != readerGeneration) {

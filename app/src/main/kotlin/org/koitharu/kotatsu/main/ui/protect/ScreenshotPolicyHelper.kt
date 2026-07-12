@@ -4,14 +4,10 @@ import android.app.Activity
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.annotation.MainThread
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -35,19 +31,6 @@ class ScreenshotPolicyHelper @Inject constructor(
 
 	private fun ContentContainer.setupScreenshotPolicy(activity: Activity) =
 		lifecycleScope.launch(Dispatchers.Main.immediate) {
-			val isResumedFlow = callbackFlow {
-				val observer = LifecycleEventObserver { _, event ->
-					if (event == Lifecycle.Event.ON_RESUME) {
-						trySend(true)
-					} else if (event == Lifecycle.Event.ON_PAUSE) {
-						trySend(false)
-					}
-				}
-				lifecycle.addObserver(observer)
-				trySend(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-				awaitClose { lifecycle.removeObserver(observer) }
-			}
-
 			val screenshotPolicyFlow = settings.observeAsFlow(AppSettings.KEY_SCREENSHOTS_POLICY) { screenshotsPolicy }
 				.flatMapLatest { policy ->
 					when (policy) {
@@ -67,13 +50,8 @@ class ScreenshotPolicyHelper @Inject constructor(
 				screenshotPolicyFlow,
 				protectAppFlow,
 				protectHelper.isUnlockedFlow,
-				isResumedFlow
-			) { screenshotSecure, protectEnabled, isUnlocked, isResumed ->
-				// Force secure (FLAG_SECURE) if app protection is enabled AND (the app is locked OR activity is not resumed).
-				// This ensures that:
-				// 1. When the app is locked, the content is secure.
-				// 2. When the activity is paused/stopped (e.g. minimizing the app), it immediately becomes secure before the OS takes a screenshot.
-				screenshotSecure || (protectEnabled && (!isUnlocked || !isResumed))
+			) { screenshotSecure, protectEnabled, isUnlocked ->
+				screenshotSecure || (protectEnabled && !isUnlocked)
 			}.collect { isSecure ->
 				if (isSecure) {
 					activity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)

@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.settings.compose
 
 import androidx.annotation.StringRes
+import android.os.Bundle
 import androidx.fragment.app.Fragment
 
 /**
@@ -17,8 +18,22 @@ abstract class BaseComposeSettingsFragment(
 	@StringRes private val titleId: Int,
 ) : Fragment(), ComposeOwnedScreen {
 
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+		updateTitle()
+	}
+
+	override fun onStart() {
+		super.onStart()
+		updateTitle()
+	}
+
 	override fun onResume() {
 		super.onResume()
+		updateTitle()
+	}
+
+	private fun updateTitle() {
 		if (titleId != 0) {
 			activity?.setTitle(titleId)
 		}

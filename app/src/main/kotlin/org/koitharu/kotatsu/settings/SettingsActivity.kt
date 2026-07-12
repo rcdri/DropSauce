@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
@@ -57,6 +58,15 @@ class SettingsActivity :
 		get() = viewBinding.containerMaster != null
 
 	private val viewModel: SettingsSearchViewModel by viewModels()
+
+	override fun setTitle(title: CharSequence?) {
+		super.setTitle(title)
+		findViewById<CollapsingToolbarLayout>(R.id.collapsingToolbarLayout)?.title = title
+	}
+
+	override fun setTitle(titleId: Int) {
+		setTitle(getText(titleId))
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)

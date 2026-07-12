@@ -6,7 +6,7 @@ sealed interface Rule {
 
 	operator fun invoke(url: HttpUrl, baseUrl: HttpUrl?): Boolean
 
-	data class Domain(private val domain: String) : Rule {
+	data class Domain(val domain: String) : Rule {
 
 		override fun invoke(url: HttpUrl, baseUrl: HttpUrl?): Boolean = (url.topPrivateDomain() ?: url.host) == domain
 	}

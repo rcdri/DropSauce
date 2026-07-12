@@ -12,14 +12,23 @@ class RulesList {
 
 	private val blockRules = ArrayList<Rule>()
 	private val allowRules = ArrayList<Rule>()
+	private val blockDomains = HashMap<String, MutableList<Rule>>()
+	private val allowDomains = HashMap<String, MutableList<Rule>>()
 
 	operator fun get(url: HttpUrl, baseUrl: HttpUrl?): Rule? {
-		val rule = blockRules.find { x -> x(url, baseUrl) }
-		return rule?.takeIf { allowRules.none { x -> x(url, baseUrl) } }
+		val domain = url.topPrivateDomain() ?: url.host
+		val rule = blockDomains[domain]?.firstOrNull { it(url, baseUrl) }
+			?: blockRules.firstOrNull { it(url, baseUrl) }
+		return rule?.takeIf {
+			allowDomains[domain]?.none { x -> x(url, baseUrl) } != false &&
+				allowRules.none { x -> x(url, baseUrl) }
+		}
 	}
 
 	fun add(line: String) {
-		val parts = line.lowercase().trim().split('$')
+		val normalized = line.trim()
+		if (normalized.isEmpty() || "##" in normalized || "#@#" in normalized) return
+		val parts = normalized.lowercase().split('$', limit = 2)
 		parts.first().addImpl(isWhitelist = false, modifiers = parts.getOrNull(1))
 	}
 
@@ -38,7 +47,12 @@ class RulesList {
 
 			startsWith("||") -> {
 				// domain
-				list += Rule.Domain(substring(2).substringBefore('^').trim()).withModifiers(modifiers)
+				val domain = substring(2).substringBefore('^').trim()
+				if (domain.isNotEmpty() && '*' !in domain && '/' !in domain) {
+					val rule = Rule.Domain(domain).withModifiers(modifiers)
+					val domains = if (isWhitelist) allowDomains else blockDomains
+					domains.getOrPut(domain) { ArrayList(1) } += rule
+				}
 			}
 
 			startsWith('|') -> {

@@ -93,17 +93,15 @@ DropSauce is a free and open-source manga reader for Android, built to feel quic
 
 </details>
 
-## Star history
+## Star History
 
-<p align="center">
-  <a href="https://star-history.com/#HuzaifaKhalid1311/DropSauce&Date">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HuzaifaKhalid1311/DropSauce&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HuzaifaKhalid1311/DropSauce&type=Date" />
-      <img alt="DropSauce star history chart" src="https://api.star-history.com/svg?repos=HuzaifaKhalid1311/DropSauce&type=Date" />
-    </picture>
-  </a>
-</p>
+<a href="https://www.star-history.com/?repos=HuzaifaKhalid1311%2FDropSauce&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=HuzaifaKhalid1311/DropSauce&type=date&theme=dark&legend=top-left&sealed_token=WCXLPn5xBgloSjmN1d0FVz4b_AhpF7pqchA72IfTFnB7loTdSNmldj4dtjRPvy25mzYWw0HbOjwW5-L3IIKZPiwQNn6MXISsmwmCuCXLybr-2c5ByQ_Ycg" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=HuzaifaKhalid1311/DropSauce&type=date&legend=top-left&sealed_token=WCXLPn5xBgloSjmN1d0FVz4b_AhpF7pqchA72IfTFnB7loTdSNmldj4dtjRPvy25mzYWw0HbOjwW5-L3IIKZPiwQNn6MXISsmwmCuCXLybr-2c5ByQ_Ycg" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=HuzaifaKhalid1311/DropSauce&type=date&legend=top-left&sealed_token=WCXLPn5xBgloSjmN1d0FVz4b_AhpF7pqchA72IfTFnB7loTdSNmldj4dtjRPvy25mzYWw0HbOjwW5-L3IIKZPiwQNn6MXISsmwmCuCXLybr-2c5ByQ_Ycg" />
+ </picture>
+</a>
 
 ## Install
 
