@@ -542,7 +542,7 @@ class ReaderConfigSheet : BaseAdaptiveSheet<SheetReaderConfigBinding>() {
             ReaderMode.STANDARD to (R.string.standard to R.drawable.ic_reader_ltr),
             ReaderMode.REVERSED to (R.string.r_to_l to R.drawable.ic_reader_rtl),
             ReaderMode.VERTICAL to (R.string.vertical to R.drawable.ic_reader_vertical),
-            ReaderMode.WEBTOON to (R.string.webtoon to R.drawable.ic_script),
+            ReaderMode.WEBTOON to (R.string.webtoon to R.drawable.ic_reader_webtoon),
         )
         val selectedIndex = modes.indexOfFirst { it.first == selectedMode }.coerceAtLeast(0)
 
